@@ -1,5 +1,11 @@
 <?php
-require __DIR__ . '/vendor/autoload.php';
+$autoload = __DIR__ . '/vendor/autoload.php';
+if (!file_exists($autoload)) {
+    header('HTTP/1.1 500 Internal Server Error');
+    echo 'Dependencies missing—run composer install.';
+    exit;
+}
+require $autoload;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -8,7 +14,14 @@ use Slim\Factory\AppFactory;
 
 session_start();
 
-$dbPath = __DIR__ . '/data/app.db';
+$dataDir = __DIR__ . '/data';
+if (!is_dir($dataDir) && !mkdir($dataDir, 0777, true)) {
+    header('HTTP/1.1 500 Internal Server Error');
+    echo 'Failed to create data directory.';
+    exit;
+}
+
+$dbPath = $dataDir . '/app.db';
 $pdo = new PDO('sqlite:' . $dbPath);
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
