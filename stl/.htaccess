@@ -1,0 +1,4 @@
+Options -Indexes
+<Files "stl.sqlite">
+  Require all denied
+</Files>

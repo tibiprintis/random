@@ -1,0 +1,7 @@
+body {font-family: sans-serif;margin:0;padding:0;}
+#controls, #notifications, #preview, #download {padding:1em;}
+#preview {height:400px;background:#f0f0f0;}
+#notifications div{margin:0.25em 0;}
+#notifications .error{color:#b00;}
+#notifications .success{color:#080;}
+#notifications .info{color:#333;}
