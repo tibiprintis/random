@@ -12,9 +12,11 @@ window.Preview = {
         const ambient = new THREE.AmbientLight(0x666666);
         this.scene.add(ambient);
         this.rotationSpeed = 0.01;
+        this.autoRotate = true;
+        this.meshColor = new THREE.Color('#6699ff');
         const animate = () => {
             requestAnimationFrame(animate);
-            if (this.mesh) {
+            if (this.mesh && this.autoRotate) {
                 this.mesh.rotation.y += this.rotationSpeed;
             }
             this.renderer.render(this.scene, this.camera);
@@ -26,7 +28,7 @@ window.Preview = {
             .then(r => r.arrayBuffer())
             .then(buf => {
                 const geometry = this.parseBinarySTL(buf);
-                const material = new THREE.MeshStandardMaterial({ color: 0x6699ff });
+                const material = new THREE.MeshStandardMaterial({ color: this.meshColor });
                 const mesh = new THREE.Mesh(geometry, material);
                 if (this.mesh) this.scene.remove(this.mesh);
                 this.mesh = mesh;
@@ -59,5 +61,12 @@ window.Preview = {
     },
     setRotationSpeed(speed) {
         this.rotationSpeed = speed;
+    },
+    setAutorotate(flag) {
+        this.autoRotate = flag;
+    },
+    setMeshColor(color) {
+        this.meshColor = new THREE.Color(color);
+        if (this.mesh) this.mesh.material.color = this.meshColor;
     }
 };

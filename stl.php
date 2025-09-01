@@ -6,7 +6,7 @@ if (empty($_SESSION['csrf'])) {
 $csrf = $_SESSION['csrf'];
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
