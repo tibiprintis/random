@@ -98,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_FILES['files'])) {
 <meta charset="utf-8"/>
 <title>eMAG Upload</title>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<link href="https://cdn.jsdelivr.net/npm/tailwindcss@^3/dist/tailwind.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.1/dist/tailwind.min.css" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
 <body class="font-sans bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen transition-colors">
@@ -114,7 +114,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_FILES['files'])) {
 <p class="text-gray-600 dark:text-gray-300">Drag & Drop (xlsx, pdf, zip) sau click pentru selectie. Maxim 10 fisiere.</p>
 <input type="file" id="fileInput" name="files[]" multiple accept=".xlsx,.pdf,.zip" class="hidden"/>
 </div>
-<button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors">Incarca</button>
 </form>
 <?php if (!empty($error)): ?>
 <div class="mt-4 text-red-500"><?= htmlspecialchars($error) ?></div>
@@ -138,6 +137,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_FILES['files'])) {
 const dropZone = document.getElementById('drop_zone');
 const fileInput = document.getElementById('fileInput');
 dropZone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', () => {
+  if (fileInput.files.length > 0) {
+    fileInput.form.submit();
+  }
+});
 dropZone.addEventListener('dragover', e => {
   e.preventDefault();
   dropZone.classList.add('bg-blue-50','dark:bg-gray-700');
@@ -155,6 +159,9 @@ dropZone.addEventListener('drop', e => {
     dt.items.add(files[i]);
   }
   fileInput.files = dt.files;
+  if (fileInput.files.length > 0) {
+    fileInput.form.submit();
+  }
 });
 </script>
 </body>
