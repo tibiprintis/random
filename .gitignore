@@ -1,2 +1,6 @@
 vendor/
 data/
+
+emag/uploads/*
+!emag/uploads/.gitkeep
+emag/*.db
