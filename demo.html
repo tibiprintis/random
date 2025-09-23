@@ -1,0 +1,2015 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#05011a" />
+    <title>Alien Horizons Flight Suite</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap");
+
+      :root {
+        color-scheme: dark;
+        font-family: "Rajdhani", "Segoe UI", sans-serif;
+        font-size: clamp(14px, 1.05vw, 18px);
+        --bg: radial-gradient(
+          circle at 50% 0%,
+          rgba(24, 12, 48, 0.9),
+          rgba(3, 3, 18, 0.96)
+        );
+        --grid-line: rgba(120, 200, 255, 0.12);
+        --card-border: rgba(90, 190, 255, 0.4);
+        --accent: #7cf4ff;
+        --accent-2: #9a6bff;
+        --accent-3: #fa5cff;
+        --text-soft: rgba(200, 235, 255, 0.86);
+        --text-muted: rgba(170, 210, 255, 0.68);
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text-soft);
+        letter-spacing: 0.04em;
+        overflow-x: hidden;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: -20vh -10vw 0;
+        background: radial-gradient(
+            circle at 20% 15%,
+            rgba(96, 214, 255, 0.18),
+            transparent 55%
+          ),
+          radial-gradient(
+            circle at 85% 25%,
+            rgba(152, 90, 255, 0.18),
+            transparent 60%
+          ),
+          repeating-linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.05) 0 1px,
+            transparent 1px 3px
+          );
+        opacity: 0.35;
+        mix-blend-mode: screen;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .page {
+        position: relative;
+        z-index: 1;
+        padding: clamp(1.6rem, 3vw, 3.2rem);
+      }
+
+      .masthead {
+        display: grid;
+        gap: clamp(0.8rem, 1.8vw, 1.6rem);
+        justify-items: start;
+        margin-bottom: clamp(1.6rem, 3vw, 3rem);
+      }
+
+      .masthead .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.35rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid rgba(110, 220, 255, 0.4);
+        background: rgba(16, 34, 68, 0.35);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2.4rem, 5vw, 3.8rem);
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .masthead p {
+        max-width: 60ch;
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        line-height: 1.55;
+      }
+
+      .demo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        gap: clamp(1.6rem, 3vw, 2.6rem);
+      }
+
+      .demo-card {
+        position: relative;
+        border-radius: 26px;
+        border: 1px solid var(--card-border);
+        background: linear-gradient(
+          160deg,
+          rgba(6, 16, 32, 0.92),
+          rgba(5, 6, 20, 0.82)
+        );
+        overflow: hidden;
+        min-height: clamp(380px, 44vw, 640px);
+        box-shadow: 0 24px 70px rgba(4, 10, 40, 0.6);
+      }
+
+      .demo-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+            circle at 15% 18%,
+            rgba(110, 234, 255, 0.22),
+            transparent 60%
+          ),
+          radial-gradient(
+            circle at 78% 26%,
+            rgba(190, 140, 255, 0.22),
+            transparent 64%
+          );
+        mix-blend-mode: screen;
+        opacity: 0.65;
+        pointer-events: none;
+        z-index: 0;
+      }
+      .demo-card[data-demo="nebula"]::before {
+        background: radial-gradient(
+            circle at 12% 20%,
+            rgba(110, 234, 255, 0.28),
+            transparent 55%
+          ),
+          radial-gradient(
+            circle at 78% 28%,
+            rgba(100, 60, 255, 0.32),
+            transparent 68%
+          );
+      }
+
+      .demo-card[data-demo="crystal"]::before {
+        background: radial-gradient(
+            circle at 18% 18%,
+            rgba(120, 255, 220, 0.24),
+            transparent 58%
+          ),
+          radial-gradient(
+            circle at 80% 24%,
+            rgba(255, 142, 86, 0.25),
+            transparent 68%
+          );
+      }
+
+      .demo-card[data-demo="rift"]::before {
+        background: radial-gradient(
+            circle at 20% 16%,
+            rgba(255, 120, 240, 0.28),
+            transparent 60%
+          ),
+          radial-gradient(
+            circle at 70% 26%,
+            rgba(120, 210, 255, 0.24),
+            transparent 70%
+          );
+      }
+
+      canvas.view {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .overlay {
+        position: relative;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: clamp(1.1rem, 2.4vw, 2rem);
+        z-index: 2;
+        pointer-events: none;
+      }
+
+      .card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .card-header .title-block {
+        display: grid;
+        gap: 0.4rem;
+      }
+
+      .card-header span.variant {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: var(--text-muted);
+      }
+
+      .card-header h2 {
+        margin: 0;
+        font-size: clamp(1.4rem, 2.8vw, 1.8rem);
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+      }
+
+      .status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 999px;
+        border: 1px solid rgba(120, 255, 255, 0.25);
+        background: rgba(10, 30, 58, 0.55);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: rgba(210, 245, 255, 0.8);
+      }
+
+      .status-chip::before {
+        content: "";
+        width: 0.55rem;
+        height: 0.55rem;
+        border-radius: 50%;
+        background: linear-gradient(120deg, #7bfff9, #6b98ff);
+        box-shadow: 0 0 18px rgba(130, 255, 255, 0.8);
+      }
+
+      .control-hub {
+        margin-top: auto;
+        display: grid;
+        gap: 1.1rem;
+        pointer-events: auto;
+      }
+
+      .control-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 0.85rem;
+      }
+
+      .control {
+        position: relative;
+        padding: 0.85rem;
+        border-radius: 16px;
+        background: rgba(6, 18, 44, 0.68);
+        border: 1px solid rgba(120, 230, 255, 0.24);
+        display: grid;
+        gap: 0.55rem;
+        align-content: center;
+      }
+
+      .control .label {
+        font-size: 0.75rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(190, 230, 255, 0.78);
+      }
+
+      .control .value {
+        font-family: "Share Tech Mono", "Rajdhani", monospace;
+        font-size: 0.95rem;
+        letter-spacing: 0.12em;
+        color: #9af0ff;
+      }
+
+      .dial-face {
+        width: 100%;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        position: relative;
+        background: radial-gradient(
+          circle at 50% 50%,
+          rgba(30, 62, 104, 0.9),
+          rgba(10, 26, 54, 0.8)
+        );
+        border: 1px solid rgba(140, 255, 255, 0.18);
+      }
+
+      .dial-face::before,
+      .dial-face::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+      }
+
+      .dial-face::before {
+        inset: 18%;
+        border: 1px dashed rgba(120, 200, 255, 0.35);
+        opacity: 0.6;
+      }
+
+      .dial-face::after {
+        width: 2px;
+        height: 32%;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.65),
+          rgba(120, 255, 255, 0.8)
+        );
+        top: 18%;
+        left: calc(50% - 1px);
+        transform-origin: 50% 100%;
+        transform: rotate(var(--dial-rotation, -135deg));
+        border-radius: 2px;
+        box-shadow: 0 0 12px rgba(120, 255, 255, 0.6);
+      }
+
+      .dial-face input[type="range"] {
+        position: absolute;
+        inset: 0;
+        margin: 0;
+        opacity: 0;
+        cursor: pointer;
+      }
+      .slider-track {
+        position: relative;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(28, 66, 120, 0.4);
+        overflow: hidden;
+      }
+
+      .slider-track::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          90deg,
+          rgba(120, 230, 255, 0.9),
+          rgba(140, 120, 255, 0.85)
+        );
+        width: var(--slider-progress, 50%);
+        border-radius: inherit;
+        box-shadow: 0 0 18px rgba(120, 230, 255, 0.55);
+      }
+
+      .slider input[type="range"] {
+        appearance: none;
+        width: 100%;
+        background: transparent;
+        height: 18px;
+        margin: 0;
+        cursor: pointer;
+      }
+
+      .slider input[type="range"]::-webkit-slider-thumb {
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: radial-gradient(circle, #9ffcff, #4d9cff);
+        box-shadow: 0 0 18px rgba(120, 255, 255, 0.9);
+        border: none;
+      }
+
+      .slider input[type="range"]::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: radial-gradient(circle, #9ffcff, #4d9cff);
+        box-shadow: 0 0 18px rgba(120, 255, 255, 0.9);
+        border: none;
+      }
+
+      .toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.8rem;
+        padding: 0.75rem 1rem;
+        border-radius: 999px;
+        background: rgba(8, 24, 54, 0.68);
+        border: 1px solid rgba(110, 220, 255, 0.25);
+        font-size: 0.78rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(205, 240, 255, 0.75);
+      }
+
+      .toggle input {
+        appearance: none;
+        width: 42px;
+        height: 22px;
+        border-radius: 999px;
+        border: 1px solid rgba(110, 220, 255, 0.32);
+        background: rgba(16, 40, 74, 0.7);
+        position: relative;
+        cursor: pointer;
+        transition: background 0.3s ease;
+      }
+
+      .toggle input::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: linear-gradient(130deg, #8ffbff, #5d99ff);
+        box-shadow: 0 0 12px rgba(120, 240, 255, 0.6);
+        transition: transform 0.3s ease;
+      }
+
+      .toggle input:checked {
+        background: linear-gradient(
+          90deg,
+          rgba(120, 230, 255, 0.88),
+          rgba(140, 130, 255, 0.88)
+        );
+      }
+
+      .toggle input:checked::after {
+        transform: translateX(20px);
+      }
+
+      .actions {
+        display: flex;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+      }
+
+      .actions button {
+        font-family: inherit;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        padding: 0.6rem 1rem;
+        border-radius: 999px;
+        border: 1px solid rgba(120, 240, 255, 0.45);
+        background: rgba(10, 28, 58, 0.65);
+        color: rgba(210, 250, 255, 0.85);
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .actions button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(40, 120, 255, 0.35);
+      }
+
+      .telemetry {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 0.75rem;
+      }
+
+      .metric {
+        padding: 0.8rem;
+        border-radius: 14px;
+        background: rgba(6, 20, 46, 0.7);
+        border: 1px solid rgba(120, 240, 255, 0.18);
+        display: grid;
+        gap: 0.4rem;
+      }
+
+      .metric span {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: rgba(180, 220, 255, 0.6);
+      }
+
+      .metric strong {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 1.1rem;
+        color: #94f8ff;
+      }
+
+      footer {
+        margin-top: clamp(2.4rem, 4vw, 4rem);
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        color: rgba(160, 200, 240, 0.7);
+        font-size: 0.8rem;
+      }
+
+      footer .tag {
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      @media (max-width: 900px) {
+        .demo-card {
+          min-height: 420px;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .card-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="masthead">
+        <span class="badge">XR-9 Deep Survey &middot; Alien Horizons</span>
+        <h1>Flight Suite Demonstrator</h1>
+        <p>
+          Experience three simultaneous telemetry feeds exploring radically
+          different alien environments. Each viewport is a self-contained vessel
+          with bespoke controls, live-adjustable dials and sliders, and
+          autonomous logic tuned to its biome. Mix and match settings in real
+          time to sculpt the landscapes.
+        </p>
+      </header>
+
+      <main class="demo-grid">
+        <article class="demo-card" data-demo="nebula">
+          <canvas id="nebulaCanvas" class="view"></canvas>
+          <div class="overlay">
+            <div class="card-header">
+              <div class="title-block">
+                <span class="variant">Variant 01</span>
+                <h2>Nebula Runway</h2>
+              </div>
+              <span class="status-chip">Escort Wing Linked</span>
+            </div>
+
+            <section class="control-hub" id="nebulaControls">
+              <div class="control-row">
+                <div class="control dial" data-param="warp">
+                  <span class="label">Warp Shear</span>
+                  <div class="dial-face">
+                    <input
+                      type="range"
+                      min="0.3"
+                      max="1.4"
+                      step="0.01"
+                      value="0.82"
+                    />
+                  </div>
+                  <span class="value">0.82</span>
+                </div>
+                <div class="control dial" data-param="nebulaPulse">
+                  <span class="label">Veil Bloom</span>
+                  <div class="dial-face">
+                    <input
+                      type="range"
+                      min="0.4"
+                      max="1.4"
+                      step="0.01"
+                      value="0.9"
+                    />
+                  </div>
+                  <span class="value">0.90</span>
+                </div>
+                <div class="control dial" data-param="escortTightness">
+                  <span class="label">Escort Cohesion</span>
+                  <div class="dial-face">
+                    <input
+                      type="range"
+                      min="0.1"
+                      max="1.0"
+                      step="0.01"
+                      value="0.6"
+                    />
+                  </div>
+                  <span class="value">0.60</span>
+                </div>
+              </div>
+
+              <div class="control-row">
+                <div class="control slider" data-param="starSpeed">
+                  <span class="label">Starstream Velocity</span>
+                  <div class="slider-track"></div>
+                  <input
+                    type="range"
+                    min="0.2"
+                    max="1.3"
+                    step="0.01"
+                    value="0.58"
+                  />
+                  <span class="value">0.58</span>
+                </div>
+                <div class="control slider" data-param="droneSpin">
+                  <span class="label">Drone Spiral</span>
+                  <div class="slider-track"></div>
+                  <input
+                    type="range"
+                    min="0.2"
+                    max="1.5"
+                    step="0.01"
+                    value="0.74"
+                  />
+                  <span class="value">0.74</span>
+                </div>
+                <div class="control slider" data-param="riftGlow">
+                  <span class="label">Rift Luminosity</span>
+                  <div class="slider-track"></div>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="1.2"
+                    step="0.01"
+                    value="0.65"
+                  />
+                  <span class="value">0.65</span>
+                </div>
+              </div>
+
+              <div class="control-row">
+                <label class="toggle" data-param="autopilot">
+                  <span>Autopilot</span>
+                  <input type="checkbox" checked />
+                </label>
+                <label class="toggle" data-param="escortMode">
+                  <span>Escort Spiral</span>
+                  <input type="checkbox" checked />
+                </label>
+                <label class="toggle" data-param="shockwave">
+                  <span>Shockwave Surge</span>
+                  <input type="checkbox" />
+                </label>
+              </div>
+
+              <div class="actions">
+                <button type="button" data-action="nebula-randomize">
+                  Randomise Vectors
+                </button>
+                <button type="button" data-action="nebula-boost">
+                  Pulse Boost
+                </button>
+              </div>
+
+              <div class="telemetry">
+                <div class="metric">
+                  <span>Warp Factor</span>
+                  <strong data-output="warp">8.2</strong>
+                </div>
+                <div class="metric">
+                  <span>Escort Cohesion</span>
+                  <strong data-output="escort">60%</strong>
+                </div>
+                <div class="metric">
+                  <span>Nebula Bloom</span>
+                  <strong data-output="nebula">0.90</strong>
+                </div>
+                <div class="metric">
+                  <span>Starstream</span>
+                  <strong data-output="stream">0.58</strong>
+                </div>
+              </div>
+            </section>
+          </div>
+        </article>
+        <article class="demo-card" data-demo="crystal">
+          <canvas id="crystalCanvas" class="view"></canvas>
+          <div class="overlay">
+            <div class="card-header">
+              <div class="title-block">
+                <span class="variant">Variant 02</span>
+                <h2>Crystal Megalopolis</h2>
+              </div>
+              <span class="status-chip">Strata Towers Online</span>
+            </div>
+
+            <section class="control-hub" id="crystalControls">
+              <div class="control-row">
+                <div class="control dial" data-param="skylineDensity">
+                  <span class="label">Skyline Density</span>
+                  <div class="dial-face">
+                    <input
+                      type="range"
+                      min="0.4"
+                      max="1.4"
+                      step="0.01"
+                      value="0.96"
+                    />
+                  </div>
+                  <span class="value">0.96</span>
+                </div>
+                <div class="control dial" data-param="towerGlow">
+                  <span class="label">Tower Radiance</span>
+                  <div class="dial-face">
+                    <input
+                      type="range"
+                      min="0.4"
+                      max="1.5"
+                      step="0.01"
+                      value="1.05"
+                    />
+                  </div>
+                  <span class="value">1.05</span>
+                </div>
+                <div class="control dial" data-param="auroraSpan">
+                  <span class="label">Aurora Span</span>
+                  <div class="dial-face">
+                    <input
+                      type="range"
+                      min="0.2"
+                      max="1.2"
+                      step="0.01"
+                      value="0.72"
+                    />
+                  </div>
+                  <span class="value">0.72</span>
+                </div>
+              </div>
+
+              <div class="control-row">
+                <div class="control slider" data-param="trafficFlow">
+                  <span class="label">Traffic Flow</span>
+                  <div class="slider-track"></div>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="1.4"
+                    step="0.01"
+                    value="0.68"
+                  />
+                  <span class="value">0.68</span>
+                </div>
+                <div class="control slider" data-param="sentinelDrift">
+                  <span class="label">Sentinel Drift</span>
+                  <div class="slider-track"></div>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="1.3"
+                    step="0.01"
+                    value="0.56"
+                  />
+                  <span class="value">0.56</span>
+                </div>
+                <div class="control slider" data-param="gridPulse">
+                  <span class="label">Grid Pulse</span>
+                  <div class="slider-track"></div>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="1.2"
+                    step="0.01"
+                    value="0.64"
+                  />
+                  <span class="value">0.64</span>
+                </div>
+              </div>
+
+              <div class="control-row">
+                <label class="toggle" data-param="autopilot">
+                  <span>Auto Glide</span>
+                  <input type="checkbox" checked />
+                </label>
+                <label class="toggle" data-param="tremor">
+                  <span>Seismic Lift</span>
+                  <input type="checkbox" />
+                </label>
+                <label class="toggle" data-param="auroraFlux">
+                  <span>Aurora Flux</span>
+                  <input type="checkbox" checked />
+                </label>
+              </div>
+
+              <div class="actions">
+                <button type="button" data-action="crystal-scan">
+                  Trigger Skyline Scan
+                </button>
+                <button type="button" data-action="crystal-randomize">
+                  Re-seed Districts
+                </button>
+              </div>
+
+              <div class="telemetry">
+                <div class="metric">
+                  <span>Density Index</span>
+                  <strong data-output="density">0.96</strong>
+                </div>
+                <div class="metric">
+                  <span>Traffic Lanes</span>
+                  <strong data-output="traffic">0.68</strong>
+                </div>
+                <div class="metric">
+                  <span>Aurora Span</span>
+                  <strong data-output="aurora">0.72</strong>
+                </div>
+                <div class="metric">
+                  <span>Sentinel Drift</span>
+                  <strong data-output="sentinel">0.56</strong>
+                </div>
+              </div>
+            </section>
+          </div>
+        </article>
+        <article class="demo-card" data-demo="rift">
+          <canvas id="riftCanvas" class="view"></canvas>
+          <div class="overlay">
+            <div class="card-header">
+              <div class="title-block">
+                <span class="variant">Variant 03</span>
+                <h2>Quantum Rift Expanse</h2>
+              </div>
+              <span class="status-chip">Flux Containment Nominal</span>
+            </div>
+
+            <section class="control-hub" id="riftControls">
+              <div class="control-row">
+                <div class="control dial" data-param="riftStability">
+                  <span class="label">Rift Stability</span>
+                  <div class="dial-face">
+                    <input
+                      type="range"
+                      min="0.3"
+                      max="1.5"
+                      step="0.01"
+                      value="0.92"
+                    />
+                  </div>
+                  <span class="value">0.92</span>
+                </div>
+                <div class="control dial" data-param="portalTurbulence">
+                  <span class="label">Portal Turbulence</span>
+                  <div class="dial-face">
+                    <input
+                      type="range"
+                      min="0.2"
+                      max="1.6"
+                      step="0.01"
+                      value="1.1"
+                    />
+                  </div>
+                  <span class="value">1.10</span>
+                </div>
+                <div class="control dial" data-param="shardDensity">
+                  <span class="label">Shard Density</span>
+                  <div class="dial-face">
+                    <input
+                      type="range"
+                      min="0.1"
+                      max="1.2"
+                      step="0.01"
+                      value="0.58"
+                    />
+                  </div>
+                  <span class="value">0.58</span>
+                </div>
+              </div>
+
+              <div class="control-row">
+                <div class="control slider" data-param="streamVelocity">
+                  <span class="label">Flux Stream</span>
+                  <div class="slider-track"></div>
+                  <input
+                    type="range"
+                    min="0.2"
+                    max="1.4"
+                    step="0.01"
+                    value="0.72"
+                  />
+                  <span class="value">0.72</span>
+                </div>
+                <div class="control slider" data-param="haloCharge">
+                  <span class="label">Halo Charge</span>
+                  <div class="slider-track"></div>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="1.3"
+                    step="0.01"
+                    value="0.66"
+                  />
+                  <span class="value">0.66</span>
+                </div>
+                <div class="control slider" data-param="singularity">
+                  <span class="label">Singularity Spin</span>
+                  <div class="slider-track"></div>
+                  <input
+                    type="range"
+                    min="0.2"
+                    max="1.5"
+                    step="0.01"
+                    value="0.84"
+                  />
+                  <span class="value">0.84</span>
+                </div>
+              </div>
+
+              <div class="control-row">
+                <label class="toggle" data-param="autopilot">
+                  <span>Auto Orbit</span>
+                  <input type="checkbox" checked />
+                </label>
+                <label class="toggle" data-param="fluxLock">
+                  <span>Flux Lock</span>
+                  <input type="checkbox" />
+                </label>
+                <label class="toggle" data-param="riftEchoes">
+                  <span>Rift Echoes</span>
+                  <input type="checkbox" checked />
+                </label>
+              </div>
+
+              <div class="actions">
+                <button type="button" data-action="rift-collapse">
+                  Stabilise Core
+                </button>
+                <button type="button" data-action="rift-randomize">
+                  Resequence Flux
+                </button>
+              </div>
+
+              <div class="telemetry">
+                <div class="metric">
+                  <span>Rift Phase</span>
+                  <strong data-output="rift">0.92</strong>
+                </div>
+                <div class="metric">
+                  <span>Stream Velocity</span>
+                  <strong data-output="stream">0.72</strong>
+                </div>
+                <div class="metric">
+                  <span>Shard Field</span>
+                  <strong data-output="shards">0.58</strong>
+                </div>
+                <div class="metric">
+                  <span>Halo Charge</span>
+                  <strong data-output="halo">0.66</strong>
+                </div>
+              </div>
+            </section>
+          </div>
+        </article>
+      </main>
+
+      <footer>
+        <span class="tag"
+          >XR-9 Mission Control &mdash; Multiview Flight Deck</span
+        >
+        <span
+          >Adjustments propagate instantly across each renderer. Combine
+          autopilot with manual overrides for emergent vistas.</span
+        >
+      </footer>
+    </div>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"
+      integrity="sha512-UoL10TWjQJJvYjOz43rxPvo6nEloxGIYsFioCZoqWVbL4zSfnxuuYgFRJYkYjxbNq/71tNd1IaFuyKxsfwWhmw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script>
+      (() => {
+        const demos = [];
+
+        class AlienDemo {
+          constructor({ canvas, controls, variant }) {
+            this.canvas = canvas;
+            this.controlsRoot = controls;
+            this.variant = variant;
+            this.renderer = new THREE.WebGLRenderer({
+              canvas: this.canvas,
+              antialias: true,
+              alpha: true,
+            });
+            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            this.scene = new THREE.Scene();
+            this.camera = new THREE.PerspectiveCamera(62, 1, 0.1, 2000);
+            this.camera.position.set(0, 4.5, 16);
+            this.params = this.createDefaultParams();
+            this.objects = {};
+            this.outputs = {};
+            this.controlElements = {};
+            this.lastTime = 0;
+            this.setupScene();
+            this.registerControls();
+            this.handleResize();
+            this.boundResize = () => this.handleResize();
+            window.addEventListener("resize", this.boundResize);
+            this.resizeObserver = new ResizeObserver(() => this.handleResize());
+            this.resizeObserver.observe(this.canvas);
+          }
+
+          createDefaultParams() {
+            switch (this.variant) {
+              case "nebula":
+                return {
+                  warp: 0.82,
+                  nebulaPulse: 0.9,
+                  escortTightness: 0.6,
+                  starSpeed: 0.58,
+                  droneSpin: 0.74,
+                  riftGlow: 0.65,
+                  autopilot: true,
+                  escortMode: true,
+                  shockwave: false,
+                };
+              case "crystal":
+                return {
+                  skylineDensity: 0.96,
+                  towerGlow: 1.05,
+                  auroraSpan: 0.72,
+                  trafficFlow: 0.68,
+                  sentinelDrift: 0.56,
+                  gridPulse: 0.64,
+                  autopilot: true,
+                  tremor: false,
+                  auroraFlux: true,
+                };
+              case "rift":
+                return {
+                  riftStability: 0.92,
+                  portalTurbulence: 1.1,
+                  shardDensity: 0.58,
+                  streamVelocity: 0.72,
+                  haloCharge: 0.66,
+                  singularity: 0.84,
+                  autopilot: true,
+                  fluxLock: false,
+                  riftEchoes: true,
+                };
+              default:
+                return {};
+            }
+          }
+          setupScene() {
+            if (this.variant === "nebula") {
+              this.setupNebulaScene();
+            } else if (this.variant === "crystal") {
+              this.setupCrystalScene();
+            } else if (this.variant === "rift") {
+              this.setupRiftScene();
+            }
+          }
+
+          registerControls() {
+            if (!this.controlsRoot) return;
+            const rangeControls = this.controlsRoot.querySelectorAll(
+              '.control[data-param] input[type="range"]'
+            );
+            rangeControls.forEach((input) => {
+              const control = input.closest(".control");
+              const param = control.dataset.param;
+              const type = control.classList.contains("dial")
+                ? "dial"
+                : "slider";
+              const descriptor = {
+                element: control,
+                input,
+                type,
+                min: parseFloat(input.min),
+                max: parseFloat(input.max),
+              };
+              this.controlElements[param] = descriptor;
+              if (this.params[param] !== undefined) {
+                input.value = this.params[param];
+              } else {
+                this.params[param] = parseFloat(input.value);
+              }
+              this.updateRangeVisual(param);
+              input.addEventListener("input", () => {
+                this.params[param] = parseFloat(input.value);
+                this.updateRangeVisual(param);
+              });
+            });
+
+            const toggles = this.controlsRoot.querySelectorAll(
+              '.toggle[data-param] input[type="checkbox"]'
+            );
+            toggles.forEach((input) => {
+              const control = input.closest(".toggle");
+              const param = control.dataset.param;
+              const descriptor = { element: control, input, type: "toggle" };
+              this.controlElements[param] = descriptor;
+              if (this.params[param] !== undefined) {
+                input.checked = !!this.params[param];
+              } else {
+                this.params[param] = input.checked;
+              }
+              this.updateToggleVisual(param);
+              input.addEventListener("change", () => {
+                this.params[param] = input.checked;
+                this.updateToggleVisual(param);
+              });
+            });
+
+            this.controlsRoot
+              .querySelectorAll("[data-output]")
+              .forEach((el) => {
+                this.outputs[el.dataset.output] = el;
+              });
+
+            this.controlsRoot
+              .querySelectorAll("[data-action]")
+              .forEach((btn) => {
+                btn.addEventListener("click", () =>
+                  this.handleAction(btn.dataset.action)
+                );
+              });
+          }
+
+          updateRangeVisual(param) {
+            const descriptor = this.controlElements[param];
+            if (!descriptor) return;
+            const { element, input, min, max, type } = descriptor;
+            const value = parseFloat(input.value);
+            const normalized = (value - min) / (max - min);
+            const label = element.querySelector(".value");
+            if (label) {
+              label.textContent = value.toFixed(2);
+            }
+            if (type === "dial") {
+              const rotation = normalized * 270 - 135;
+              const face = element.querySelector(".dial-face");
+              if (face) {
+                face.style.setProperty("--dial-rotation", `${rotation}deg`);
+              }
+            } else {
+              element.style.setProperty(
+                "--slider-progress",
+                `${(normalized * 100).toFixed(1)}%`
+              );
+            }
+          }
+
+          updateToggleVisual(param) {
+            const descriptor = this.controlElements[param];
+            if (!descriptor) return;
+            const { element, input } = descriptor;
+            if (element) {
+              element.classList.toggle("is-active", input.checked);
+            }
+          }
+
+          handleAction(action) {
+            if (action === "nebula-randomize") {
+              this.randomizeParams([
+                "warp",
+                "nebulaPulse",
+                "escortTightness",
+                "starSpeed",
+                "droneSpin",
+                "riftGlow",
+              ]);
+            } else if (action === "nebula-boost") {
+              this.triggerNebulaBoost();
+            } else if (action === "crystal-scan") {
+              this.triggerCrystalScan();
+            } else if (action === "crystal-randomize") {
+              this.randomizeParams([
+                "skylineDensity",
+                "towerGlow",
+                "auroraSpan",
+                "trafficFlow",
+                "sentinelDrift",
+                "gridPulse",
+              ]);
+            } else if (action === "rift-collapse") {
+              this.triggerRiftCollapse();
+            } else if (action === "rift-randomize") {
+              this.randomizeParams([
+                "riftStability",
+                "portalTurbulence",
+                "shardDensity",
+                "streamVelocity",
+                "haloCharge",
+                "singularity",
+              ]);
+            }
+          }
+
+          randomizeParams(paramList) {
+            paramList.forEach((param) => {
+              const descriptor = this.controlElements[param];
+              if (!descriptor) return;
+              const randomValue =
+                descriptor.min +
+                Math.random() * (descriptor.max - descriptor.min);
+              this.params[param] = parseFloat(randomValue.toFixed(2));
+              descriptor.input.value = this.params[param];
+              this.updateRangeVisual(param);
+            });
+          }
+
+          triggerNebulaBoost() {
+            if (this.objects.warpBurst) {
+              this.objects.warpBurst.strength = 1.0;
+            }
+          }
+
+          triggerCrystalScan() {
+            if (this.objects.scanPulse) {
+              this.objects.scanPulse.strength = 1.0;
+            }
+          }
+
+          triggerRiftCollapse() {
+            if (this.objects.collapsePulse) {
+              this.objects.collapsePulse.strength = 1.0;
+            }
+          }
+          setupNebulaScene() {
+            this.scene.fog = new THREE.FogExp2(0x040016, 0.012);
+            const ambient = new THREE.AmbientLight(0x4d7bff, 0.4);
+            this.scene.add(ambient);
+            const dir = new THREE.DirectionalLight(0x7efaff, 1.1);
+            dir.position.set(12, 24, 18);
+            this.scene.add(dir);
+
+            const starCount = 2200;
+            const positions = new Float32Array(starCount * 3);
+            const colors = new Float32Array(starCount * 3);
+            const speeds = new Float32Array(starCount);
+            for (let i = 0; i < starCount; i++) {
+              const i3 = i * 3;
+              positions[i3] = (Math.random() - 0.5) * 160;
+              positions[i3 + 1] = (Math.random() - 0.5) * 140;
+              positions[i3 + 2] = -Math.random() * 320;
+              const col = new THREE.Color().setHSL(
+                0.58 + Math.random() * 0.12,
+                0.85,
+                0.55 + Math.random() * 0.2
+              );
+              colors[i3] = col.r;
+              colors[i3 + 1] = col.g;
+              colors[i3 + 2] = col.b;
+              speeds[i] = 35 + Math.random() * 55;
+            }
+            const starGeometry = new THREE.BufferGeometry();
+            starGeometry.setAttribute(
+              "position",
+              new THREE.BufferAttribute(positions, 3)
+            );
+            starGeometry.setAttribute(
+              "color",
+              new THREE.BufferAttribute(colors, 3)
+            );
+            const starMaterial = new THREE.PointsMaterial({
+              size: 0.9,
+              vertexColors: true,
+              transparent: true,
+              depthWrite: false,
+              blending: THREE.AdditiveBlending,
+            });
+            const starfield = new THREE.Points(starGeometry, starMaterial);
+            this.scene.add(starfield);
+
+            const nebulaUniforms = {
+              time: { value: 0 },
+              pulse: { value: this.params.nebulaPulse },
+              warp: { value: this.params.warp },
+            };
+            const nebulaMaterial = new THREE.ShaderMaterial({
+              uniforms: nebulaUniforms,
+              transparent: true,
+              side: THREE.BackSide,
+              blending: THREE.AdditiveBlending,
+              vertexShader: `
+                            varying vec3 vPosition;
+                            void main() {
+                                vPosition = position;
+                                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                                gl_Position = projectionMatrix * mvPosition;
+                            }
+                        `,
+              fragmentShader: `
+                            varying vec3 vPosition;
+                            uniform float time;
+                            uniform float pulse;
+                            uniform float warp;
+                            void main() {
+                                float radius = length(vPosition) * 0.018;
+                                float glow = sin(radius * 4.0 - time * 0.6) * 0.5 + 0.5;
+                                float band = sin(vPosition.y * 0.05 + time * 0.7 + warp * 2.0);
+                                float veil = smoothstep(0.2, 1.2, glow + band * 0.35);
+                                float intensity = clamp(veil * pulse, 0.0, 1.0);
+                                vec3 colour = mix(vec3(0.04, 0.12, 0.3), vec3(0.4, 0.8, 1.0), intensity);
+                                gl_FragColor = vec4(colour, intensity * 0.55);
+                            }
+                        `,
+            });
+            const nebula = new THREE.Mesh(
+              new THREE.SphereGeometry(160, 64, 64),
+              nebulaMaterial
+            );
+            this.scene.add(nebula);
+
+            const droneGeo = new THREE.SphereGeometry(0.22, 12, 12);
+            const droneMat = new THREE.MeshBasicMaterial({
+              color: 0x8ff6ff,
+              transparent: true,
+              opacity: 0.9,
+            });
+            const droneCount = 80;
+            const droneMesh = new THREE.InstancedMesh(
+              droneGeo,
+              droneMat,
+              droneCount
+            );
+            this.scene.add(droneMesh);
+            const droneData = [];
+            for (let i = 0; i < droneCount; i++) {
+              droneData.push({
+                angle: Math.random() * Math.PI * 2,
+                radius: 4 + Math.random() * 6,
+                vertical: (Math.random() - 0.5) * 4,
+                speed: 0.6 + Math.random() * 1.6,
+                flutter: Math.random() * 2,
+              });
+            }
+
+            const pathCurve = new THREE.CatmullRomCurve3([
+              new THREE.Vector3(-6, 2, -16),
+              new THREE.Vector3(-2, 0, -10),
+              new THREE.Vector3(0, 0, -4),
+              new THREE.Vector3(4, 1.5, -12),
+              new THREE.Vector3(2, -1.5, -22),
+              new THREE.Vector3(-2, 0.5, -28),
+            ]);
+            const pathGeometry = new THREE.TubeGeometry(
+              pathCurve,
+              240,
+              0.08,
+              8,
+              false
+            );
+            const pathMaterial = new THREE.MeshBasicMaterial({
+              color: 0x64faff,
+              transparent: true,
+              opacity: 0.7,
+            });
+            const flightPath = new THREE.Mesh(pathGeometry, pathMaterial);
+            this.scene.add(flightPath);
+
+            const warpBurst = { strength: 0 };
+
+            this.objects.starfield = {
+              geometry: starGeometry,
+              positions,
+              speeds,
+              count: starCount,
+            };
+            this.objects.nebula = { mesh: nebula, uniforms: nebulaUniforms };
+            this.objects.drones = {
+              mesh: droneMesh,
+              data: droneData,
+              dummy: new THREE.Object3D(),
+            };
+            this.objects.flightPath = flightPath;
+            this.objects.warpBurst = warpBurst;
+          }
+          setupCrystalScene() {
+            this.scene.fog = new THREE.FogExp2(0x030914, 0.035);
+            const ambient = new THREE.AmbientLight(0x4ca0ff, 0.28);
+            this.scene.add(ambient);
+            const hemi = new THREE.HemisphereLight(0x61f7ff, 0x02030b, 0.85);
+            this.scene.add(hemi);
+            const spot = new THREE.SpotLight(
+              0xffa26b,
+              0.9,
+              0,
+              Math.PI / 6,
+              0.4,
+              1.5
+            );
+            spot.position.set(12, 30, 6);
+            this.scene.add(spot);
+
+            const ground = new THREE.Mesh(
+              new THREE.PlaneGeometry(140, 140, 1, 1),
+              new THREE.MeshStandardMaterial({
+                color: 0x050b18,
+                metalness: 0.8,
+                roughness: 0.12,
+                emissive: 0x041b40,
+                emissiveIntensity: 0.4,
+              })
+            );
+            ground.rotation.x = -Math.PI / 2;
+            this.scene.add(ground);
+
+            const buildingGeo = new THREE.BoxGeometry(1, 1, 1);
+            const buildingMat = new THREE.MeshStandardMaterial({
+              color: 0x102054,
+              metalness: 0.6,
+              roughness: 0.2,
+              emissive: 0x2cc8ff,
+              emissiveIntensity: 0.5,
+            });
+            const buildingCount = 320;
+            const buildings = new THREE.InstancedMesh(
+              buildingGeo,
+              buildingMat,
+              buildingCount
+            );
+            this.scene.add(buildings);
+            const buildingData = [];
+            const dummy = new THREE.Object3D();
+            for (let i = 0; i < buildingCount; i++) {
+              const radius = Math.random() * 46 - 23;
+              const angle = Math.random() * Math.PI * 2;
+              const dist = 8 + Math.random() * 32;
+              const x = Math.cos(angle) * dist;
+              const z = Math.sin(angle) * dist;
+              const baseHeight = 1 + Math.random() * 12;
+              dummy.position.set(x, baseHeight / 2, z);
+              dummy.scale.set(
+                0.8 + Math.random() * 0.6,
+                baseHeight,
+                0.8 + Math.random() * 0.6
+              );
+              dummy.rotation.y = Math.random() * Math.PI;
+              dummy.updateMatrix();
+              buildings.setMatrixAt(i, dummy.matrix);
+              buildingData.push({
+                x,
+                z,
+                baseHeight,
+                pulseOffset: Math.random() * Math.PI * 2,
+                shimmer: 0.4 + Math.random() * 0.6,
+              });
+            }
+
+            const trafficCount = 280;
+            const trafficPositions = new Float32Array(trafficCount * 3);
+            const trafficSpeeds = new Float32Array(trafficCount);
+            for (let i = 0; i < trafficCount; i++) {
+              const laneRadius = 6 + Math.random() * 28;
+              const angle = Math.random() * Math.PI * 2;
+              trafficPositions[i * 3] = Math.cos(angle) * laneRadius;
+              trafficPositions[i * 3 + 1] = 1.8 + Math.random() * 2;
+              trafficPositions[i * 3 + 2] = Math.sin(angle) * laneRadius;
+              trafficSpeeds[i] = 0.6 + Math.random() * 1.8;
+            }
+            const trafficGeometry = new THREE.BufferGeometry();
+            trafficGeometry.setAttribute(
+              "position",
+              new THREE.BufferAttribute(trafficPositions, 3)
+            );
+            const trafficMaterial = new THREE.PointsMaterial({
+              size: 0.18,
+              color: 0xffb580,
+              transparent: true,
+              blending: THREE.AdditiveBlending,
+              depthWrite: false,
+            });
+            const traffic = new THREE.Points(trafficGeometry, trafficMaterial);
+            this.scene.add(traffic);
+
+            const auroraUniforms = {
+              time: { value: 0 },
+              span: { value: this.params.auroraSpan },
+            };
+            const auroraMaterial = new THREE.ShaderMaterial({
+              transparent: true,
+              side: THREE.DoubleSide,
+              uniforms: auroraUniforms,
+              blending: THREE.AdditiveBlending,
+              vertexShader: `
+                            varying vec2 vUv;
+                            void main() {
+                                vUv = uv;
+                                vec3 pos = position;
+                                pos.y += sin(uv.x * 10.0) * 0.2;
+                                gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+                            }
+                        `,
+              fragmentShader: `
+                            varying vec2 vUv;
+                            uniform float time;
+                            uniform float span;
+                            void main() {
+                                float wave = sin(vUv.x * 14.0 + time * 1.2) * 0.5 + 0.5;
+                                float glow = smoothstep(0.0, 0.45 + span * 0.4, 1.0 - abs(vUv.y * 2.0 - 1.0));
+                                vec3 colour = mix(vec3(0.05, 0.2, 0.5), vec3(0.6, 0.9, 1.0), wave * glow);
+                                float alpha = glow * (0.35 + span * 0.3);
+                                gl_FragColor = vec4(colour, alpha);
+                            }
+                        `,
+            });
+            const aurora = new THREE.Mesh(
+              new THREE.PlaneGeometry(42, 12, 32, 8),
+              auroraMaterial
+            );
+            aurora.position.set(0, 10, -18);
+            aurora.rotation.y = Math.PI;
+            this.scene.add(aurora);
+
+            const sentinel = new THREE.Mesh(
+              new THREE.IcosahedronGeometry(1.2, 1),
+              new THREE.MeshStandardMaterial({
+                color: 0x62f8ff,
+                metalness: 0.8,
+                roughness: 0.15,
+                emissive: 0x1e99ff,
+                emissiveIntensity: 0.9,
+              })
+            );
+            sentinel.position.set(0, 6, 12);
+            this.scene.add(sentinel);
+
+            const scanPulse = { strength: 0 };
+
+            this.objects.buildings = {
+              mesh: buildings,
+              data: buildingData,
+              dummy,
+            };
+            this.objects.traffic = {
+              geometry: trafficGeometry,
+              positions: trafficPositions,
+              speeds: trafficSpeeds,
+            };
+            this.objects.aurora = { mesh: aurora, uniforms: auroraUniforms };
+            this.objects.sentinel = sentinel;
+            this.objects.scanPulse = scanPulse;
+          }
+          setupRiftScene() {
+            this.scene.fog = new THREE.FogExp2(0x070012, 0.016);
+            const ambient = new THREE.AmbientLight(0x8fb8ff, 0.32);
+            this.scene.add(ambient);
+            const point = new THREE.PointLight(0xff64f6, 2.4, 0, 2.0);
+            point.position.set(0, 4, 0);
+            this.scene.add(point);
+            const rim = new THREE.PointLight(0x64c8ff, 1.6, 0, 2.2);
+            rim.position.set(-6, 8, -10);
+            this.scene.add(rim);
+
+            const platform = new THREE.Mesh(
+              new THREE.CylinderGeometry(9, 13, 1.4, 32, 1, true),
+              new THREE.MeshStandardMaterial({
+                color: 0x0d0424,
+                metalness: 0.7,
+                roughness: 0.2,
+                emissive: 0x341466,
+                emissiveIntensity: 0.6,
+                side: THREE.DoubleSide,
+              })
+            );
+            platform.rotation.x = Math.PI / 2;
+            platform.position.y = -2.8;
+            this.scene.add(platform);
+
+            const portalUniforms = {
+              time: { value: 0 },
+              turbulence: { value: this.params.portalTurbulence },
+              glow: { value: this.params.haloCharge },
+            };
+            const portalMaterial = new THREE.ShaderMaterial({
+              uniforms: portalUniforms,
+              transparent: true,
+              side: THREE.DoubleSide,
+              blending: THREE.AdditiveBlending,
+              vertexShader: `
+                            varying vec2 vUv;
+                            void main() {
+                                vUv = uv;
+                                vec3 pos = position;
+                                float ripple = sin(uv.x * 12.0 + uv.y * 18.0);
+                                pos.z += ripple * 0.3;
+                                gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+                            }
+                        `,
+              fragmentShader: `
+                            varying vec2 vUv;
+                            uniform float time;
+                            uniform float turbulence;
+                            uniform float glow;
+                            void main() {
+                                float r = length(vUv - 0.5) * 2.0;
+                                float wave = sin((r * 7.0 - time * 1.4) + turbulence * 2.0);
+                                float intensity = smoothstep(1.4, 0.0, r) * (0.4 + glow * 0.6);
+                                vec3 colour = mix(vec3(0.2, 0.0, 0.4), vec3(0.9, 0.4, 1.0), intensity + wave * 0.2);
+                                gl_FragColor = vec4(colour, intensity);
+                            }
+                        `,
+            });
+            const portal = new THREE.Mesh(
+              new THREE.TorusGeometry(6, 0.6, 32, 256),
+              portalMaterial
+            );
+            portal.rotation.x = Math.PI / 2;
+            this.scene.add(portal);
+
+            const shardCount = 260;
+            const shardGeo = new THREE.IcosahedronGeometry(0.34, 0);
+            const shardMat = new THREE.MeshStandardMaterial({
+              color: 0x8af8ff,
+              emissive: 0x3654ff,
+              emissiveIntensity: 0.8,
+              roughness: 0.25,
+              metalness: 0.75,
+            });
+            const shards = new THREE.InstancedMesh(
+              shardGeo,
+              shardMat,
+              shardCount
+            );
+            const shardData = [];
+            const dummy = new THREE.Object3D();
+            for (let i = 0; i < shardCount; i++) {
+              const radius = 7 + Math.random() * 20;
+              const angle = Math.random() * Math.PI * 2;
+              const y = (Math.random() - 0.5) * 12;
+              dummy.position.set(
+                Math.cos(angle) * radius,
+                y,
+                Math.sin(angle) * radius
+              );
+              dummy.scale.setScalar(0.4 + Math.random() * 1.2);
+              dummy.rotation.set(
+                Math.random() * Math.PI,
+                Math.random() * Math.PI,
+                Math.random() * Math.PI
+              );
+              dummy.updateMatrix();
+              shards.setMatrixAt(i, dummy.matrix);
+              shardData.push({
+                radius,
+                angle,
+                vertical: y,
+                speed: 0.2 + Math.random() * 0.8,
+                wobble: Math.random() * Math.PI * 2,
+              });
+            }
+            this.scene.add(shards);
+
+            const streamCount = 400;
+            const streamPositions = new Float32Array(streamCount * 3);
+            const streamSpeeds = new Float32Array(streamCount);
+            for (let i = 0; i < streamCount; i++) {
+              const r = 3 + Math.random() * 12;
+              const angle = Math.random() * Math.PI * 2;
+              const height = (Math.random() - 0.5) * 10;
+              streamPositions[i * 3] = Math.cos(angle) * r;
+              streamPositions[i * 3 + 1] = height;
+              streamPositions[i * 3 + 2] = Math.sin(angle) * r;
+              streamSpeeds[i] = 0.8 + Math.random() * 1.6;
+            }
+            const streamGeometry = new THREE.BufferGeometry();
+            streamGeometry.setAttribute(
+              "position",
+              new THREE.BufferAttribute(streamPositions, 3)
+            );
+            const streamMaterial = new THREE.PointsMaterial({
+              size: 0.2,
+              color: 0xff78f6,
+              transparent: true,
+              blending: THREE.AdditiveBlending,
+              depthWrite: false,
+            });
+            const stream = new THREE.Points(streamGeometry, streamMaterial);
+            this.scene.add(stream);
+
+            const collapsePulse = { strength: 0 };
+
+            this.objects.portal = { mesh: portal, uniforms: portalUniforms };
+            this.objects.shards = { mesh: shards, data: shardData, dummy };
+            this.objects.stream = {
+              geometry: streamGeometry,
+              positions: streamPositions,
+              speeds: streamSpeeds,
+            };
+            this.objects.collapsePulse = collapsePulse;
+          }
+          handleResize() {
+            const width = this.canvas.clientWidth;
+            const height = this.canvas.clientHeight;
+            if (width === 0 || height === 0) return;
+            this.renderer.setSize(width, height, false);
+            this.camera.aspect = width / height;
+            this.camera.updateProjectionMatrix();
+          }
+
+          update(time) {
+            const delta = this.lastTime
+              ? Math.min(time - this.lastTime, 0.12)
+              : 0;
+            this.lastTime = time;
+            if (this.variant === "nebula") {
+              this.updateNebula(time, delta);
+            } else if (this.variant === "crystal") {
+              this.updateCrystal(time, delta);
+            } else if (this.variant === "rift") {
+              this.updateRift(time, delta);
+            }
+            this.renderer.render(this.scene, this.camera);
+          }
+          updateNebula(time, delta) {
+            const starfield = this.objects.starfield;
+            if (starfield) {
+              const { positions, speeds, geometry } = starfield;
+              for (let i = 0; i < positions.length; i += 3) {
+                const speed =
+                  speeds[i / 3] * (this.params.starSpeed * 0.8 + 0.4);
+                positions[i + 2] += speed * delta;
+                if (positions[i + 2] > 12) {
+                  positions[i] = (Math.random() - 0.5) * 160;
+                  positions[i + 1] = (Math.random() - 0.5) * 120;
+                  positions[i + 2] = -320;
+                }
+              }
+              geometry.attributes.position.needsUpdate = true;
+            }
+
+            const nebula = this.objects.nebula;
+            if (nebula) {
+              nebula.uniforms.time.value = time;
+              nebula.uniforms.pulse.value =
+                this.params.nebulaPulse +
+                (this.objects.warpBurst?.strength || 0) * 0.6;
+              nebula.uniforms.warp.value = this.params.warp;
+              nebula.mesh.rotation.y +=
+                0.02 * delta * (1 + this.params.warp * 0.6);
+              nebula.mesh.rotation.x = Math.sin(time * 0.28) * 0.06;
+            }
+
+            const drones = this.objects.drones;
+            if (drones) {
+              const { mesh, data, dummy } = drones;
+              const cohesion = this.params.escortTightness;
+              data.forEach((item, index) => {
+                const radius = 3 + item.radius * (1 - cohesion * 0.6);
+                const height =
+                  item.vertical +
+                  Math.sin(time * item.speed + item.flutter) *
+                    0.8 *
+                    this.params.droneSpin;
+                const angle =
+                  item.angle +
+                  time * item.speed * (this.params.escortMode ? 1 : -0.6);
+                dummy.position.set(
+                  Math.cos(angle) * radius,
+                  height,
+                  Math.sin(angle) * radius - 10
+                );
+                dummy.scale.setScalar(
+                  0.7 + Math.sin(time * 1.2 + item.flutter) * 0.12
+                );
+                dummy.lookAt(0, 0, -20);
+                dummy.updateMatrix();
+                mesh.setMatrixAt(index, dummy.matrix);
+              });
+              mesh.instanceMatrix.needsUpdate = true;
+            }
+
+            if (
+              this.params.shockwave &&
+              this.objects.warpBurst.strength < 0.001
+            ) {
+              this.objects.warpBurst.strength = 0.35;
+            }
+
+            if (this.objects.warpBurst) {
+              const burst = this.objects.warpBurst;
+              if (burst.strength > 0) {
+                burst.strength *= 0.92;
+                this.camera.position.z = 15 - burst.strength * 6;
+              } else {
+                this.camera.position.z = 15 - this.params.warp * 2.2;
+              }
+            }
+
+            if (this.params.autopilot) {
+              const sway = Math.sin(time * 0.42) * this.params.warp * 2.1;
+              this.camera.position.x = sway;
+              this.camera.position.y = 3.2 + Math.sin(time * 0.7) * 0.8;
+              this.camera.lookAt(0, 0, -12);
+            }
+
+            if (this.outputs.warp) {
+              this.outputs.warp.textContent = (this.params.warp * 9.5).toFixed(
+                2
+              );
+            }
+            if (this.outputs.escort) {
+              this.outputs.escort.textContent = `${Math.round(
+                this.params.escortTightness * 100
+              )}%`;
+            }
+            if (this.outputs.nebula) {
+              this.outputs.nebula.textContent =
+                this.params.nebulaPulse.toFixed(2);
+            }
+            if (this.outputs.stream) {
+              this.outputs.stream.textContent =
+                this.params.starSpeed.toFixed(2);
+            }
+          }
+          updateCrystal(time, delta) {
+            const buildings = this.objects.buildings;
+            if (buildings) {
+              const { mesh, data, dummy } = buildings;
+              const density = this.params.skylineDensity;
+              data.forEach((item, index) => {
+                const pulse =
+                  Math.sin(time * 0.8 + item.pulseOffset) * 0.5 + 0.5;
+                const height =
+                  item.baseHeight * (0.8 + density * 0.6 + pulse * 0.4);
+                dummy.position.set(item.x, height / 2, item.z);
+                dummy.scale.set(
+                  0.8 + item.shimmer * 0.2,
+                  height,
+                  0.8 + item.shimmer * 0.2
+                );
+                dummy.rotation.y +=
+                  0.0006 * delta * (this.params.gridPulse + 0.4);
+                dummy.updateMatrix();
+                mesh.setMatrixAt(index, dummy.matrix);
+              });
+              mesh.instanceMatrix.needsUpdate = true;
+            }
+
+            const traffic = this.objects.traffic;
+            if (traffic) {
+              const { positions, speeds, geometry } = traffic;
+              for (let i = 0; i < positions.length; i += 3) {
+                const radius = Math.sqrt(
+                  positions[i] * positions[i] +
+                    positions[i + 2] * positions[i + 2]
+                );
+                const angle = Math.atan2(positions[i + 2], positions[i]);
+                const speed = speeds[i / 3] * (0.4 + this.params.trafficFlow);
+                const newAngle = angle + speed * delta * 0.6;
+                positions[i] = Math.cos(newAngle) * radius;
+                positions[i + 2] = Math.sin(newAngle) * radius;
+                positions[i + 1] =
+                  1.6 + Math.sin(time * 1.2 + radius * 0.2) * 0.4;
+              }
+              geometry.attributes.position.needsUpdate = true;
+            }
+
+            const aurora = this.objects.aurora;
+            if (aurora) {
+              aurora.uniforms.time.value = time;
+              aurora.uniforms.span.value = this.params.auroraFlux
+                ? this.params.auroraSpan
+                : this.params.auroraSpan * 0.4;
+              aurora.mesh.rotation.y = Math.PI + Math.sin(time * 0.12) * 0.2;
+            }
+
+            const sentinel = this.objects.sentinel;
+            if (sentinel) {
+              sentinel.rotation.y +=
+                0.25 * delta * (this.params.sentinelDrift + 0.6);
+              sentinel.position.y =
+                6 +
+                Math.sin(time * 0.8) * 0.6 +
+                (this.params.tremor ? Math.sin(time * 6.0) * 0.4 : 0);
+            }
+
+            if (this.objects.scanPulse) {
+              const pulse = this.objects.scanPulse;
+              if (pulse.strength > 0) {
+                pulse.strength *= 0.88;
+                this.camera.position.y = 5 + pulse.strength * 3;
+              } else {
+                this.camera.position.y = 5;
+              }
+            }
+
+            if (this.params.autopilot) {
+              const orbit = time * 0.16;
+              const radius = 24 - this.params.skylineDensity * 6;
+              this.camera.position.x = Math.cos(orbit) * radius;
+              this.camera.position.z = Math.sin(orbit) * radius;
+              this.camera.lookAt(0, 6, 0);
+            }
+
+            if (this.outputs.density) {
+              this.outputs.density.textContent =
+                this.params.skylineDensity.toFixed(2);
+            }
+            if (this.outputs.traffic) {
+              this.outputs.traffic.textContent =
+                this.params.trafficFlow.toFixed(2);
+            }
+            if (this.outputs.aurora) {
+              this.outputs.aurora.textContent =
+                this.params.auroraSpan.toFixed(2);
+            }
+            if (this.outputs.sentinel) {
+              this.outputs.sentinel.textContent =
+                this.params.sentinelDrift.toFixed(2);
+            }
+          }
+          updateRift(time, delta) {
+            const portal = this.objects.portal;
+            if (portal) {
+              portal.uniforms.time.value = time;
+              portal.uniforms.turbulence.value = this.params.portalTurbulence;
+              portal.uniforms.glow.value = this.params.haloCharge;
+              portal.mesh.rotation.z = Math.sin(time * 0.32) * 0.2;
+            }
+
+            const shards = this.objects.shards;
+            if (shards) {
+              const { mesh, data, dummy } = shards;
+              data.forEach((item, index) => {
+                const radius =
+                  item.radius +
+                  Math.sin(time * 0.2 + item.wobble) *
+                    this.params.riftStability;
+                const angle =
+                  item.angle + delta * (0.4 + this.params.riftStability * 0.6);
+                const y =
+                  item.vertical +
+                  Math.sin(time * 0.6 + item.wobble) *
+                    this.params.streamVelocity;
+                dummy.position.set(
+                  Math.cos(angle) * radius,
+                  y,
+                  Math.sin(angle) * radius
+                );
+                dummy.rotation.x += 0.4 * delta;
+                dummy.rotation.y += 0.35 * delta;
+                dummy.updateMatrix();
+                mesh.setMatrixAt(index, dummy.matrix);
+                item.angle = angle;
+              });
+              mesh.instanceMatrix.needsUpdate = true;
+            }
+
+            const stream = this.objects.stream;
+            if (stream) {
+              const { positions, speeds, geometry } = stream;
+              for (let i = 0; i < positions.length; i += 3) {
+                const velocity = speeds[i / 3] * this.params.streamVelocity;
+                positions[i + 1] +=
+                  velocity * delta * (this.params.fluxLock ? 0.4 : 1.0);
+                if (positions[i + 1] > 8) {
+                  positions[i + 1] = -8;
+                }
+              }
+              geometry.attributes.position.needsUpdate = true;
+            }
+
+            if (this.objects.collapsePulse) {
+              const pulse = this.objects.collapsePulse;
+              if (pulse.strength > 0) {
+                pulse.strength *= 0.86;
+                this.camera.position.y = 4 + pulse.strength * 3;
+              } else {
+                this.camera.position.y = 4;
+              }
+            }
+
+            if (this.params.autopilot) {
+              const loop = time * 0.24;
+              const radius = 14 + this.params.riftStability * 4;
+              this.camera.position.x = Math.cos(loop) * radius;
+              this.camera.position.z = Math.sin(loop) * radius;
+              this.camera.lookAt(0, 0, 0);
+            }
+
+            if (this.outputs.rift) {
+              this.outputs.rift.textContent =
+                this.params.riftStability.toFixed(2);
+            }
+            if (this.outputs.stream) {
+              this.outputs.stream.textContent =
+                this.params.streamVelocity.toFixed(2);
+            }
+            if (this.outputs.shards) {
+              this.outputs.shards.textContent =
+                this.params.shardDensity.toFixed(2);
+            }
+            if (this.outputs.halo) {
+              this.outputs.halo.textContent = this.params.haloCharge.toFixed(2);
+            }
+          }
+        }
+
+        document.querySelectorAll(".demo-card").forEach((card) => {
+          const canvas = card.querySelector("canvas");
+          const controls = card.querySelector(".control-hub");
+          const variant = card.dataset.demo;
+          demos.push(new AlienDemo({ canvas, controls, variant }));
+        });
+
+        function animate(time) {
+          const t = time * 0.001;
+          demos.forEach((demo) => demo.update(t));
+          requestAnimationFrame(animate);
+        }
+
+        requestAnimationFrame(animate);
+      })();
+    </script>
+  </body>
+</html>
