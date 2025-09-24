@@ -127,11 +127,6 @@
         box-shadow: 0 24px 70px rgba(4, 10, 40, 0.6);
       }
 
-      .demo-card.is-live {
-        border-color: rgba(150, 250, 255, 0.7);
-        box-shadow: 0 28px 95px rgba(120, 240, 255, 0.5);
-      }
-
       .demo-card::before {
         content: "";
         position: absolute;
@@ -474,228 +469,6 @@
         box-shadow: 0 8px 22px rgba(40, 120, 255, 0.35);
       }
 
-      .launch-control {
-        margin-top: 0.85rem;
-      }
-
-      .launch-control button {
-        width: 100%;
-        padding: 0.9rem 1.2rem;
-        border-radius: 18px;
-        border: 1px solid rgba(130, 250, 255, 0.55);
-        background: linear-gradient(
-          120deg,
-          rgba(120, 240, 255, 0.9),
-          rgba(150, 130, 255, 0.95)
-        );
-        color: #041022;
-        font-size: 0.82rem;
-        font-weight: 600;
-        letter-spacing: 0.28em;
-        text-transform: uppercase;
-        cursor: pointer;
-        box-shadow: 0 16px 46px rgba(60, 140, 255, 0.45);
-        transition: transform 0.25s ease, box-shadow 0.25s ease;
-      }
-
-      .launch-control button:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 26px 70px rgba(90, 200, 255, 0.55);
-      }
-
-      body.stage-open {
-        overflow: hidden;
-      }
-
-      .cinematic-stage {
-        position: fixed;
-        inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: clamp(1rem, 3vw, 2.4rem);
-        backdrop-filter: blur(18px);
-        background: radial-gradient(
-            circle at 15% 20%,
-            rgba(80, 150, 255, 0.25),
-            transparent 60%
-          ),
-          radial-gradient(
-            circle at 80% 15%,
-            rgba(210, 120, 255, 0.28),
-            transparent 62%
-          ),
-          rgba(2, 4, 18, 0.86);
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.45s ease;
-        z-index: 200;
-      }
-
-      .cinematic-stage.is-open {
-        opacity: 1;
-        pointer-events: auto;
-      }
-
-      .stage-shell {
-        position: relative;
-        width: min(1180px, 100%);
-        border-radius: 30px;
-        border: 1px solid rgba(130, 240, 255, 0.4);
-        background: linear-gradient(
-          160deg,
-          rgba(5, 12, 32, 0.95),
-          rgba(12, 5, 32, 0.85)
-        );
-        box-shadow: 0 42px 140px rgba(6, 16, 48, 0.82);
-        padding: clamp(1.2rem, 2.6vw, 2.2rem);
-        display: grid;
-        gap: clamp(1.1rem, 2vw, 1.8rem);
-        overflow: hidden;
-      }
-
-      .stage-shell::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(
-          circle at 25% 20%,
-          rgba(120, 255, 255, 0.08),
-          transparent 55%
-        );
-        pointer-events: none;
-        mix-blend-mode: screen;
-      }
-
-      .stage-header {
-        position: relative;
-        z-index: 1;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1.2rem;
-      }
-
-      .stage-heading {
-        display: grid;
-        gap: 0.3rem;
-      }
-
-      .stage-heading .stage-variant {
-        font-size: 0.78rem;
-        letter-spacing: 0.26em;
-        text-transform: uppercase;
-        color: rgba(180, 220, 255, 0.7);
-      }
-
-      .stage-heading h3 {
-        margin: 0;
-        text-transform: uppercase;
-        font-size: clamp(1.4rem, 3vw, 2rem);
-        letter-spacing: 0.2em;
-      }
-
-      .stage-header button {
-        font-family: inherit;
-        font-size: 0.75rem;
-        letter-spacing: 0.22em;
-        text-transform: uppercase;
-        padding: 0.55rem 1.1rem;
-        border-radius: 999px;
-        border: 1px solid rgba(130, 240, 255, 0.5);
-        background: rgba(8, 28, 58, 0.65);
-        color: rgba(210, 240, 255, 0.86);
-        cursor: pointer;
-        transition: box-shadow 0.25s ease, transform 0.25s ease;
-      }
-
-      .stage-header button:hover {
-        box-shadow: 0 0 22px rgba(140, 240, 255, 0.55);
-        transform: translateY(-2px);
-      }
-
-      .stage-canvas-wrap {
-        position: relative;
-        z-index: 1;
-        border-radius: 22px;
-        border: 1px solid rgba(110, 220, 255, 0.38);
-        overflow: hidden;
-        background: radial-gradient(
-          circle at 40% 20%,
-          rgba(120, 230, 255, 0.12),
-          rgba(6, 10, 26, 0.92)
-        );
-        min-height: clamp(380px, 60vh, 640px);
-        display: grid;
-      }
-
-      .stage-canvas-wrap canvas.stage-view,
-      .stage-canvas-wrap .stage-hud {
-        grid-area: 1 / 1 / 2 / 2;
-      }
-
-      canvas.stage-view {
-        width: 100%;
-        height: 100%;
-        display: block;
-        pointer-events: none;
-      }
-
-      .stage-hud {
-        justify-self: end;
-        align-self: end;
-        display: grid;
-        gap: 0.55rem;
-        background: rgba(6, 18, 44, 0.68);
-        border: 1px solid rgba(120, 230, 255, 0.32);
-        border-radius: 16px;
-        padding: 0.95rem 1.2rem;
-        box-shadow: 0 22px 50px rgba(10, 20, 50, 0.65);
-        pointer-events: none;
-        text-align: right;
-      }
-
-      .stage-hud .readout {
-        display: flex;
-        align-items: baseline;
-        justify-content: flex-end;
-        gap: 0.6rem;
-        font-size: 0.78rem;
-      }
-
-      .stage-hud .readout span {
-        text-transform: uppercase;
-        letter-spacing: 0.2em;
-        color: rgba(180, 225, 255, 0.72);
-      }
-
-      .stage-hud .readout strong {
-        font-family: "Share Tech Mono", "Rajdhani", monospace;
-        font-size: 0.86rem;
-        letter-spacing: 0.2em;
-        color: #9ff6ff;
-      }
-
-      .stage-hud .readout strong[data-state="active"] {
-        color: #7effd8;
-        text-shadow: 0 0 14px rgba(130, 255, 210, 0.6);
-      }
-
-      .stage-hud .readout strong[data-state="idle"] {
-        color: rgba(150, 190, 255, 0.6);
-      }
-
-      .stage-hint {
-        position: relative;
-        z-index: 1;
-        margin: 0;
-        font-size: 0.78rem;
-        letter-spacing: 0.22em;
-        text-transform: uppercase;
-        color: rgba(200, 235, 255, 0.66);
-        text-align: center;
-      }
-
       .telemetry {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -739,60 +512,9 @@
         text-transform: uppercase;
       }
 
-      @media (max-width: 1024px) {
-        .stage-canvas-wrap {
-          min-height: clamp(340px, 55vh, 560px);
-        }
-      }
-
       @media (max-width: 900px) {
         .demo-card {
           min-height: 420px;
-        }
-      }
-
-      @media (max-width: 820px) {
-        .stage-header {
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 0.8rem;
-        }
-
-        .stage-header button {
-          align-self: flex-end;
-        }
-      }
-
-      @media (max-width: 720px) {
-        .launch-control button {
-          letter-spacing: 0.18em;
-        }
-
-        .stage-shell {
-          padding: clamp(1rem, 4vw, 1.7rem);
-        }
-
-        .stage-canvas-wrap {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .stage-canvas-wrap .stage-hud {
-          position: static;
-          grid-area: auto;
-          width: 100%;
-          margin-top: 1rem;
-          text-align: left;
-          box-shadow: 0 12px 32px rgba(8, 18, 36, 0.6);
-          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        }
-
-        .stage-hud .readout {
-          justify-content: space-between;
-        }
-
-        .stage-hint {
-          text-align: left;
         }
       }
 
@@ -936,12 +658,6 @@
                 </button>
               </div>
 
-              <div class="launch-control">
-                <button type="button" data-launch="nebula">
-                  Engage Nebula Simulation
-                </button>
-              </div>
-
               <div class="telemetry">
                 <div class="metric">
                   <span>Warp Factor</span>
@@ -1077,12 +793,6 @@
                 </button>
                 <button type="button" data-action="crystal-randomize">
                   Re-seed Districts
-                </button>
-              </div>
-
-              <div class="launch-control">
-                <button type="button" data-launch="crystal">
-                  Engage Crystal Simulation
                 </button>
               </div>
 
@@ -1224,12 +934,6 @@
                 </button>
               </div>
 
-              <div class="launch-control">
-                <button type="button" data-launch="rift">
-                  Engage Rift Simulation
-                </button>
-              </div>
-
               <div class="telemetry">
                 <div class="metric">
                   <span>Rift Phase</span>
@@ -1253,26 +957,6 @@
         </article>
       </main>
 
-      <div class="cinematic-stage" aria-hidden="true">
-        <div class="stage-shell">
-          <header class="stage-header">
-            <div class="stage-heading">
-              <span class="stage-variant" data-stage-variant></span>
-              <h3 data-stage-title></h3>
-            </div>
-            <button type="button" data-stage-close>Return to Console</button>
-          </header>
-          <div class="stage-canvas-wrap">
-            <canvas id="stageCanvas" class="stage-view"></canvas>
-            <div class="stage-hud" data-stage-readouts></div>
-          </div>
-          <p class="stage-hint">
-            Tune the control panels live &mdash; adjustments feed the cinematic
-            viewport instantly.
-          </p>
-        </div>
-      </div>
-
       <footer>
         <span class="tag"
           >XR-9 Mission Control &mdash; Multiview Flight Deck</span
@@ -1291,76 +975,13 @@
     ></script>
     <script>
       (() => {
-        const deckDemos = [];
-        const demosByVariant = new Map();
-        let stageDemo = null;
-        let activeVariant = null;
-
-        const VARIANT_INFO = {
-          nebula: {
-            title: "Nebula Runway",
-            variantLabel: "Variant 01",
-            readouts: {
-              warp: "Warp Shear",
-              nebulaPulse: "Veil Bloom",
-              escortTightness: "Escort Cohesion",
-              starSpeed: "Starstream Velocity",
-              droneSpin: "Drone Spiral",
-              riftGlow: "Rift Luminosity",
-              autopilot: "Autopilot",
-              escortMode: "Escort Spiral",
-              shockwave: "Shockwave Surge",
-            },
-          },
-          crystal: {
-            title: "Crystal Megalopolis",
-            variantLabel: "Variant 02",
-            readouts: {
-              skylineDensity: "Skyline Density",
-              towerGlow: "Tower Radiance",
-              auroraSpan: "Aurora Span",
-              trafficFlow: "Traffic Flow",
-              sentinelDrift: "Sentinel Drift",
-              gridPulse: "Grid Pulse",
-              autopilot: "Auto Glide",
-              tremor: "Seismic Lift",
-              auroraFlux: "Aurora Flux",
-            },
-          },
-          rift: {
-            title: "Quantum Rift Expanse",
-            variantLabel: "Variant 03",
-            readouts: {
-              riftStability: "Rift Stability",
-              portalTurbulence: "Portal Turbulence",
-              shardDensity: "Shard Density",
-              streamVelocity: "Flux Stream",
-              haloCharge: "Halo Charge",
-              singularity: "Singularity Spin",
-              autopilot: "Auto Orbit",
-              fluxLock: "Flux Lock",
-              riftEchoes: "Rift Echoes",
-            },
-          },
-        };
-
-        const stageOverlay = document.querySelector(".cinematic-stage");
-        const stageCanvas = stageOverlay?.querySelector("#stageCanvas");
-        const stageTitle = stageOverlay?.querySelector("[data-stage-title]");
-        const stageVariantLabel = stageOverlay?.querySelector(
-          "[data-stage-variant]"
-        );
-        const stageReadouts = stageOverlay?.querySelector(
-          "[data-stage-readouts]"
-        );
-        const stageCloseBtn = stageOverlay?.querySelector("[data-stage-close]");
+        const demos = [];
 
         class AlienDemo {
-          constructor({ canvas, controls, variant, card = null }) {
+          constructor({ canvas, controls, variant }) {
             this.canvas = canvas;
             this.controlsRoot = controls;
             this.variant = variant;
-            this.card = card;
             this.renderer = new THREE.WebGLRenderer({
               canvas: this.canvas,
               antialias: true,
@@ -1375,8 +996,6 @@
             this.outputs = {};
             this.controlElements = {};
             this.lastTime = 0;
-            this.onParamsChange = null;
-            this.onAction = null;
             this.setupScene();
             this.registerControls();
             this.handleResize();
@@ -1384,7 +1003,6 @@
             window.addEventListener("resize", this.boundResize);
             this.resizeObserver = new ResizeObserver(() => this.handleResize());
             this.resizeObserver.observe(this.canvas);
-            this.broadcastParams();
           }
 
           createDefaultParams() {
@@ -1467,7 +1085,6 @@
               input.addEventListener("input", () => {
                 this.params[param] = parseFloat(input.value);
                 this.updateRangeVisual(param);
-                this.broadcastParams();
               });
             });
 
@@ -1488,7 +1105,6 @@
               input.addEventListener("change", () => {
                 this.params[param] = input.checked;
                 this.updateToggleVisual(param);
-                this.broadcastParams();
               });
             });
 
@@ -1505,71 +1121,6 @@
                   this.handleAction(btn.dataset.action)
                 );
               });
-          }
-
-          broadcastParams() {
-            if (typeof this.onParamsChange === "function") {
-              this.onParamsChange(this.getSnapshot());
-            }
-          }
-
-          getSnapshot() {
-            return JSON.parse(JSON.stringify(this.params));
-          }
-
-          applyParams(newParams, options = {}) {
-            const { syncControls = true, silent = false } = options;
-            if (!newParams) return;
-            Object.entries(newParams).forEach(([key, value]) => {
-              if (value === undefined) return;
-              if (typeof this.params[key] === "boolean") {
-                this.params[key] = !!value;
-              } else if (typeof value === "number") {
-                this.params[key] = value;
-              } else if (!Number.isNaN(parseFloat(value))) {
-                this.params[key] = parseFloat(value);
-              }
-              const descriptor = this.controlElements[key];
-              if (descriptor && syncControls) {
-                if (descriptor.type === "toggle") {
-                  descriptor.input.checked = !!this.params[key];
-                  this.updateToggleVisual(key);
-                } else {
-                  descriptor.input.value = this.params[key];
-                  this.updateRangeVisual(key);
-                }
-              }
-            });
-            if (!silent) {
-              this.broadcastParams();
-            }
-          }
-
-          dispose() {
-            window.removeEventListener("resize", this.boundResize);
-            if (this.resizeObserver) {
-              this.resizeObserver.disconnect();
-            }
-            if (this.renderer) {
-              this.renderer.dispose();
-            }
-            this.scene.traverse((object) => {
-              if (object.geometry && typeof object.geometry.dispose === "function") {
-                object.geometry.dispose();
-              }
-              if (object.material) {
-                const materials = Array.isArray(object.material)
-                  ? object.material
-                  : [object.material];
-                materials.forEach((material) => {
-                  if (material && typeof material.dispose === "function") {
-                    material.dispose();
-                  }
-                });
-              }
-            });
-            this.onParamsChange = null;
-            this.onAction = null;
           }
 
           updateRangeVisual(param) {
@@ -1640,9 +1191,6 @@
                 "singularity",
               ]);
             }
-            if (typeof this.onAction === "function") {
-              this.onAction(action);
-            }
           }
 
           randomizeParams(paramList) {
@@ -1656,7 +1204,6 @@
               descriptor.input.value = this.params[param];
               this.updateRangeVisual(param);
             });
-            this.broadcastParams();
           }
 
           triggerNebulaBoost() {
@@ -2452,145 +1999,12 @@
           const canvas = card.querySelector("canvas");
           const controls = card.querySelector(".control-hub");
           const variant = card.dataset.demo;
-          const demo = new AlienDemo({ canvas, controls, variant, card });
-          deckDemos.push(demo);
-          demosByVariant.set(variant, demo);
-          const launchButton = card.querySelector(`[data-launch="${variant}"]`);
-          if (launchButton) {
-            launchButton.addEventListener("click", () => openStage(variant));
-          }
+          demos.push(new AlienDemo({ canvas, controls, variant }));
         });
-
-        if (stageCloseBtn) {
-          stageCloseBtn.addEventListener("click", closeStage);
-        }
-
-        if (stageOverlay) {
-          stageOverlay.addEventListener("click", (event) => {
-            if (event.target === stageOverlay) {
-              closeStage();
-            }
-          });
-        }
-
-        document.addEventListener("keydown", (event) => {
-          if (event.key === "Escape" && stageOverlay?.classList.contains("is-open")) {
-            closeStage();
-          }
-        });
-
-        function formatParamValue(value) {
-          if (typeof value === "boolean") {
-            return value ? "ENGAGED" : "IDLE";
-          }
-          if (typeof value === "number" && Number.isFinite(value)) {
-            return value.toFixed(2);
-          }
-          return String(value ?? "");
-        }
-
-        function updateStageReadouts(variant, params) {
-          if (!stageReadouts) return;
-          const info = VARIANT_INFO[variant];
-          if (!info) {
-            stageReadouts.innerHTML = "";
-            return;
-          }
-          const fragments = Object.entries(info.readouts)
-            .map(([key, label]) => {
-              const value = params?.[key];
-              if (value === undefined) return "";
-              const stateAttr =
-                typeof value === "boolean"
-                  ? ` data-state="${value ? "active" : "idle"}"`
-                  : "";
-              const valueText = formatParamValue(value);
-              return `<div class="readout"><span>${label}</span><strong${stateAttr}>${valueText}</strong></div>`;
-            })
-            .join("\n");
-          stageReadouts.innerHTML = fragments;
-        }
-
-        function openStage(variant) {
-          const info = VARIANT_INFO[variant];
-          const sourceDemo = demosByVariant.get(variant);
-          if (!info || !sourceDemo || !stageOverlay || !stageCanvas) return;
-
-          if (activeVariant) {
-            const previousDemo = demosByVariant.get(activeVariant);
-            if (previousDemo) {
-              previousDemo.onParamsChange = null;
-              previousDemo.onAction = null;
-              previousDemo.card?.classList.remove("is-live");
-            }
-          }
-
-          if (stageDemo) {
-            stageDemo.dispose();
-            stageDemo = null;
-          }
-
-          stageDemo = new AlienDemo({ canvas: stageCanvas, controls: null, variant });
-          const snapshot = sourceDemo.getSnapshot();
-          stageDemo.applyParams(snapshot, { syncControls: false, silent: true });
-          stageDemo.update(0);
-          activeVariant = variant;
-
-          stageOverlay.classList.add("is-open");
-          stageOverlay.setAttribute("aria-hidden", "false");
-          document.body.classList.add("stage-open");
-          if (stageTitle) {
-            stageTitle.textContent = info.title;
-          }
-          if (stageVariantLabel) {
-            stageVariantLabel.textContent = info.variantLabel;
-          }
-          updateStageReadouts(variant, snapshot);
-
-          sourceDemo.card?.classList.add("is-live");
-          sourceDemo.onParamsChange = (params) => {
-            if (activeVariant !== variant || !stageDemo) return;
-            stageDemo.applyParams(params, { syncControls: false, silent: true });
-            updateStageReadouts(variant, params);
-          };
-          sourceDemo.onAction = (action) => {
-            if (!action || action.includes("randomize")) return;
-            if (activeVariant !== variant || !stageDemo) return;
-            stageDemo.handleAction(action);
-          };
-          sourceDemo.broadcastParams();
-        }
-
-        function closeStage() {
-          if (!stageOverlay || !stageOverlay.classList.contains("is-open")) return;
-          if (activeVariant) {
-            const sourceDemo = demosByVariant.get(activeVariant);
-            if (sourceDemo) {
-              sourceDemo.onParamsChange = null;
-              sourceDemo.onAction = null;
-              sourceDemo.card?.classList.remove("is-live");
-            }
-          }
-          activeVariant = null;
-          stageOverlay.classList.remove("is-open");
-          stageOverlay.setAttribute("aria-hidden", "true");
-          document.body.classList.remove("stage-open");
-          if (stageDemo) {
-            const disposable = stageDemo;
-            stageDemo = null;
-            disposable.dispose();
-          }
-          if (stageReadouts) {
-            stageReadouts.innerHTML = "";
-          }
-        }
 
         function animate(time) {
           const t = time * 0.001;
-          deckDemos.forEach((demo) => demo.update(t));
-          if (stageDemo) {
-            stageDemo.update(t);
-          }
+          demos.forEach((demo) => demo.update(t));
           requestAnimationFrame(animate);
         }
 
