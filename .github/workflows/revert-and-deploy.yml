@@ -1,0 +1,112 @@
+name: Revert to Last Version & FTP Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch pe care facem revert (implicit: main)"
+        required: false
+        default: "main"
+      create_backup_tag:
+        description: "Creează tag de backup înainte de revert (true/false)"
+        required: false
+        default: "true"
+
+# Necesare pentru a putea face push înapoi pe repo
+permissions:
+  contents: write
+
+concurrency:
+  group: revert-${{ inputs.branch }}
+  cancel-in-progress: false
+
+jobs:
+  revert-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          fetch-depth: 0   # istoric complet pentru a căuta merge-urile
+
+      - name: Configure Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Sync with remote
+        run: |
+          git fetch origin ${{ inputs.branch }} --prune --tags
+          git checkout ${{ inputs.branch }}
+          git pull --ff-only origin ${{ inputs.branch }}
+
+      - id: revert
+        name: Revert last merge commit
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BRANCH="${{ inputs.branch }}"
+          # Ultimul merge de pe prima linie a branch-ului (PR-urile către main apar aici)
+          LAST_MERGE="$(git log --first-parent --merges -1 --pretty=format:%H "$BRANCH" || true)"
+
+          if [[ -z "$LAST_MERGE" ]]; then
+            echo "Nu am găsit niciun merge commit pe $BRANCH. Ies fără modificări."
+            echo "did_revert=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Ultimul merge pe $BRANCH: $LAST_MERGE"
+
+          # Tag de backup opțional, pentru revenire ușoară dacă e nevoie
+          if [[ "${{ inputs.create_backup_tag }}" == "true" ]]; then
+            TAG="pre-revert-$(date -u +%Y%m%d-%H%M%SZ)"
+            git tag -a "$TAG" -m "Backup before reverting $LAST_MERGE"
+            git push origin "$TAG"
+            echo "Creat tag de backup: $TAG"
+          fi
+
+          # Revert folosind părintele 1 (mainline), standard pentru "merge PR în main"
+          set +e
+          git revert -m 1 "$LAST_MERGE" --no-edit
+          status=$?
+          set -e
+
+          if [[ $status -ne 0 ]]; then
+            echo "Revert eșuat (probabil conflicte). Anulez revert-ul."
+            git revert --abort || true
+            echo "did_revert=false" >> "$GITHUB_OUTPUT"
+            # Eșuăm jobul ca să fie vizibil în UI și să nu continuăm cu deploy
+            exit 1
+          fi
+
+          # Împingem starea revertită înapoi pe branch (necesită permissions: contents: write)
+          git push origin "$BRANCH"
+          echo "did_revert=true" >> "$GITHUB_OUTPUT"
+
+      # === Secțiunea de build & deploy — copiată/adaptată din workflow-ul tău "Config" ===
+
+      - name: Set up PHP
+        if: steps.revert.outputs.did_revert == 'true'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+
+      - name: Install dependencies
+        if: steps.revert.outputs.did_revert == 'true'
+        run: composer install --no-dev --optimize-autoloader
+
+      - name: Prepare data directory
+        if: steps.revert.outputs.did_revert == 'true'
+        run: mkdir -p data
+
+      - name: Deploy to FTP (reverted state)
+        if: steps.revert.outputs.did_revert == 'true'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_PATH }}/
