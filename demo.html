@@ -152,6 +152,240 @@
         pointer-events: none;
         z-index: 0;
       }
+      .demo-card::after {
+        content: "";
+        position: absolute;
+        inset: -2px;
+        border-radius: inherit;
+        pointer-events: none;
+        opacity: 0;
+        mix-blend-mode: screen;
+        box-shadow: 0 0 60px rgba(124, 244, 255, 0.08);
+        transition: opacity 0.6s ease, box-shadow 0.6s ease,
+          transform 12s linear;
+      }
+      .demo-card.simulation-live::after {
+        opacity: 1;
+        background: conic-gradient(
+          from 0deg,
+          rgba(124, 244, 255, 0.28),
+          rgba(154, 107, 255, 0.18),
+          rgba(250, 92, 255, 0.24),
+          rgba(124, 244, 255, 0.28)
+        );
+        animation: cardOrbit 18s linear infinite;
+        box-shadow: 0 0 80px rgba(124, 244, 255, 0.35),
+          0 0 120px rgba(250, 92, 255, 0.24);
+      }
+      .demo-card.start-flash::after {
+        box-shadow: 0 0 130px rgba(124, 244, 255, 0.5),
+          0 0 240px rgba(154, 107, 255, 0.45),
+          0 0 320px rgba(250, 92, 255, 0.4);
+      }
+      .demo-card.simulation-idle canvas.view {
+        filter: saturate(0.55) brightness(0.78);
+      }
+      .demo-card.simulation-live canvas.view {
+        animation: viewPulse 14s ease-in-out infinite;
+      }
+      .start-overlay {
+        position: absolute;
+        z-index: 5;
+        display: grid;
+        place-items: center;
+        justify-items: center;
+        gap: 0.75rem;
+        text-align: center;
+        transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .demo-card:not(.simulation-live) .start-overlay {
+        inset: 0;
+        background: radial-gradient(
+            circle at 22% 26%,
+            rgba(124, 244, 255, 0.24),
+            transparent 60%
+          ),
+          radial-gradient(
+            circle at 78% 32%,
+            rgba(250, 92, 255, 0.16),
+            transparent 58%
+          );
+        backdrop-filter: blur(18px) saturate(180%);
+      }
+      .demo-card.simulation-live .start-overlay {
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(1.06);
+        background: none;
+        backdrop-filter: none;
+      }
+      .start-core {
+        position: relative;
+        display: grid;
+        gap: 0.7rem;
+        justify-items: center;
+        padding: clamp(1rem, 3vw, 1.6rem);
+      }
+      .demo-card.simulation-live .start-core {
+        padding: 0;
+        gap: 0.45rem;
+        justify-items: end;
+      }
+      .demo-card:not(.simulation-live) .start-core::before {
+        content: "";
+        position: absolute;
+        inset: -18% -22%;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(124, 244, 255, 0.22),
+          transparent 62%
+        );
+        filter: blur(2px);
+        animation: startHalo 6s ease-in-out infinite;
+      }
+      .start-rings {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      .start-rings span {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 1px solid rgba(124, 244, 255, 0.32);
+        animation: startRing 4.6s linear infinite;
+      }
+      .start-rings span:nth-child(2) {
+        border-color: rgba(154, 107, 255, 0.28);
+        animation-delay: -1.6s;
+      }
+      .start-rings span:nth-child(3) {
+        border-color: rgba(250, 92, 255, 0.25);
+        animation-delay: -3.2s;
+      }
+      .start-trigger {
+        position: relative;
+        display: grid;
+        place-items: center;
+        gap: 0.25rem;
+        width: clamp(170px, 24vw, 230px);
+        aspect-ratio: 1;
+        border-radius: 50%;
+        border: none;
+        font-family: inherit;
+        text-transform: uppercase;
+        letter-spacing: 0.26em;
+        font-size: 0.78rem;
+        color: rgba(5, 8, 16, 0.92);
+        cursor: pointer;
+        background: conic-gradient(
+          from 210deg,
+          rgba(124, 244, 255, 0.95),
+          rgba(154, 107, 255, 0.95),
+          rgba(250, 92, 255, 0.95),
+          rgba(124, 244, 255, 0.95)
+        );
+        box-shadow: 0 0 68px rgba(124, 244, 255, 0.6),
+          0 0 0 2px rgba(124, 244, 255, 0.32),
+          inset 0 0 28px rgba(255, 255, 255, 0.5);
+        overflow: hidden;
+        transition: transform 0.35s ease, box-shadow 0.35s ease;
+      }
+      .start-trigger span {
+        position: relative;
+        z-index: 2;
+      }
+      .start-trigger .start-flare,
+      .start-trigger::before,
+      .start-trigger::after {
+        content: "";
+        position: absolute;
+        inset: -36%;
+        border-radius: 50%;
+        mix-blend-mode: screen;
+        pointer-events: none;
+        filter: blur(6px);
+      }
+      .start-trigger::before {
+        background: radial-gradient(
+          circle,
+          rgba(255, 255, 255, 0.8),
+          rgba(124, 244, 255, 0.2) 60%,
+          transparent 72%
+        );
+        animation: startFlare 5.6s linear infinite;
+      }
+      .start-trigger::after {
+        inset: -45%;
+        background: radial-gradient(
+          circle,
+          rgba(154, 107, 255, 0.55),
+          transparent 68%
+        );
+        animation: startFlare 6.2s linear infinite;
+        animation-delay: -1.4s;
+      }
+      .start-trigger .start-flare {
+        inset: -52%;
+        background: conic-gradient(
+          from 120deg,
+          rgba(124, 244, 255, 0.35),
+          rgba(250, 92, 255, 0.5),
+          rgba(124, 244, 255, 0.35)
+        );
+        animation: startSweep 7s linear infinite;
+        opacity: 0.5;
+      }
+      .start-trigger:hover {
+        transform: scale(1.06);
+        box-shadow: 0 0 90px rgba(124, 244, 255, 0.78),
+          0 0 0 3px rgba(154, 107, 255, 0.55),
+          inset 0 0 36px rgba(255, 255, 255, 0.6);
+      }
+      .demo-card.simulation-live .start-trigger {
+        width: clamp(120px, 18vw, 170px);
+        font-size: 0.7rem;
+        letter-spacing: 0.22em;
+        box-shadow: 0 0 50px rgba(124, 244, 255, 0.52),
+          0 0 0 2px rgba(124, 244, 255, 0.28),
+          inset 0 0 24px rgba(255, 255, 255, 0.45);
+      }
+      .demo-card.simulation-live .start-trigger:hover {
+        transform: scale(1.04);
+      }
+      .start-label {
+        font-size: 0.92rem;
+        text-shadow: 0 0 12px rgba(0, 10, 24, 0.45);
+      }
+      .start-hint {
+        font-size: 0.62rem;
+        letter-spacing: 0.32em;
+        color: rgba(8, 16, 26, 0.78);
+      }
+      .start-caption {
+        margin: 0;
+        font-size: 0.72rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: rgba(210, 240, 255, 0.82);
+        max-width: 22ch;
+      }
+      .demo-card.simulation-live .start-caption {
+        color: rgba(200, 235, 255, 0.68);
+        font-size: 0.68rem;
+        max-width: none;
+      }
+      .status-chip.is-online {
+        border-color: rgba(124, 255, 200, 0.55);
+        background: rgba(20, 54, 78, 0.65);
+        color: rgba(220, 255, 255, 0.92);
+        box-shadow: 0 0 28px rgba(120, 255, 210, 0.35);
+      }
+      .status-chip.is-online::before {
+        background: linear-gradient(120deg, #7bff94, #7cf4ff);
+        box-shadow: 0 0 18px rgba(140, 255, 210, 0.95);
+      }
       .experience-veil {
         position: fixed;
         inset: 0;
@@ -221,7 +455,7 @@
         cursor: pointer;
         transition: transform 0.25s ease, box-shadow 0.25s ease;
         pointer-events: auto;
-        z-index: 3;
+        z-index: 6;
       }
 
       .close-experience:hover {
@@ -598,6 +832,101 @@
         color: #94f8ff;
       }
 
+      @keyframes cardOrbit {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes viewPulse {
+        0%,
+        100% {
+          filter: saturate(1.18) brightness(1.04);
+        }
+        30% {
+          filter: saturate(1.36) brightness(1.1);
+        }
+        60% {
+          filter: saturate(1.26) brightness(1.08);
+        }
+        80% {
+          filter: saturate(1.2) brightness(1.02);
+        }
+      }
+
+      @keyframes startRing {
+        0% {
+          transform: scale(0.6);
+          opacity: 0.6;
+        }
+        55% {
+          opacity: 0.85;
+        }
+        100% {
+          transform: scale(1.8);
+          opacity: 0;
+        }
+      }
+
+      @keyframes startHalo {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.35;
+        }
+        50% {
+          transform: scale(1.12);
+          opacity: 0.6;
+        }
+      }
+
+      @keyframes startFlare {
+        0% {
+          transform: rotate(0deg);
+          opacity: 0.55;
+        }
+        50% {
+          opacity: 0.85;
+        }
+        100% {
+          transform: rotate(360deg);
+          opacity: 0.55;
+        }
+      }
+
+      @keyframes startSweep {
+        0% {
+          transform: rotate(0deg) scale(1);
+          opacity: 0.45;
+        }
+        50% {
+          opacity: 0.75;
+        }
+        100% {
+          transform: rotate(360deg) scale(1.05);
+          opacity: 0.45;
+        }
+      }
+
+      @keyframes startFlash {
+        0% {
+          filter: saturate(1) brightness(1);
+        }
+        40% {
+          filter: saturate(1.6) brightness(1.28);
+        }
+        100% {
+          filter: saturate(1.12) brightness(1.05);
+        }
+      }
+
+      .demo-card.start-flash {
+        animation: startFlash 0.8s ease;
+      }
+
       footer {
         margin-top: clamp(2.4rem, 4vw, 4rem);
         display: flex;
@@ -624,6 +953,12 @@
           flex-direction: column;
           align-items: flex-start;
         }
+        .start-trigger {
+          width: min(68vw, 220px);
+        }
+        .demo-card:not(.simulation-live) .start-overlay {
+          padding: 1.6rem;
+        }
       }
     </style>
   </head>
@@ -644,6 +979,30 @@
       <main class="demo-grid">
         <article class="demo-card" data-demo="nebula" tabindex="-1">
           <canvas id="nebulaCanvas" class="view"></canvas>
+          <div class="start-overlay" data-start-overlay>
+            <div class="start-core">
+              <div class="start-rings" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <button
+                type="button"
+                class="start-trigger"
+                data-simulation-start
+                aria-label="Start Nebula simulation"
+              >
+                <span class="start-flare" aria-hidden="true"></span>
+                <span class="start-label" data-start-label>
+                  Ignite Nebula Runway
+                </span>
+                <span class="start-hint" data-start-hint>Start Simulation</span>
+              </button>
+              <p class="start-caption" data-start-caption>
+                Thrusters on standby. Tune parameters freely.
+              </p>
+            </div>
+          </div>
           <button
             type="button"
             class="close-experience"
@@ -797,6 +1156,30 @@
         </article>
         <article class="demo-card" data-demo="crystal" tabindex="-1">
           <canvas id="crystalCanvas" class="view"></canvas>
+          <div class="start-overlay" data-start-overlay>
+            <div class="start-core">
+              <div class="start-rings" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <button
+                type="button"
+                class="start-trigger"
+                data-simulation-start
+                aria-label="Start Crystal simulation"
+              >
+                <span class="start-flare" aria-hidden="true"></span>
+                <span class="start-label" data-start-label>
+                  Wake the Skyline
+                </span>
+                <span class="start-hint" data-start-hint>Start Simulation</span>
+              </button>
+              <p class="start-caption" data-start-caption>
+                District grid idle. Dial anything before liftoff.
+              </p>
+            </div>
+          </div>
           <button
             type="button"
             class="close-experience"
@@ -950,6 +1333,30 @@
         </article>
         <article class="demo-card" data-demo="rift" tabindex="-1">
           <canvas id="riftCanvas" class="view"></canvas>
+          <div class="start-overlay" data-start-overlay>
+            <div class="start-core">
+              <div class="start-rings" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <button
+                type="button"
+                class="start-trigger"
+                data-simulation-start
+                aria-label="Start Rift simulation"
+              >
+                <span class="start-flare" aria-hidden="true"></span>
+                <span class="start-label" data-start-label>
+                  Breach the Rift
+                </span>
+                <span class="start-hint" data-start-hint>Start Simulation</span>
+              </button>
+              <p class="start-caption" data-start-caption>
+                Containment calm. Configure flux before breach.
+              </p>
+            </div>
+          </div>
           <button
             type="button"
             class="close-experience"
@@ -1124,6 +1531,221 @@
     <script>
       (() => {
         const demos = [];
+        const audioSuite = (() => {
+          const suite = {
+            context: null,
+            masterGain: null,
+            noiseBuffer: null,
+            cooldowns: new Map(),
+          };
+
+          suite.ensureContext = () => {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return null;
+            if (!suite.context) {
+              suite.context = new AudioCtx();
+              suite.masterGain = suite.context.createGain();
+              suite.masterGain.gain.value = 0.26;
+              suite.masterGain.connect(suite.context.destination);
+            }
+            if (suite.context.state === "suspended") {
+              suite.context.resume();
+            }
+            return suite.context;
+          };
+
+          suite.getNoiseBuffer = () => {
+            const ctx = suite.context;
+            if (!ctx) return null;
+            if (!suite.noiseBuffer) {
+              const length = ctx.sampleRate * 1.5;
+              const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+              const data = buffer.getChannelData(0);
+              for (let i = 0; i < length; i++) {
+                data[i] = Math.random() * 2 - 1;
+              }
+              suite.noiseBuffer = buffer;
+            }
+            return suite.noiseBuffer;
+          };
+
+          suite.scheduleSweep = ({
+            type = "sawtooth",
+            start = 220,
+            end = 660,
+            duration = 2,
+            startTime = 0,
+            peak = 0.4,
+            destination,
+          }) => {
+            const ctx = suite.context;
+            if (!ctx || !destination) return;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(start, startTime);
+            osc.frequency.exponentialRampToValueAtTime(
+              Math.max(10, end),
+              startTime + duration
+            );
+            gain.gain.setValueAtTime(0.0001, startTime);
+            gain.gain.exponentialRampToValueAtTime(peak, startTime + 0.08);
+            gain.gain.exponentialRampToValueAtTime(
+              0.0001,
+              startTime + duration
+            );
+            osc.connect(gain).connect(destination);
+            osc.start(startTime);
+            osc.stop(startTime + duration + 0.05);
+          };
+
+          suite.playLaunchCue = (variant) => {
+            const ctx = suite.ensureContext();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+            const baseGain = ctx.createGain();
+            baseGain.gain.setValueAtTime(0.0001, now);
+            baseGain.gain.exponentialRampToValueAtTime(0.8, now + 0.18);
+            baseGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.2);
+            baseGain.connect(suite.masterGain);
+
+            const filter = ctx.createBiquadFilter();
+            filter.type = "lowpass";
+            filter.frequency.setValueAtTime(4800, now);
+            filter.frequency.exponentialRampToValueAtTime(900, now + 2.6);
+            filter.Q.value = 1.5;
+            filter.connect(baseGain);
+
+            const variantSettings = {
+              nebula: { start: 180, end: 720, chord: 540 },
+              crystal: { start: 260, end: 980, chord: 840 },
+              rift: { start: 120, end: 420, chord: 240 },
+            };
+            const settings = variantSettings[variant] || variantSettings.nebula;
+
+            suite.scheduleSweep({
+              type: "sawtooth",
+              start: settings.start,
+              end: settings.end,
+              duration: 2.6,
+              startTime: now,
+              peak: 0.55,
+              destination: filter,
+            });
+            suite.scheduleSweep({
+              type: "triangle",
+              start: settings.chord,
+              end: settings.end * 1.15,
+              duration: 2.1,
+              startTime: now + 0.12,
+              peak: 0.28,
+              destination: filter,
+            });
+
+            const noiseBuffer = suite.getNoiseBuffer();
+            if (noiseBuffer) {
+              const noise = ctx.createBufferSource();
+              noise.buffer = noiseBuffer;
+              const noiseGain = ctx.createGain();
+              noiseGain.gain.setValueAtTime(0.0001, now);
+              noiseGain.gain.exponentialRampToValueAtTime(
+                variant === "crystal" ? 0.14 : 0.2,
+                now + 0.06
+              );
+              noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.6);
+              noise.connect(noiseGain).connect(baseGain);
+              noise.start(now);
+              noise.stop(now + 1.6);
+            }
+          };
+
+          suite.playControlAdjust = (variant, intensity = 0.5) => {
+            const ctx = suite.ensureContext();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+            const last = suite.cooldowns.get("control") || 0;
+            if (now - last < 0.08) return;
+            suite.cooldowns.set("control", now);
+            const blip = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const baseFreq =
+              variant === "crystal" ? 520 : variant === "rift" ? 320 : 440;
+            blip.type = "sine";
+            blip.frequency.setValueAtTime(
+              baseFreq + intensity * 220,
+              now
+            );
+            blip.frequency.exponentialRampToValueAtTime(
+              Math.max(90, baseFreq * 0.4),
+              now + 0.18
+            );
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(0.18, now + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
+            blip.connect(gain).connect(suite.masterGain);
+            blip.start(now);
+            blip.stop(now + 0.3);
+          };
+
+          suite.playToggle = (variant, isOn) => {
+            const ctx = suite.ensureContext();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+            const blip = ctx.createOscillator();
+            const gain = ctx.createGain();
+            blip.type = "square";
+            const base =
+              variant === "rift" ? 180 : variant === "crystal" ? 260 : 220;
+            blip.frequency.setValueAtTime(base, now);
+            blip.frequency.linearRampToValueAtTime(
+              isOn ? base * 1.8 : base * 0.6,
+              now + 0.18
+            );
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(0.12, now + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
+            blip.connect(gain).connect(suite.masterGain);
+            blip.start(now);
+            blip.stop(now + 0.26);
+          };
+
+          suite.playActionPulse = (variant) => {
+            const ctx = suite.ensureContext();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+            const burstGain = ctx.createGain();
+            burstGain.gain.setValueAtTime(0.0001, now);
+            burstGain.gain.exponentialRampToValueAtTime(0.35, now + 0.04);
+            burstGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
+            burstGain.connect(suite.masterGain);
+
+            const freq =
+              variant === "rift" ? 160 : variant === "crystal" ? 320 : 260;
+            suite.scheduleSweep({
+              type: "sawtooth",
+              start: freq,
+              end: freq * 2.2,
+              duration: 0.6,
+              startTime: now,
+              peak: 0.24,
+              destination: burstGain,
+            });
+
+            const noiseBuffer = suite.getNoiseBuffer();
+            if (noiseBuffer) {
+              const fizz = ctx.createBufferSource();
+              fizz.buffer = noiseBuffer;
+              const fizzGain = ctx.createGain();
+              fizzGain.gain.setValueAtTime(0.04, now);
+              fizzGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
+              fizz.connect(fizzGain).connect(burstGain);
+              fizz.start(now);
+              fizz.stop(now + 0.5);
+            }
+          };
+
+          return suite;
+        })();
         const experience = {
           activeDemo: null,
           activeCard: null,
@@ -1171,10 +1793,11 @@
         };
 
         class AlienDemo {
-          constructor({ canvas, controls, variant }) {
+          constructor({ canvas, controls, variant, card }) {
             this.canvas = canvas;
             this.controlsRoot = controls;
             this.variant = variant;
+            this.card = card;
             this.renderer = new THREE.WebGLRenderer({
               canvas: this.canvas,
               antialias: true,
@@ -1189,8 +1812,25 @@
             this.outputs = {};
             this.controlElements = {};
             this.lastTime = 0;
+            this.isRunning = false;
+            this.flashTimeout = null;
+            this.startOverlay = null;
+            this.startButton = null;
+            this.startLabel = null;
+            this.startHint = null;
+            this.startCaption = null;
+            this.statusChip = null;
+            this.variantTitle =
+              this.variant === "nebula"
+                ? "Nebula Runway"
+                : this.variant === "crystal"
+                ? "Crystal Skyline"
+                : this.variant === "rift"
+                ? "Quantum Rift"
+                : "Simulation";
             this.setupScene();
             this.registerControls();
+            this.bindStartInterface();
             this.handleResize();
             this.boundResize = () => this.handleResize();
             window.addEventListener("resize", this.boundResize);
@@ -1278,6 +1918,10 @@
               input.addEventListener("input", () => {
                 this.params[param] = parseFloat(input.value);
                 this.updateRangeVisual(param);
+                const span = descriptor.max - descriptor.min || 1;
+                const normalized =
+                  (this.params[param] - descriptor.min) / span;
+                audioSuite.playControlAdjust(this.variant, normalized);
               });
             });
 
@@ -1298,6 +1942,7 @@
               input.addEventListener("change", () => {
                 this.params[param] = input.checked;
                 this.updateToggleVisual(param);
+                audioSuite.playToggle(this.variant, input.checked);
               });
             });
 
@@ -1314,6 +1959,86 @@
                   this.handleAction(btn.dataset.action)
                 );
               });
+          }
+
+          bindStartInterface() {
+            if (!this.card) return;
+            this.card.classList.add("simulation-idle");
+            this.startOverlay = this.card.querySelector("[data-start-overlay]");
+            this.startButton = this.card.querySelector(
+              "[data-simulation-start]"
+            );
+            this.startLabel = this.card.querySelector("[data-start-label]");
+            this.startHint = this.card.querySelector("[data-start-hint]");
+            this.startCaption = this.card.querySelector(
+              "[data-start-caption]"
+            );
+            this.statusChip = this.card.querySelector(".status-chip");
+            if (this.startOverlay) {
+              this.startOverlay.setAttribute("aria-hidden", "false");
+            }
+            if (this.startButton) {
+              this.startButton.setAttribute("aria-pressed", "false");
+              this.startButton.addEventListener("click", () =>
+                this.startSequence()
+              );
+            }
+          }
+
+          startSequence() {
+            if (!this.isRunning) {
+              this.isRunning = true;
+              this.lastTime = 0;
+              if (this.card) {
+                this.card.classList.remove("simulation-idle");
+                this.card.classList.add("simulation-live");
+              }
+              if (this.startButton) {
+                this.startButton.setAttribute("aria-pressed", "true");
+                this.startButton.classList.add("is-active");
+              }
+              if (this.startOverlay) {
+                this.startOverlay.setAttribute("aria-hidden", "true");
+              }
+              if (this.startLabel) {
+                this.startLabel.textContent = `${this.variantTitle} Live`;
+              }
+              if (this.startHint) {
+                this.startHint.textContent = "Tap to surge thrusters";
+              }
+              if (this.startCaption) {
+                this.startCaption.textContent =
+                  "Live telemetry — adjust in real time.";
+              }
+              if (this.statusChip) {
+                this.statusChip.textContent = "Simulation Live";
+                this.statusChip.classList.add("is-online");
+              }
+              audioSuite.playLaunchCue(this.variant);
+            }
+            this.triggerLaunchCelebration();
+            this.renderer.render(this.scene, this.camera);
+          }
+
+          triggerLaunchCelebration() {
+            if (this.variant === "nebula") {
+              this.triggerNebulaBoost();
+            } else if (this.variant === "crystal") {
+              this.triggerCrystalScan();
+            } else if (this.variant === "rift") {
+              this.triggerRiftCollapse();
+            }
+            audioSuite.playActionPulse(this.variant);
+            if (this.card) {
+              this.card.classList.add("start-flash");
+              if (this.flashTimeout) {
+                clearTimeout(this.flashTimeout);
+              }
+              this.flashTimeout = window.setTimeout(() => {
+                this.card?.classList.remove("start-flash");
+                this.flashTimeout = null;
+              }, 800);
+            }
           }
 
           updateRangeVisual(param) {
@@ -1384,6 +2109,7 @@
                 "singularity",
               ]);
             }
+            audioSuite.playActionPulse(this.variant);
           }
 
           randomizeParams(paramList) {
@@ -1563,7 +2289,10 @@
               data: droneData,
               dummy: new THREE.Object3D(),
             };
-            this.objects.flightPath = flightPath;
+            this.objects.flightPath = {
+              mesh: flightPath,
+              material: pathMaterial,
+            };
             this.objects.warpBurst = warpBurst;
           }
           setupCrystalScene() {
@@ -1722,6 +2451,7 @@
               mesh: buildings,
               data: buildingData,
               dummy,
+              material: buildingMat,
             };
             this.objects.traffic = {
               geometry: trafficGeometry,
@@ -1730,6 +2460,7 @@
             };
             this.objects.aurora = { mesh: aurora, uniforms: auroraUniforms };
             this.objects.sentinel = sentinel;
+            this.objects.sentinelMaterial = sentinel.material;
             this.objects.scanPulse = scanPulse;
           }
           setupRiftScene() {
@@ -1824,7 +2555,8 @@
                 y,
                 Math.sin(angle) * radius
               );
-              dummy.scale.setScalar(0.4 + Math.random() * 1.2);
+              const baseScale = 0.4 + Math.random() * 1.2;
+              dummy.scale.setScalar(baseScale);
               dummy.rotation.set(
                 Math.random() * Math.PI,
                 Math.random() * Math.PI,
@@ -1838,6 +2570,8 @@
                 vertical: y,
                 speed: 0.2 + Math.random() * 0.8,
                 wobble: Math.random() * Math.PI * 2,
+                baseScale,
+                densityGate: Math.random(),
               });
             }
             this.scene.add(shards);
@@ -1871,12 +2605,22 @@
 
             const collapsePulse = { strength: 0 };
 
-            this.objects.portal = { mesh: portal, uniforms: portalUniforms };
-            this.objects.shards = { mesh: shards, data: shardData, dummy };
+            this.objects.portal = {
+              mesh: portal,
+              uniforms: portalUniforms,
+              material: portalMaterial,
+            };
+            this.objects.shards = {
+              mesh: shards,
+              data: shardData,
+              dummy,
+              material: shardMat,
+            };
             this.objects.stream = {
               geometry: streamGeometry,
               positions: streamPositions,
               speeds: streamSpeeds,
+              material: streamMaterial,
             };
             this.objects.collapsePulse = collapsePulse;
           }
@@ -1890,6 +2634,11 @@
           }
 
           update(time) {
+            if (!this.isRunning) {
+              this.lastTime = time;
+              this.renderer.render(this.scene, this.camera);
+              return;
+            }
             const delta = this.lastTime
               ? Math.min(time - this.lastTime, 0.12)
               : 0;
@@ -1961,6 +2710,16 @@
               mesh.instanceMatrix.needsUpdate = true;
             }
 
+            const flightPath = this.objects.flightPath;
+            if (flightPath) {
+              const { mesh, material } = flightPath;
+              const glow = this.params.riftGlow;
+              material.opacity = 0.18 + glow * 0.55;
+              const hue = 0.52 + glow * 0.12;
+              material.color.setHSL(hue, 0.95, 0.55 + glow * 0.18);
+              mesh.rotation.y = time * 0.12 * (0.6 + glow * 0.9);
+            }
+
             if (
               this.params.shockwave &&
               this.objects.warpBurst.strength < 0.001
@@ -2007,7 +2766,7 @@
           updateCrystal(time, delta) {
             const buildings = this.objects.buildings;
             if (buildings) {
-              const { mesh, data, dummy } = buildings;
+              const { mesh, data, dummy, material } = buildings;
               const density = this.params.skylineDensity;
               data.forEach((item, index) => {
                 const pulse =
@@ -2026,6 +2785,15 @@
                 mesh.setMatrixAt(index, dummy.matrix);
               });
               mesh.instanceMatrix.needsUpdate = true;
+              if (material) {
+                const glow = 0.35 + this.params.towerGlow * 0.7;
+                material.emissiveIntensity = glow;
+                material.color.setHSL(
+                  0.6,
+                  0.58,
+                  0.16 + this.params.towerGlow * 0.12
+                );
+              }
             }
 
             const traffic = this.objects.traffic;
@@ -2066,6 +2834,17 @@
                 (this.params.tremor ? Math.sin(time * 6.0) * 0.4 : 0);
             }
 
+            const sentinelMaterial = this.objects.sentinelMaterial;
+            if (sentinelMaterial) {
+              const halo = 0.7 + this.params.towerGlow * 0.6;
+              sentinelMaterial.emissiveIntensity = halo;
+              sentinelMaterial.color.setHSL(
+                0.55,
+                0.9,
+                0.45 + this.params.towerGlow * 0.18
+              );
+            }
+
             if (this.objects.scanPulse) {
               const pulse = this.objects.scanPulse;
               if (pulse.strength > 0) {
@@ -2104,26 +2883,42 @@
           updateRift(time, delta) {
             const portal = this.objects.portal;
             if (portal) {
-              portal.uniforms.time.value = time;
-              portal.uniforms.turbulence.value = this.params.portalTurbulence;
-              portal.uniforms.glow.value = this.params.haloCharge;
-              portal.mesh.rotation.z = Math.sin(time * 0.32) * 0.2;
+              const { mesh, uniforms } = portal;
+              uniforms.time.value = time;
+              uniforms.turbulence.value =
+                this.params.portalTurbulence + this.params.singularity * 0.35;
+              const echoPulse = this.params.riftEchoes
+                ? Math.sin(time * 2.2) * this.params.singularity * 0.15
+                : 0;
+              uniforms.glow.value = this.params.haloCharge + echoPulse;
+              mesh.rotation.z = Math.sin(time * 0.32) * 0.2;
+              mesh.rotation.y += delta * (0.4 + this.params.singularity * 0.9);
             }
 
             const shards = this.objects.shards;
             if (shards) {
-              const { mesh, data, dummy } = shards;
+              const { mesh, data, dummy, material } = shards;
+              const density = Math.min(
+                1,
+                Math.max(0, (this.params.shardDensity - 0.1) / 1.1)
+              );
               data.forEach((item, index) => {
                 const radius =
                   item.radius +
                   Math.sin(time * 0.2 + item.wobble) *
                     this.params.riftStability;
                 const angle =
-                  item.angle + delta * (0.4 + this.params.riftStability * 0.6);
+                  item.angle +
+                  delta *
+                    (0.4 + this.params.riftStability * 0.6 + this.params.singularity * 0.3);
                 const y =
                   item.vertical +
                   Math.sin(time * 0.6 + item.wobble) *
-                    this.params.streamVelocity;
+                    this.params.streamVelocity +
+                    (this.params.riftEchoes
+                      ? Math.sin(time * 2.8 + item.wobble) *
+                        this.params.singularity * 0.35
+                      : 0);
                 dummy.position.set(
                   Math.cos(angle) * radius,
                   y,
@@ -2131,16 +2926,29 @@
                 );
                 dummy.rotation.x += 0.4 * delta;
                 dummy.rotation.y += 0.35 * delta;
+                const active = item.densityGate <= density + 0.05;
+                const scale = active
+                  ? item.baseScale * (0.6 + this.params.singularity * 0.5)
+                  : item.baseScale * 0.04;
+                dummy.scale.setScalar(scale);
                 dummy.updateMatrix();
                 mesh.setMatrixAt(index, dummy.matrix);
                 item.angle = angle;
               });
               mesh.instanceMatrix.needsUpdate = true;
+              if (material) {
+                material.emissiveIntensity =
+                  0.45 +
+                  this.params.haloCharge * 0.7 +
+                  (this.params.riftEchoes
+                    ? Math.sin(time * 2.4) * 0.2
+                    : 0);
+              }
             }
 
             const stream = this.objects.stream;
             if (stream) {
-              const { positions, speeds, geometry } = stream;
+              const { positions, speeds, geometry, material } = stream;
               for (let i = 0; i < positions.length; i += 3) {
                 const velocity = speeds[i / 3] * this.params.streamVelocity;
                 positions[i + 1] +=
@@ -2150,6 +2958,16 @@
                 }
               }
               geometry.attributes.position.needsUpdate = true;
+              if (material) {
+                material.size = 0.14 + this.params.singularity * 0.12;
+                material.opacity = this.params.riftEchoes ? 0.9 : 0.55;
+                material.color.setHSL(
+                  0.82 + this.params.haloCharge * 0.08,
+                  1,
+                  0.58 + this.params.haloCharge * 0.15
+                );
+                material.needsUpdate = true;
+              }
             }
 
             if (this.objects.collapsePulse) {
@@ -2163,10 +2981,14 @@
             }
 
             if (this.params.autopilot) {
-              const loop = time * 0.24;
+              const loop = time * (0.18 + this.params.singularity * 0.06);
               const radius = 14 + this.params.riftStability * 4;
               this.camera.position.x = Math.cos(loop) * radius;
               this.camera.position.z = Math.sin(loop) * radius;
+              this.camera.position.y =
+                3.2 +
+                Math.sin(time * (0.4 + this.params.singularity * 0.6)) *
+                  (1.6 + this.params.singularity * 0.8);
               this.camera.lookAt(0, 0, 0);
             }
 
@@ -2197,13 +3019,16 @@
           const canvas = card.querySelector("canvas");
           const controls = card.querySelector(".control-hub");
           const variant = card.dataset.demo;
-          const demo = new AlienDemo({ canvas, controls, variant });
+          const demo = new AlienDemo({ canvas, controls, variant, card });
           demos.push(demo);
 
           const launchButton = card.querySelector("[data-experience-launch]");
           if (launchButton) {
             launchButton.setAttribute("aria-pressed", "false");
-            launchButton.addEventListener("click", () => experience.open(demo));
+            launchButton.addEventListener("click", () => {
+              demo.startSequence();
+              experience.open(demo);
+            });
           }
 
           const closeButton = card.querySelector("[data-experience-close]");
