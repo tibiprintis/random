@@ -41,6 +41,10 @@
         overflow-x: hidden;
       }
 
+      body.experience-open {
+        overflow: hidden;
+      }
+
       body::after {
         content: "";
         position: fixed;
@@ -125,6 +129,8 @@
         overflow: hidden;
         min-height: clamp(380px, 44vw, 640px);
         box-shadow: 0 24px 70px rgba(4, 10, 40, 0.6);
+        transition: transform 0.5s ease, box-shadow 0.5s ease,
+          filter 0.5s ease, opacity 0.5s ease;
       }
 
       .demo-card::before {
@@ -145,6 +151,86 @@
         opacity: 0.65;
         pointer-events: none;
         z-index: 0;
+      }
+      .experience-veil {
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(
+            circle at 30% 20%,
+            rgba(126, 244, 255, 0.14),
+            rgba(8, 6, 28, 0.82) 55%
+          ),
+          radial-gradient(
+            circle at 70% 80%,
+            rgba(250, 92, 255, 0.16),
+            rgba(3, 0, 14, 0.85) 60%
+          );
+        backdrop-filter: blur(18px) saturate(120%);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.4s ease;
+        z-index: 14;
+      }
+
+      body.experience-open .experience-veil {
+        opacity: 0.7;
+        pointer-events: auto;
+      }
+
+      .demo-card.is-active {
+        position: fixed;
+        inset: clamp(1.2rem, 4vw, 2.8rem) clamp(1.2rem, 4vw, 3rem);
+        max-width: none;
+        width: auto;
+        min-height: min(88vh, 960px);
+        max-height: 92vh;
+        z-index: 24;
+        box-shadow: 0 40px 140px rgba(6, 20, 80, 0.85);
+      }
+
+      body.experience-open .demo-card:not(.is-active) {
+        opacity: 0;
+        transform: scale(0.96);
+        filter: blur(10px);
+        pointer-events: none;
+      }
+
+      .demo-card.is-active .overlay {
+        pointer-events: auto;
+      }
+
+      .demo-card.is-active canvas.view {
+        filter: saturate(1.2);
+      }
+
+      .close-experience {
+        position: absolute;
+        top: clamp(0.8rem, 2vw, 1.6rem);
+        right: clamp(0.8rem, 2vw, 1.6rem);
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        border: 1px solid rgba(120, 240, 255, 0.4);
+        background: rgba(4, 10, 28, 0.72);
+        color: rgba(210, 245, 255, 0.88);
+        font-size: 1.6rem;
+        line-height: 1;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        pointer-events: auto;
+        z-index: 3;
+      }
+
+      .close-experience:hover {
+        transform: scale(1.05);
+        box-shadow: 0 16px 36px rgba(80, 150, 255, 0.45);
+      }
+
+      .demo-card.is-active .close-experience {
+        display: inline-flex;
       }
       .demo-card[data-demo="nebula"]::before {
         background: radial-gradient(
@@ -469,6 +555,21 @@
         box-shadow: 0 8px 22px rgba(40, 120, 255, 0.35);
       }
 
+      .actions .primary-action {
+        background: linear-gradient(
+          100deg,
+          rgba(124, 244, 255, 0.95),
+          rgba(154, 107, 255, 0.95),
+          rgba(250, 92, 255, 0.95)
+        );
+        color: rgba(8, 12, 22, 0.92);
+        box-shadow: 0 14px 42px rgba(120, 220, 255, 0.42);
+      }
+
+      .actions .primary-action:hover {
+        box-shadow: 0 18px 52px rgba(120, 220, 255, 0.55);
+      }
+
       .telemetry {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -541,8 +642,16 @@
       </header>
 
       <main class="demo-grid">
-        <article class="demo-card" data-demo="nebula">
+        <article class="demo-card" data-demo="nebula" tabindex="-1">
           <canvas id="nebulaCanvas" class="view"></canvas>
+          <button
+            type="button"
+            class="close-experience"
+            data-experience-close
+            aria-label="Exit simulation view"
+          >
+            &times;
+          </button>
           <div class="overlay">
             <div class="card-header">
               <div class="title-block">
@@ -650,6 +759,13 @@
               </div>
 
               <div class="actions">
+                <button
+                  type="button"
+                  class="primary-action"
+                  data-experience-launch
+                >
+                  Launch Simulation
+                </button>
                 <button type="button" data-action="nebula-randomize">
                   Randomise Vectors
                 </button>
@@ -679,8 +795,16 @@
             </section>
           </div>
         </article>
-        <article class="demo-card" data-demo="crystal">
+        <article class="demo-card" data-demo="crystal" tabindex="-1">
           <canvas id="crystalCanvas" class="view"></canvas>
+          <button
+            type="button"
+            class="close-experience"
+            data-experience-close
+            aria-label="Exit simulation view"
+          >
+            &times;
+          </button>
           <div class="overlay">
             <div class="card-header">
               <div class="title-block">
@@ -788,6 +912,13 @@
               </div>
 
               <div class="actions">
+                <button
+                  type="button"
+                  class="primary-action"
+                  data-experience-launch
+                >
+                  Launch Simulation
+                </button>
                 <button type="button" data-action="crystal-scan">
                   Trigger Skyline Scan
                 </button>
@@ -817,8 +948,16 @@
             </section>
           </div>
         </article>
-        <article class="demo-card" data-demo="rift">
+        <article class="demo-card" data-demo="rift" tabindex="-1">
           <canvas id="riftCanvas" class="view"></canvas>
+          <button
+            type="button"
+            class="close-experience"
+            data-experience-close
+            aria-label="Exit simulation view"
+          >
+            &times;
+          </button>
           <div class="overlay">
             <div class="card-header">
               <div class="title-block">
@@ -926,6 +1065,13 @@
               </div>
 
               <div class="actions">
+                <button
+                  type="button"
+                  class="primary-action"
+                  data-experience-launch
+                >
+                  Launch Simulation
+                </button>
                 <button type="button" data-action="rift-collapse">
                   Stabilise Core
                 </button>
@@ -957,6 +1103,8 @@
         </article>
       </main>
 
+      <div class="experience-veil" aria-hidden="true"></div>
+
       <footer>
         <span class="tag"
           >XR-9 Mission Control &mdash; Multiview Flight Deck</span
@@ -976,6 +1124,51 @@
     <script>
       (() => {
         const demos = [];
+        const experience = {
+          activeDemo: null,
+          activeCard: null,
+          veil: null,
+          open(demo) {
+            if (!demo) return;
+            if (this.activeDemo === demo) {
+              this.close();
+              return;
+            }
+            this.close();
+            const card = demo.canvas.closest(".demo-card");
+            if (!card) return;
+            this.activeDemo = demo;
+            this.activeCard = card;
+            document.body.classList.add("experience-open");
+            card.classList.add("is-active");
+            card.focus({ preventScroll: true });
+            const launch = card.querySelector("[data-experience-launch]");
+            if (launch) {
+              launch.setAttribute("aria-pressed", "true");
+            }
+            if (this.veil) {
+              this.veil.setAttribute("aria-hidden", "false");
+            }
+            requestAnimationFrame(() => demo.handleResize());
+          },
+          close() {
+            const card = this.activeCard;
+            if (card) {
+              card.classList.remove("is-active");
+              const launch = card.querySelector("[data-experience-launch]");
+              if (launch) {
+                launch.setAttribute("aria-pressed", "false");
+              }
+              card.blur();
+            }
+            if (this.veil) {
+              this.veil.setAttribute("aria-hidden", "true");
+            }
+            document.body.classList.remove("experience-open");
+            this.activeCard = null;
+            this.activeDemo = null;
+          },
+        };
 
         class AlienDemo {
           constructor({ canvas, controls, variant }) {
@@ -1995,11 +2188,43 @@
           }
         }
 
+        experience.veil = document.querySelector(".experience-veil");
+        if (experience.veil) {
+          experience.veil.addEventListener("click", () => experience.close());
+        }
+
         document.querySelectorAll(".demo-card").forEach((card) => {
           const canvas = card.querySelector("canvas");
           const controls = card.querySelector(".control-hub");
           const variant = card.dataset.demo;
-          demos.push(new AlienDemo({ canvas, controls, variant }));
+          const demo = new AlienDemo({ canvas, controls, variant });
+          demos.push(demo);
+
+          const launchButton = card.querySelector("[data-experience-launch]");
+          if (launchButton) {
+            launchButton.setAttribute("aria-pressed", "false");
+            launchButton.addEventListener("click", () => experience.open(demo));
+          }
+
+          const closeButton = card.querySelector("[data-experience-close]");
+          if (closeButton) {
+            closeButton.addEventListener("click", (event) => {
+              event.stopPropagation();
+              experience.close();
+            });
+          }
+
+          card.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+              experience.close();
+            }
+          });
+        });
+
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            experience.close();
+          }
         });
 
         function animate(time) {
