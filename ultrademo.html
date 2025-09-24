@@ -1,0 +1,3623 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#05011a" />
+    <meta
+      name="description"
+      content="Command the Alien Horizons flight suite with improved mission telemetry, synchronized controls, and cinematic vistas."
+    />
+    <title>Alien Horizons Flight Suite · Ultra Demo</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap");
+
+      :root {
+        color-scheme: dark;
+        font-family: "Rajdhani", "Segoe UI", sans-serif;
+        font-size: clamp(14px, 1.05vw, 18px);
+        --bg: radial-gradient(
+          circle at 50% 0%,
+          rgba(24, 12, 48, 0.9),
+          rgba(3, 3, 18, 0.96)
+        );
+        --grid-line: rgba(120, 200, 255, 0.12);
+        --card-border: rgba(90, 190, 255, 0.4);
+        --accent: #7cf4ff;
+        --accent-2: #9a6bff;
+        --accent-3: #fa5cff;
+        --text-soft: rgba(200, 235, 255, 0.86);
+        --text-muted: rgba(170, 210, 255, 0.68);
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 3px;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text-soft);
+        letter-spacing: 0.04em;
+        overflow-x: hidden;
+      }
+
+      body.experience-open {
+        overflow: hidden;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: -20vh -10vw 0;
+        background: radial-gradient(
+            circle at 20% 15%,
+            rgba(96, 214, 255, 0.18),
+            transparent 55%
+          ),
+          radial-gradient(
+            circle at 85% 25%,
+            rgba(152, 90, 255, 0.18),
+            transparent 60%
+          ),
+          repeating-linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.05) 0 1px,
+            transparent 1px 3px
+          );
+        opacity: 0.35;
+        mix-blend-mode: screen;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .page {
+        position: relative;
+        z-index: 1;
+        padding: clamp(1.6rem, 3vw, 3.2rem);
+      }
+
+      .masthead {
+        display: grid;
+        gap: clamp(0.8rem, 1.8vw, 1.6rem);
+        justify-items: start;
+        margin-bottom: clamp(1.6rem, 3vw, 3rem);
+      }
+
+      .masthead .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.35rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid rgba(110, 220, 255, 0.4);
+        background: rgba(16, 34, 68, 0.35);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2.4rem, 5vw, 3.8rem);
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .masthead p {
+        max-width: 60ch;
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        line-height: 1.55;
+      }
+
+      .mission-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 0.4rem;
+      }
+
+      .control-button {
+        appearance: none;
+        border: 1px solid rgba(124, 244, 255, 0.4);
+        background: rgba(18, 38, 66, 0.6);
+        color: var(--text-soft);
+        padding: 0.6rem 1.4rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        transition: transform 0.25s ease, box-shadow 0.25s ease,
+          background 0.25s ease;
+        cursor: pointer;
+      }
+
+      .control-button:hover,
+      .control-button:focus-visible {
+        transform: translateY(-1px);
+        box-shadow: 0 0 28px rgba(124, 244, 255, 0.35);
+        background: rgba(30, 68, 104, 0.8);
+      }
+
+      .control-button.secondary {
+        border-color: rgba(154, 107, 255, 0.42);
+        background: rgba(24, 20, 60, 0.6);
+      }
+
+      .mission-feed {
+        border: 1px solid rgba(124, 244, 255, 0.18);
+        border-radius: 20px;
+        padding: clamp(1rem, 2.2vw, 1.6rem);
+        margin-bottom: clamp(1.8rem, 3.4vw, 3rem);
+        background: rgba(8, 20, 44, 0.45);
+        backdrop-filter: blur(18px);
+        box-shadow: 0 22px 60px rgba(6, 12, 40, 0.45);
+      }
+
+      .mission-feed__header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: clamp(1rem, 2.6vw, 1.8rem);
+      }
+
+      .mission-feed__header h2 {
+        margin: 0;
+        font-size: clamp(1.2rem, 2.6vw, 1.6rem);
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+      }
+
+      .mission-feed__header p {
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        max-width: 46ch;
+      }
+
+      .mission-feed__grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: clamp(1rem, 2.2vw, 1.6rem);
+      }
+
+      .mission-feed__card {
+        border: 1px solid rgba(124, 244, 255, 0.16);
+        border-radius: 18px;
+        padding: 1rem 1.2rem;
+        background: rgba(6, 18, 44, 0.6);
+        display: grid;
+        gap: 0.7rem;
+      }
+
+      .mission-feed__card header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.6rem;
+      }
+
+      .mission-feed__card h3 {
+        margin: 0;
+        font-size: 1rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .mission-feed__status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.15rem 0.6rem;
+        border-radius: 999px;
+        border: 1px solid rgba(124, 244, 255, 0.26);
+        font-size: 0.7rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: rgba(180, 210, 255, 0.8);
+        transition: box-shadow 0.3s ease, border-color 0.3s ease,
+          background 0.3s ease, color 0.3s ease;
+      }
+
+      .mission-feed__status[data-state="live"] {
+        border-color: rgba(124, 255, 210, 0.55);
+        background: rgba(20, 54, 78, 0.65);
+        box-shadow: 0 0 16px rgba(110, 255, 210, 0.25);
+        color: rgba(220, 255, 255, 0.95);
+      }
+
+      .mission-feed__mode {
+        margin: 0;
+        font-size: 0.72rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(190, 225, 255, 0.72);
+      }
+
+      .mission-feed__mode span {
+        color: var(--accent);
+      }
+
+      .mission-feed__mode[data-mode="manual"] span {
+        color: var(--accent-3);
+      }
+
+      .mission-feed__card dl {
+        margin: 0;
+        display: grid;
+        gap: 0.4rem;
+      }
+
+      .mission-feed__card dl div {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 0.6rem;
+      }
+
+      .mission-feed__card dt {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: rgba(180, 220, 255, 0.7);
+      }
+
+      .mission-feed__card dd {
+        margin: 0;
+        font-family: "Share Tech Mono", "Rajdhani", monospace;
+        font-size: 0.9rem;
+        color: var(--accent);
+      }
+
+      .demo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+        gap: clamp(1.6rem, 3vw, 2.6rem);
+      }
+
+      .demo-card {
+        position: relative;
+        border-radius: 26px;
+        border: 1px solid var(--card-border);
+        background: linear-gradient(
+          160deg,
+          rgba(6, 16, 32, 0.92),
+          rgba(5, 6, 20, 0.82)
+        );
+        overflow: hidden;
+        min-height: clamp(380px, 44vw, 640px);
+        box-shadow: 0 24px 70px rgba(4, 10, 40, 0.6);
+        transition: transform 0.5s ease, box-shadow 0.5s ease,
+          filter 0.5s ease, opacity 0.5s ease;
+      }
+
+      .demo-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+            circle at 15% 18%,
+            rgba(110, 234, 255, 0.22),
+            transparent 60%
+          ),
+          radial-gradient(
+            circle at 78% 26%,
+            rgba(190, 140, 255, 0.22),
+            transparent 64%
+          );
+        mix-blend-mode: screen;
+        opacity: 0.65;
+        pointer-events: none;
+        z-index: 0;
+      }
+      .demo-card::after {
+        content: "";
+        position: absolute;
+        inset: -2px;
+        border-radius: inherit;
+        pointer-events: none;
+        opacity: 0;
+        mix-blend-mode: screen;
+        box-shadow: 0 0 60px rgba(124, 244, 255, 0.08);
+        transition: opacity 0.6s ease, box-shadow 0.6s ease,
+          transform 12s linear;
+      }
+      .demo-card.simulation-live::after {
+        opacity: 1;
+        background: conic-gradient(
+          from 0deg,
+          rgba(124, 244, 255, 0.28),
+          rgba(154, 107, 255, 0.18),
+          rgba(250, 92, 255, 0.24),
+          rgba(124, 244, 255, 0.28)
+        );
+        animation: cardOrbit 18s linear infinite;
+        box-shadow: 0 0 80px rgba(124, 244, 255, 0.35),
+          0 0 120px rgba(250, 92, 255, 0.24);
+      }
+      .demo-card.start-flash::after {
+        box-shadow: 0 0 130px rgba(124, 244, 255, 0.5),
+          0 0 240px rgba(154, 107, 255, 0.45),
+          0 0 320px rgba(250, 92, 255, 0.4);
+      }
+      .demo-card.simulation-idle canvas.view {
+        filter: saturate(0.55) brightness(0.78);
+      }
+      .demo-card.simulation-live canvas.view {
+        animation: viewPulse 14s ease-in-out infinite;
+      }
+      .start-overlay {
+        position: absolute;
+        z-index: 5;
+        display: grid;
+        place-items: center;
+        justify-items: center;
+        gap: 0.75rem;
+        text-align: center;
+        transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .demo-card:not(.simulation-live) .start-overlay {
+        inset: 0;
+        background: radial-gradient(
+            circle at 22% 26%,
+            rgba(124, 244, 255, 0.24),
+            transparent 60%
+          ),
+          radial-gradient(
+            circle at 78% 32%,
+            rgba(250, 92, 255, 0.16),
+            transparent 58%
+          );
+        backdrop-filter: blur(18px) saturate(180%);
+      }
+      .demo-card.simulation-live .start-overlay {
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(1.06);
+        background: none;
+        backdrop-filter: none;
+      }
+      .start-core {
+        position: relative;
+        display: grid;
+        gap: 0.7rem;
+        justify-items: center;
+        padding: clamp(1rem, 3vw, 1.6rem);
+      }
+      .demo-card.simulation-live .start-core {
+        padding: 0;
+        gap: 0.45rem;
+        justify-items: end;
+      }
+      .demo-card:not(.simulation-live) .start-core::before {
+        content: "";
+        position: absolute;
+        inset: -18% -22%;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          rgba(124, 244, 255, 0.22),
+          transparent 62%
+        );
+        filter: blur(2px);
+        animation: startHalo 6s ease-in-out infinite;
+      }
+      .start-rings {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      .start-rings span {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 1px solid rgba(124, 244, 255, 0.32);
+        animation: startRing 4.6s linear infinite;
+      }
+      .start-rings span:nth-child(2) {
+        border-color: rgba(154, 107, 255, 0.28);
+        animation-delay: -1.6s;
+      }
+      .start-rings span:nth-child(3) {
+        border-color: rgba(250, 92, 255, 0.25);
+        animation-delay: -3.2s;
+      }
+      .start-trigger {
+        position: relative;
+        display: grid;
+        place-items: center;
+        gap: 0.25rem;
+        width: clamp(170px, 24vw, 230px);
+        aspect-ratio: 1;
+        border-radius: 50%;
+        border: none;
+        font-family: inherit;
+        text-transform: uppercase;
+        letter-spacing: 0.26em;
+        font-size: 0.78rem;
+        color: rgba(5, 8, 16, 0.92);
+        cursor: pointer;
+        background: conic-gradient(
+          from 210deg,
+          rgba(124, 244, 255, 0.95),
+          rgba(154, 107, 255, 0.95),
+          rgba(250, 92, 255, 0.95),
+          rgba(124, 244, 255, 0.95)
+        );
+        box-shadow: 0 0 68px rgba(124, 244, 255, 0.6),
+          0 0 0 2px rgba(124, 244, 255, 0.32),
+          inset 0 0 28px rgba(255, 255, 255, 0.5);
+        overflow: hidden;
+        transition: transform 0.35s ease, box-shadow 0.35s ease;
+      }
+      .start-trigger span {
+        position: relative;
+        z-index: 2;
+      }
+      .start-trigger .start-flare,
+      .start-trigger::before,
+      .start-trigger::after {
+        content: "";
+        position: absolute;
+        inset: -36%;
+        border-radius: 50%;
+        mix-blend-mode: screen;
+        pointer-events: none;
+        filter: blur(6px);
+      }
+      .start-trigger::before {
+        background: radial-gradient(
+          circle,
+          rgba(255, 255, 255, 0.8),
+          rgba(124, 244, 255, 0.2) 60%,
+          transparent 72%
+        );
+        animation: startFlare 5.6s linear infinite;
+      }
+      .start-trigger::after {
+        inset: -45%;
+        background: radial-gradient(
+          circle,
+          rgba(154, 107, 255, 0.55),
+          transparent 68%
+        );
+        animation: startFlare 6.2s linear infinite;
+        animation-delay: -1.4s;
+      }
+      .start-trigger .start-flare {
+        inset: -52%;
+        background: conic-gradient(
+          from 120deg,
+          rgba(124, 244, 255, 0.35),
+          rgba(250, 92, 255, 0.5),
+          rgba(124, 244, 255, 0.35)
+        );
+        animation: startSweep 7s linear infinite;
+        opacity: 0.5;
+      }
+      .start-trigger:hover {
+        transform: scale(1.06);
+        box-shadow: 0 0 90px rgba(124, 244, 255, 0.78),
+          0 0 0 3px rgba(154, 107, 255, 0.55),
+          inset 0 0 36px rgba(255, 255, 255, 0.6);
+      }
+      .demo-card.simulation-live .start-trigger {
+        width: clamp(120px, 18vw, 170px);
+        font-size: 0.7rem;
+        letter-spacing: 0.22em;
+        box-shadow: 0 0 50px rgba(124, 244, 255, 0.52),
+          0 0 0 2px rgba(124, 244, 255, 0.28),
+          inset 0 0 24px rgba(255, 255, 255, 0.45);
+      }
+      .demo-card.simulation-live .start-trigger:hover {
+        transform: scale(1.04);
+      }
+      .start-label {
+        font-size: 0.92rem;
+        text-shadow: 0 0 12px rgba(0, 10, 24, 0.45);
+      }
+      .start-hint {
+        font-size: 0.62rem;
+        letter-spacing: 0.32em;
+        color: rgba(8, 16, 26, 0.78);
+      }
+      .start-caption {
+        margin: 0;
+        font-size: 0.72rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: rgba(210, 240, 255, 0.82);
+        max-width: 22ch;
+      }
+      .demo-card.simulation-live .start-caption {
+        color: rgba(200, 235, 255, 0.68);
+        font-size: 0.68rem;
+        max-width: none;
+      }
+      .status-chip.is-online {
+        border-color: rgba(124, 255, 200, 0.55);
+        background: rgba(20, 54, 78, 0.65);
+        color: rgba(220, 255, 255, 0.92);
+        box-shadow: 0 0 28px rgba(120, 255, 210, 0.35);
+      }
+      .status-chip.is-online::before {
+        background: linear-gradient(120deg, #7bff94, #7cf4ff);
+        box-shadow: 0 0 18px rgba(140, 255, 210, 0.95);
+      }
+      .experience-veil {
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(
+            circle at 30% 20%,
+            rgba(126, 244, 255, 0.14),
+            rgba(8, 6, 28, 0.82) 55%
+          ),
+          radial-gradient(
+            circle at 70% 80%,
+            rgba(250, 92, 255, 0.16),
+            rgba(3, 0, 14, 0.85) 60%
+          );
+        backdrop-filter: blur(18px) saturate(120%);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.4s ease;
+        z-index: 14;
+      }
+
+      body.experience-open .experience-veil {
+        opacity: 0.7;
+        pointer-events: auto;
+      }
+
+      .demo-card.is-active {
+        position: fixed;
+        inset: clamp(1.2rem, 4vw, 2.8rem) clamp(1.2rem, 4vw, 3rem);
+        max-width: none;
+        width: auto;
+        min-height: min(88vh, 960px);
+        max-height: 92vh;
+        z-index: 24;
+        box-shadow: 0 40px 140px rgba(6, 20, 80, 0.85);
+      }
+
+      body.experience-open .demo-card:not(.is-active) {
+        opacity: 0;
+        transform: scale(0.96);
+        filter: blur(10px);
+        pointer-events: none;
+      }
+
+      .demo-card.is-active .overlay {
+        pointer-events: auto;
+      }
+
+      .demo-card.is-active canvas.view {
+        filter: saturate(1.2);
+      }
+
+      .close-experience {
+        position: absolute;
+        top: clamp(0.8rem, 2vw, 1.6rem);
+        right: clamp(0.8rem, 2vw, 1.6rem);
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        border: 1px solid rgba(120, 240, 255, 0.4);
+        background: rgba(4, 10, 28, 0.72);
+        color: rgba(210, 245, 255, 0.88);
+        font-size: 1.6rem;
+        line-height: 1;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        pointer-events: auto;
+        z-index: 6;
+      }
+
+      .close-experience:hover {
+        transform: scale(1.05);
+        box-shadow: 0 16px 36px rgba(80, 150, 255, 0.45);
+      }
+
+      .demo-card.is-active .close-experience {
+        display: inline-flex;
+      }
+      .demo-card[data-demo="nebula"]::before {
+        background: radial-gradient(
+            circle at 12% 20%,
+            rgba(110, 234, 255, 0.28),
+            transparent 55%
+          ),
+          radial-gradient(
+            circle at 78% 28%,
+            rgba(100, 60, 255, 0.32),
+            transparent 68%
+          );
+      }
+
+      .demo-card[data-demo="crystal"]::before {
+        background: radial-gradient(
+            circle at 18% 18%,
+            rgba(120, 255, 220, 0.24),
+            transparent 58%
+          ),
+          radial-gradient(
+            circle at 80% 24%,
+            rgba(255, 142, 86, 0.25),
+            transparent 68%
+          );
+      }
+
+      .demo-card[data-demo="rift"]::before {
+        background: radial-gradient(
+            circle at 20% 16%,
+            rgba(255, 120, 240, 0.28),
+            transparent 60%
+          ),
+          radial-gradient(
+            circle at 70% 26%,
+            rgba(120, 210, 255, 0.24),
+            transparent 70%
+          );
+      }
+
+      canvas.view {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .overlay {
+        position: relative;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: clamp(1.1rem, 2.4vw, 2rem);
+        z-index: 2;
+        pointer-events: none;
+      }
+
+      .card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .card-header .title-block {
+        display: grid;
+        gap: 0.4rem;
+      }
+
+      .card-header span.variant {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: var(--text-muted);
+      }
+
+      .card-header h2 {
+        margin: 0;
+        font-size: clamp(1.4rem, 2.8vw, 1.8rem);
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+      }
+
+      .status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 999px;
+        border: 1px solid rgba(120, 255, 255, 0.25);
+        background: rgba(10, 30, 58, 0.55);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: rgba(210, 245, 255, 0.8);
+      }
+
+      .status-chip::before {
+        content: "";
+        width: 0.55rem;
+        height: 0.55rem;
+        border-radius: 50%;
+        background: linear-gradient(120deg, #7bfff9, #6b98ff);
+        box-shadow: 0 0 18px rgba(130, 255, 255, 0.8);
+      }
+
+      .control-hub {
+        margin-top: auto;
+        display: grid;
+        gap: 1.1rem;
+        pointer-events: auto;
+      }
+
+      .control-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 0.85rem;
+      }
+
+      .control {
+        position: relative;
+        padding: 0.85rem;
+        border-radius: 16px;
+        background: rgba(6, 18, 44, 0.68);
+        border: 1px solid rgba(120, 230, 255, 0.24);
+        display: grid;
+        gap: 0.55rem;
+        align-content: center;
+      }
+
+      .control .label {
+        font-size: 0.75rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(190, 230, 255, 0.78);
+      }
+
+      .control .value {
+        font-family: "Share Tech Mono", "Rajdhani", monospace;
+        font-size: 0.95rem;
+        letter-spacing: 0.12em;
+        color: #9af0ff;
+      }
+
+      .dial-face {
+        width: 100%;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        position: relative;
+        background: radial-gradient(
+          circle at 50% 50%,
+          rgba(30, 62, 104, 0.9),
+          rgba(10, 26, 54, 0.8)
+        );
+        border: 1px solid rgba(140, 255, 255, 0.18);
+      }
+
+      .dial-face::before,
+      .dial-face::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+      }
+
+      .dial-face::before {
+        inset: 18%;
+        border: 1px dashed rgba(120, 200, 255, 0.35);
+        opacity: 0.6;
+      }
+
+      .dial-face::after {
+        width: 2px;
+        height: 32%;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.65),
+          rgba(120, 255, 255, 0.8)
+        );
+        top: 18%;
+        left: calc(50% - 1px);
+        transform-origin: 50% 100%;
+        transform: rotate(var(--dial-rotation, -135deg));
+        border-radius: 2px;
+        box-shadow: 0 0 12px rgba(120, 255, 255, 0.6);
+      }
+
+      .dial-face input[type="range"] {
+        position: absolute;
+        inset: 0;
+        margin: 0;
+        opacity: 0;
+        cursor: pointer;
+      }
+      .slider-track {
+        position: relative;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(28, 66, 120, 0.4);
+        overflow: hidden;
+      }
+
+      .slider-track::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          90deg,
+          rgba(120, 230, 255, 0.9),
+          rgba(140, 120, 255, 0.85)
+        );
+        width: var(--slider-progress, 50%);
+        border-radius: inherit;
+        box-shadow: 0 0 18px rgba(120, 230, 255, 0.55);
+      }
+
+      .slider input[type="range"] {
+        appearance: none;
+        width: 100%;
+        background: transparent;
+        height: 18px;
+        margin: 0;
+        cursor: pointer;
+      }
+
+      .slider input[type="range"]::-webkit-slider-thumb {
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: radial-gradient(circle, #9ffcff, #4d9cff);
+        box-shadow: 0 0 18px rgba(120, 255, 255, 0.9);
+        border: none;
+      }
+
+      .slider input[type="range"]::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: radial-gradient(circle, #9ffcff, #4d9cff);
+        box-shadow: 0 0 18px rgba(120, 255, 255, 0.9);
+        border: none;
+      }
+
+      .toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.8rem;
+        padding: 0.75rem 1rem;
+        border-radius: 999px;
+        background: rgba(8, 24, 54, 0.68);
+        border: 1px solid rgba(110, 220, 255, 0.25);
+        font-size: 0.78rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(205, 240, 255, 0.75);
+      }
+
+      .toggle input {
+        appearance: none;
+        width: 42px;
+        height: 22px;
+        border-radius: 999px;
+        border: 1px solid rgba(110, 220, 255, 0.32);
+        background: rgba(16, 40, 74, 0.7);
+        position: relative;
+        cursor: pointer;
+        transition: background 0.3s ease;
+      }
+
+      .toggle input::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: linear-gradient(130deg, #8ffbff, #5d99ff);
+        box-shadow: 0 0 12px rgba(120, 240, 255, 0.6);
+        transition: transform 0.3s ease;
+      }
+
+      .toggle input:checked {
+        background: linear-gradient(
+          90deg,
+          rgba(120, 230, 255, 0.88),
+          rgba(140, 130, 255, 0.88)
+        );
+      }
+
+      .toggle input:checked::after {
+        transform: translateX(20px);
+      }
+
+      .actions {
+        display: flex;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+      }
+
+      .actions button {
+        font-family: inherit;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        padding: 0.6rem 1rem;
+        border-radius: 999px;
+        border: 1px solid rgba(120, 240, 255, 0.45);
+        background: rgba(10, 28, 58, 0.65);
+        color: rgba(210, 250, 255, 0.85);
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .actions button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(40, 120, 255, 0.35);
+      }
+
+      .actions .primary-action {
+        background: linear-gradient(
+          100deg,
+          rgba(124, 244, 255, 0.95),
+          rgba(154, 107, 255, 0.95),
+          rgba(250, 92, 255, 0.95)
+        );
+        color: rgba(8, 12, 22, 0.92);
+        box-shadow: 0 14px 42px rgba(120, 220, 255, 0.42);
+      }
+
+      .actions .primary-action:hover {
+        box-shadow: 0 18px 52px rgba(120, 220, 255, 0.55);
+      }
+
+      .telemetry {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 0.75rem;
+      }
+
+      .metric {
+        padding: 0.8rem;
+        border-radius: 14px;
+        background: rgba(6, 20, 46, 0.7);
+        border: 1px solid rgba(120, 240, 255, 0.18);
+        display: grid;
+        gap: 0.4rem;
+      }
+
+      .metric span {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: rgba(180, 220, 255, 0.6);
+      }
+
+      .metric strong {
+        font-family: "Share Tech Mono", monospace;
+        font-size: 1.1rem;
+        color: #94f8ff;
+      }
+
+      @keyframes cardOrbit {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes viewPulse {
+        0%,
+        100% {
+          filter: saturate(1.18) brightness(1.04);
+        }
+        30% {
+          filter: saturate(1.36) brightness(1.1);
+        }
+        60% {
+          filter: saturate(1.26) brightness(1.08);
+        }
+        80% {
+          filter: saturate(1.2) brightness(1.02);
+        }
+      }
+
+      @keyframes startRing {
+        0% {
+          transform: scale(0.6);
+          opacity: 0.6;
+        }
+        55% {
+          opacity: 0.85;
+        }
+        100% {
+          transform: scale(1.8);
+          opacity: 0;
+        }
+      }
+
+      @keyframes startHalo {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.35;
+        }
+        50% {
+          transform: scale(1.12);
+          opacity: 0.6;
+        }
+      }
+
+      @keyframes startFlare {
+        0% {
+          transform: rotate(0deg);
+          opacity: 0.55;
+        }
+        50% {
+          opacity: 0.85;
+        }
+        100% {
+          transform: rotate(360deg);
+          opacity: 0.55;
+        }
+      }
+
+      @keyframes startSweep {
+        0% {
+          transform: rotate(0deg) scale(1);
+          opacity: 0.45;
+        }
+        50% {
+          opacity: 0.75;
+        }
+        100% {
+          transform: rotate(360deg) scale(1.05);
+          opacity: 0.45;
+        }
+      }
+
+      @keyframes startFlash {
+        0% {
+          filter: saturate(1) brightness(1);
+        }
+        40% {
+          filter: saturate(1.6) brightness(1.28);
+        }
+        100% {
+          filter: saturate(1.12) brightness(1.05);
+        }
+      }
+
+      .demo-card.start-flash {
+        animation: startFlash 0.8s ease;
+      }
+
+      footer {
+        margin-top: clamp(2.4rem, 4vw, 4rem);
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        color: rgba(160, 200, 240, 0.7);
+        font-size: 0.8rem;
+      }
+
+      footer .tag {
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.001ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.001ms !important;
+          scroll-behavior: auto !important;
+        }
+
+        .start-rings span,
+        .start-trigger::before,
+        .start-trigger::after,
+        .start-trigger .start-flare,
+        .demo-card::after {
+          animation: none !important;
+        }
+      }
+
+      @media (max-width: 900px) {
+        .demo-card {
+          min-height: 420px;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .mission-controls {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .mission-feed__header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .mission-feed__grid {
+          grid-template-columns: 1fr;
+        }
+        .card-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .start-trigger {
+          width: min(68vw, 220px);
+        }
+        .demo-card:not(.simulation-live) .start-overlay {
+          padding: 1.6rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="masthead">
+        <span class="badge">XR-9 Deep Survey &middot; Alien Horizons</span>
+        <h1>Flight Suite Demonstrator</h1>
+        <p>
+          Experience three simultaneous telemetry feeds exploring radically
+          different alien environments. Each viewport is a self-contained vessel
+          with bespoke controls, live-adjustable dials and sliders, and
+          autonomous logic tuned to its biome. Mix and match settings in real
+          time to sculpt the landscapes.
+        </p>
+        <div class="mission-controls" role="group" aria-label="Global simulation controls">
+          <button type="button" class="control-button" data-mission-start-all>
+            Launch All Simulations
+          </button>
+          <button type="button" class="control-button secondary" data-mission-reset>
+            Reset Telemetry
+          </button>
+        </div>
+      </header>
+
+      <section class="mission-feed" aria-label="Mission telemetry overview">
+        <header class="mission-feed__header">
+          <h2>Mission Telemetry Summary</h2>
+          <p data-mission-summary>All simulations awaiting launch.</p>
+        </header>
+        <div class="mission-feed__grid">
+          <article class="mission-feed__card" data-mission-card="nebula">
+            <header>
+              <h3>Nebula Runway</h3>
+              <span
+                class="mission-feed__status"
+                data-mission-status="nebula"
+                data-state="idle"
+              >
+                Idle
+              </span>
+            </header>
+            <p class="mission-feed__mode" data-mission-mode="nebula" data-mode="auto">
+              Mode: <span>Autopilot</span>
+            </p>
+            <dl>
+              <div>
+                <dt>Warp</dt>
+                <dd data-mission-metric="nebula-warp">0.82</dd>
+              </div>
+              <div>
+                <dt>Veil Bloom</dt>
+                <dd data-mission-metric="nebula-bloom">0.90</dd>
+              </div>
+              <div>
+                <dt>Starstream</dt>
+                <dd data-mission-metric="nebula-stream">0.58</dd>
+              </div>
+            </dl>
+          </article>
+          <article class="mission-feed__card" data-mission-card="crystal">
+            <header>
+              <h3>Crystal Megalopolis</h3>
+              <span
+                class="mission-feed__status"
+                data-mission-status="crystal"
+                data-state="idle"
+              >
+                Idle
+              </span>
+            </header>
+            <p class="mission-feed__mode" data-mission-mode="crystal" data-mode="auto">
+              Mode: <span>Autopilot</span>
+            </p>
+            <dl>
+              <div>
+                <dt>Tower Glow</dt>
+                <dd data-mission-metric="crystal-glow">1.05</dd>
+              </div>
+              <div>
+                <dt>Traffic</dt>
+                <dd data-mission-metric="crystal-traffic">0.68</dd>
+              </div>
+              <div>
+                <dt>Aurora Span</dt>
+                <dd data-mission-metric="crystal-aurora">0.72</dd>
+              </div>
+            </dl>
+          </article>
+          <article class="mission-feed__card" data-mission-card="rift">
+            <header>
+              <h3>Quantum Rift Expanse</h3>
+              <span
+                class="mission-feed__status"
+                data-mission-status="rift"
+                data-state="idle"
+              >
+                Idle
+              </span>
+            </header>
+            <p class="mission-feed__mode" data-mission-mode="rift" data-mode="auto">
+              Mode: <span>Autopilot</span>
+            </p>
+            <dl>
+              <div>
+                <dt>Rift Stability</dt>
+                <dd data-mission-metric="rift-stability">0.92</dd>
+              </div>
+              <div>
+                <dt>Stream Velocity</dt>
+                <dd data-mission-metric="rift-stream">0.72</dd>
+              </div>
+              <div>
+                <dt>Halo Charge</dt>
+                <dd data-mission-metric="rift-halo">0.66</dd>
+              </div>
+            </dl>
+          </article>
+        </div>
+      </section>
+
+      <main class="demo-grid">
+        <article class="demo-card" data-demo="nebula" tabindex="-1">
+          <canvas id="nebulaCanvas" class="view"></canvas>
+          <div class="start-overlay" data-start-overlay>
+            <div class="start-core">
+              <div class="start-rings" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <button
+                type="button"
+                class="start-trigger"
+                data-simulation-start
+                aria-label="Start Nebula simulation"
+              >
+                <span class="start-flare" aria-hidden="true"></span>
+                <span class="start-label" data-start-label>
+                  Ignite Nebula Runway
+                </span>
+                <span class="start-hint" data-start-hint>Start Simulation</span>
+              </button>
+              <p class="start-caption" data-start-caption>
+                Thrusters on standby. Tune parameters freely.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="close-experience"
+            data-experience-close
+            aria-label="Exit simulation view"
+          >
+            &times;
+          </button>
+          <div class="overlay">
+            <div class="card-header">
+              <div class="title-block">
+                <span class="variant">Variant 01</span>
+                <h2>Nebula Runway</h2>
+              </div>
+              <span class="status-chip">Escort Wing Linked</span>
+            </div>
+
+            <section class="control-hub" id="nebulaControls">
+              <div class="control-row">
+                <div class="control dial" data-param="warp">
+                  <span class="label">Warp Shear</span>
+                  <div class="dial-face">
+                    <input
+                      type="range"
+                      min="0.3"
+                      max="1.4"
+                      step="0.01"
+                      value="0.82"
+                    />
+                  </div>
+                  <span class="value">0.82</span>
+                </div>
+                <div class="control dial" data-param="nebulaPulse">
+                  <span class="label">Veil Bloom</span>
+                  <div class="dial-face">
+                    <input
+                      type="range"
+                      min="0.4"
+                      max="1.4"
+                      step="0.01"
+                      value="0.9"
+                    />
+                  </div>
+                  <span class="value">0.90</span>
+                </div>
+                <div class="control dial" data-param="escortTightness">
+                  <span class="label">Escort Cohesion</span>
+                  <div class="dial-face">
+                    <input
+                      type="range"
+                      min="0.1"
+                      max="1.0"
+                      step="0.01"
+                      value="0.6"
+                    />
+                  </div>
+                  <span class="value">0.60</span>
+                </div>
+              </div>
+
+              <div class="control-row">
+                <div class="control slider" data-param="starSpeed">
+                  <span class="label">Starstream Velocity</span>
+                  <div class="slider-track"></div>
+                  <input
+                    type="range"
+                    min="0.2"
+                    max="1.3"
+                    step="0.01"
+                    value="0.58"
+                  />
+                  <span class="value">0.58</span>
+                </div>
+                <div class="control slider" data-param="droneSpin">
+                  <span class="label">Drone Spiral</span>
+                  <div class="slider-track"></div>
+                  <input
+                    type="range"
+                    min="0.2"
+                    max="1.5"
+                    step="0.01"
+                    value="0.74"
+                  />
+                  <span class="value">0.74</span>
+                </div>
+                <div class="control slider" data-param="riftGlow">
+                  <span class="label">Rift Luminosity</span>
+                  <div class="slider-track"></div>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="1.2"
+                    step="0.01"
+                    value="0.65"
+                  />
+                  <span class="value">0.65</span>
+                </div>
+              </div>
+
+              <div class="control-row">
+                <label class="toggle" data-param="autopilot">
+                  <span>Autopilot</span>
+                  <input type="checkbox" checked />
+                </label>
+                <label class="toggle" data-param="escortMode">
+                  <span>Escort Spiral</span>
+                  <input type="checkbox" checked />
+                </label>
+                <label class="toggle" data-param="shockwave">
+                  <span>Shockwave Surge</span>
+                  <input type="checkbox" />
+                </label>
+              </div>
+
+              <div class="actions">
+                <button
+                  type="button"
+                  class="primary-action"
+                  data-experience-launch
+                >
+                  Launch Simulation
+                </button>
+                <button type="button" data-action="nebula-randomize">
+                  Randomise Vectors
+                </button>
+                <button type="button" data-action="nebula-boost">
+                  Pulse Boost
+                </button>
+              </div>
+
+              <div class="telemetry">
+                <div class="metric">
+                  <span>Warp Factor</span>
+                  <strong data-output="warp">8.2</strong>
+                </div>
+                <div class="metric">
+                  <span>Escort Cohesion</span>
+                  <strong data-output="escort">60%</strong>
+                </div>
+                <div class="metric">
+                  <span>Nebula Bloom</span>
+                  <strong data-output="nebula">0.90</strong>
+                </div>
+                <div class="metric">
+                  <span>Starstream</span>
+                  <strong data-output="stream">0.58</strong>
+                </div>
+              </div>
+            </section>
+          </div>
+        </article>
+        <article class="demo-card" data-demo="crystal" tabindex="-1">
+          <canvas id="crystalCanvas" class="view"></canvas>
+          <div class="start-overlay" data-start-overlay>
+            <div class="start-core">
+              <div class="start-rings" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <button
+                type="button"
+                class="start-trigger"
+                data-simulation-start
+                aria-label="Start Crystal simulation"
+              >
+                <span class="start-flare" aria-hidden="true"></span>
+                <span class="start-label" data-start-label>
+                  Wake the Skyline
+                </span>
+                <span class="start-hint" data-start-hint>Start Simulation</span>
+              </button>
+              <p class="start-caption" data-start-caption>
+                District grid idle. Dial anything before liftoff.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="close-experience"
+            data-experience-close
+            aria-label="Exit simulation view"
+          >
+            &times;
+          </button>
+          <div class="overlay">
+            <div class="card-header">
+              <div class="title-block">
+                <span class="variant">Variant 02</span>
+                <h2>Crystal Megalopolis</h2>
+              </div>
+              <span class="status-chip">Strata Towers Online</span>
+            </div>
+
+            <section class="control-hub" id="crystalControls">
+              <div class="control-row">
+                <div class="control dial" data-param="skylineDensity">
+                  <span class="label">Skyline Density</span>
+                  <div class="dial-face">
+                    <input
+                      type="range"
+                      min="0.4"
+                      max="1.4"
+                      step="0.01"
+                      value="0.96"
+                    />
+                  </div>
+                  <span class="value">0.96</span>
+                </div>
+                <div class="control dial" data-param="towerGlow">
+                  <span class="label">Tower Radiance</span>
+                  <div class="dial-face">
+                    <input
+                      type="range"
+                      min="0.4"
+                      max="1.5"
+                      step="0.01"
+                      value="1.05"
+                    />
+                  </div>
+                  <span class="value">1.05</span>
+                </div>
+                <div class="control dial" data-param="auroraSpan">
+                  <span class="label">Aurora Span</span>
+                  <div class="dial-face">
+                    <input
+                      type="range"
+                      min="0.2"
+                      max="1.2"
+                      step="0.01"
+                      value="0.72"
+                    />
+                  </div>
+                  <span class="value">0.72</span>
+                </div>
+              </div>
+
+              <div class="control-row">
+                <div class="control slider" data-param="trafficFlow">
+                  <span class="label">Traffic Flow</span>
+                  <div class="slider-track"></div>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="1.4"
+                    step="0.01"
+                    value="0.68"
+                  />
+                  <span class="value">0.68</span>
+                </div>
+                <div class="control slider" data-param="sentinelDrift">
+                  <span class="label">Sentinel Drift</span>
+                  <div class="slider-track"></div>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="1.3"
+                    step="0.01"
+                    value="0.56"
+                  />
+                  <span class="value">0.56</span>
+                </div>
+                <div class="control slider" data-param="gridPulse">
+                  <span class="label">Grid Pulse</span>
+                  <div class="slider-track"></div>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="1.2"
+                    step="0.01"
+                    value="0.64"
+                  />
+                  <span class="value">0.64</span>
+                </div>
+              </div>
+
+              <div class="control-row">
+                <label class="toggle" data-param="autopilot">
+                  <span>Auto Glide</span>
+                  <input type="checkbox" checked />
+                </label>
+                <label class="toggle" data-param="tremor">
+                  <span>Seismic Lift</span>
+                  <input type="checkbox" />
+                </label>
+                <label class="toggle" data-param="auroraFlux">
+                  <span>Aurora Flux</span>
+                  <input type="checkbox" checked />
+                </label>
+              </div>
+
+              <div class="actions">
+                <button
+                  type="button"
+                  class="primary-action"
+                  data-experience-launch
+                >
+                  Launch Simulation
+                </button>
+                <button type="button" data-action="crystal-scan">
+                  Trigger Skyline Scan
+                </button>
+                <button type="button" data-action="crystal-randomize">
+                  Re-seed Districts
+                </button>
+              </div>
+
+              <div class="telemetry">
+                <div class="metric">
+                  <span>Density Index</span>
+                  <strong data-output="density">0.96</strong>
+                </div>
+                <div class="metric">
+                  <span>Traffic Lanes</span>
+                  <strong data-output="traffic">0.68</strong>
+                </div>
+                <div class="metric">
+                  <span>Aurora Span</span>
+                  <strong data-output="aurora">0.72</strong>
+                </div>
+                <div class="metric">
+                  <span>Sentinel Drift</span>
+                  <strong data-output="sentinel">0.56</strong>
+                </div>
+              </div>
+            </section>
+          </div>
+        </article>
+        <article class="demo-card" data-demo="rift" tabindex="-1">
+          <canvas id="riftCanvas" class="view"></canvas>
+          <div class="start-overlay" data-start-overlay>
+            <div class="start-core">
+              <div class="start-rings" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <button
+                type="button"
+                class="start-trigger"
+                data-simulation-start
+                aria-label="Start Rift simulation"
+              >
+                <span class="start-flare" aria-hidden="true"></span>
+                <span class="start-label" data-start-label>
+                  Breach the Rift
+                </span>
+                <span class="start-hint" data-start-hint>Start Simulation</span>
+              </button>
+              <p class="start-caption" data-start-caption>
+                Containment calm. Configure flux before breach.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="close-experience"
+            data-experience-close
+            aria-label="Exit simulation view"
+          >
+            &times;
+          </button>
+          <div class="overlay">
+            <div class="card-header">
+              <div class="title-block">
+                <span class="variant">Variant 03</span>
+                <h2>Quantum Rift Expanse</h2>
+              </div>
+              <span class="status-chip">Flux Containment Nominal</span>
+            </div>
+
+            <section class="control-hub" id="riftControls">
+              <div class="control-row">
+                <div class="control dial" data-param="riftStability">
+                  <span class="label">Rift Stability</span>
+                  <div class="dial-face">
+                    <input
+                      type="range"
+                      min="0.3"
+                      max="1.5"
+                      step="0.01"
+                      value="0.92"
+                    />
+                  </div>
+                  <span class="value">0.92</span>
+                </div>
+                <div class="control dial" data-param="portalTurbulence">
+                  <span class="label">Portal Turbulence</span>
+                  <div class="dial-face">
+                    <input
+                      type="range"
+                      min="0.2"
+                      max="1.6"
+                      step="0.01"
+                      value="1.1"
+                    />
+                  </div>
+                  <span class="value">1.10</span>
+                </div>
+                <div class="control dial" data-param="shardDensity">
+                  <span class="label">Shard Density</span>
+                  <div class="dial-face">
+                    <input
+                      type="range"
+                      min="0.1"
+                      max="1.2"
+                      step="0.01"
+                      value="0.58"
+                    />
+                  </div>
+                  <span class="value">0.58</span>
+                </div>
+              </div>
+
+              <div class="control-row">
+                <div class="control slider" data-param="streamVelocity">
+                  <span class="label">Flux Stream</span>
+                  <div class="slider-track"></div>
+                  <input
+                    type="range"
+                    min="0.2"
+                    max="1.4"
+                    step="0.01"
+                    value="0.72"
+                  />
+                  <span class="value">0.72</span>
+                </div>
+                <div class="control slider" data-param="haloCharge">
+                  <span class="label">Halo Charge</span>
+                  <div class="slider-track"></div>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="1.3"
+                    step="0.01"
+                    value="0.66"
+                  />
+                  <span class="value">0.66</span>
+                </div>
+                <div class="control slider" data-param="singularity">
+                  <span class="label">Singularity Spin</span>
+                  <div class="slider-track"></div>
+                  <input
+                    type="range"
+                    min="0.2"
+                    max="1.5"
+                    step="0.01"
+                    value="0.84"
+                  />
+                  <span class="value">0.84</span>
+                </div>
+              </div>
+
+              <div class="control-row">
+                <label class="toggle" data-param="autopilot">
+                  <span>Auto Orbit</span>
+                  <input type="checkbox" checked />
+                </label>
+                <label class="toggle" data-param="fluxLock">
+                  <span>Flux Lock</span>
+                  <input type="checkbox" />
+                </label>
+                <label class="toggle" data-param="riftEchoes">
+                  <span>Rift Echoes</span>
+                  <input type="checkbox" checked />
+                </label>
+              </div>
+
+              <div class="actions">
+                <button
+                  type="button"
+                  class="primary-action"
+                  data-experience-launch
+                >
+                  Launch Simulation
+                </button>
+                <button type="button" data-action="rift-collapse">
+                  Stabilise Core
+                </button>
+                <button type="button" data-action="rift-randomize">
+                  Resequence Flux
+                </button>
+              </div>
+
+              <div class="telemetry">
+                <div class="metric">
+                  <span>Rift Phase</span>
+                  <strong data-output="rift">0.92</strong>
+                </div>
+                <div class="metric">
+                  <span>Stream Velocity</span>
+                  <strong data-output="stream">0.72</strong>
+                </div>
+                <div class="metric">
+                  <span>Shard Field</span>
+                  <strong data-output="shards">0.58</strong>
+                </div>
+                <div class="metric">
+                  <span>Halo Charge</span>
+                  <strong data-output="halo">0.66</strong>
+                </div>
+              </div>
+            </section>
+          </div>
+        </article>
+      </main>
+
+      <div class="experience-veil" aria-hidden="true"></div>
+
+      <footer>
+        <span class="tag"
+          >XR-9 Mission Control &mdash; Multiview Flight Deck</span
+        >
+        <span
+          >Adjustments propagate instantly across each renderer. Combine
+          autopilot with manual overrides for emergent vistas.</span
+        >
+      </footer>
+    </div>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"
+      integrity="sha512-UoL10TWjQJJvYjOz43rxPvo6nEloxGIYsFioCZoqWVbL4zSfnxuuYgFRJYkYjxbNq/71tNd1IaFuyKxsfwWhmw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script>
+      (() => {
+        const demos = [];
+        const missionControl = (() => {
+          const summary = document.querySelector("[data-mission-summary]");
+          const startAll = document.querySelector("[data-mission-start-all]");
+          const reset = document.querySelector("[data-mission-reset]");
+          const statusEls = {
+            nebula: document.querySelector('[data-mission-status="nebula"]'),
+            crystal: document.querySelector('[data-mission-status="crystal"]'),
+            rift: document.querySelector('[data-mission-status="rift"]'),
+          };
+          const modeEls = {
+            nebula: document.querySelector('[data-mission-mode="nebula"]'),
+            crystal: document.querySelector('[data-mission-mode="crystal"]'),
+            rift: document.querySelector('[data-mission-mode="rift"]'),
+          };
+          const metricEls = {
+            nebula: {
+              warp: document.querySelector('[data-mission-metric="nebula-warp"]'),
+              bloom: document.querySelector('[data-mission-metric="nebula-bloom"]'),
+              stream: document.querySelector('[data-mission-metric="nebula-stream"]'),
+            },
+            crystal: {
+              glow: document.querySelector('[data-mission-metric="crystal-glow"]'),
+              traffic: document.querySelector('[data-mission-metric="crystal-traffic"]'),
+              aurora: document.querySelector('[data-mission-metric="crystal-aurora"]'),
+            },
+            rift: {
+              stability: document.querySelector('[data-mission-metric="rift-stability"]'),
+              stream: document.querySelector('[data-mission-metric="rift-stream"]'),
+              halo: document.querySelector('[data-mission-metric="rift-halo"]'),
+            },
+          };
+          const statusState = {
+            nebula: "idle",
+            crystal: "idle",
+            rift: "idle",
+          };
+          const tracked = new Map();
+
+          const formatNumber = (value) =>
+            typeof value === "number" ? value.toFixed(2) : value;
+
+          const updateSummary = () => {
+            const totals = Object.values(statusState);
+            const liveCount = totals.filter((state) => state === "live").length;
+            if (!summary) return;
+            if (liveCount === 0) {
+              summary.textContent = "All simulations awaiting launch.";
+            } else if (liveCount === totals.length) {
+              summary.textContent =
+                "All simulations active. Instruments synchronized.";
+            } else {
+              const standby = totals.length - liveCount;
+              summary.textContent = `${liveCount} simulation${
+                liveCount === 1 ? "" : "s"
+              } live, ${standby} on standby.`;
+            }
+          };
+
+          const applyMode = (variant, autopilot) => {
+            const el = modeEls[variant];
+            if (!el) return;
+            el.dataset.mode = autopilot ? "auto" : "manual";
+            const span = el.querySelector("span");
+            if (span) {
+              span.textContent = autopilot ? "Autopilot" : "Manual override";
+            }
+          };
+
+          const setStatus = (variant, statusText, state = "idle") => {
+            statusState[variant] = state;
+            const el = statusEls[variant];
+            if (el) {
+              el.textContent = statusText;
+              el.dataset.state = state;
+            }
+            updateSummary();
+          };
+
+          const updateMetrics = (variant, metrics = {}) => {
+            const map = metricEls[variant];
+            if (!map) return;
+            Object.entries(metrics).forEach(([key, value]) => {
+              const el = map[key];
+              if (el) {
+                el.textContent = formatNumber(value);
+              }
+            });
+          };
+
+          const refreshDemo = (demo) => {
+            if (!demo) return;
+            const snapshot = demo.collectMissionMetrics?.();
+            if (!snapshot) return;
+            updateMetrics(demo.variant, snapshot.metrics);
+            applyMode(demo.variant, snapshot.autopilot);
+          };
+
+          const registerDemo = (demo) => {
+            if (!demo || !demo.variant) return;
+            tracked.set(demo.variant, demo);
+            refreshDemo(demo);
+          };
+
+          const resetDemos = () => {
+            tracked.forEach((demo) => {
+              if (typeof demo.resetToDefaults === "function") {
+                demo.resetToDefaults();
+              }
+              refreshDemo(demo);
+            });
+            updateSummary();
+          };
+
+          if (startAll) {
+            startAll.addEventListener("click", () => {
+              tracked.forEach((demo) => {
+                if (typeof demo.startSequence === "function") {
+                  demo.startSequence();
+                }
+              });
+            });
+          }
+
+          if (reset) {
+            reset.addEventListener("click", resetDemos);
+          }
+
+          updateSummary();
+
+          return {
+            setStatus,
+            updateMetrics,
+            refreshDemo,
+            registerDemo,
+            applyMode,
+            updateSummary,
+          };
+        })();
+        const audioSuite = (() => {
+          const suite = {
+            context: null,
+            masterGain: null,
+            noiseBuffer: null,
+            cooldowns: new Map(),
+          };
+
+          suite.ensureContext = () => {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return null;
+            if (!suite.context) {
+              suite.context = new AudioCtx();
+              suite.masterGain = suite.context.createGain();
+              suite.masterGain.gain.value = 0.26;
+              suite.masterGain.connect(suite.context.destination);
+            }
+            if (suite.context.state === "suspended") {
+              suite.context.resume();
+            }
+            return suite.context;
+          };
+
+          suite.getNoiseBuffer = () => {
+            const ctx = suite.context;
+            if (!ctx) return null;
+            if (!suite.noiseBuffer) {
+              const length = ctx.sampleRate * 1.5;
+              const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+              const data = buffer.getChannelData(0);
+              for (let i = 0; i < length; i++) {
+                data[i] = Math.random() * 2 - 1;
+              }
+              suite.noiseBuffer = buffer;
+            }
+            return suite.noiseBuffer;
+          };
+
+          suite.scheduleSweep = ({
+            type = "sawtooth",
+            start = 220,
+            end = 660,
+            duration = 2,
+            startTime = 0,
+            peak = 0.4,
+            destination,
+          }) => {
+            const ctx = suite.context;
+            if (!ctx || !destination) return;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(start, startTime);
+            osc.frequency.exponentialRampToValueAtTime(
+              Math.max(10, end),
+              startTime + duration
+            );
+            gain.gain.setValueAtTime(0.0001, startTime);
+            gain.gain.exponentialRampToValueAtTime(peak, startTime + 0.08);
+            gain.gain.exponentialRampToValueAtTime(
+              0.0001,
+              startTime + duration
+            );
+            osc.connect(gain).connect(destination);
+            osc.start(startTime);
+            osc.stop(startTime + duration + 0.05);
+          };
+
+          suite.playLaunchCue = (variant) => {
+            const ctx = suite.ensureContext();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+            const baseGain = ctx.createGain();
+            baseGain.gain.setValueAtTime(0.0001, now);
+            baseGain.gain.exponentialRampToValueAtTime(0.8, now + 0.18);
+            baseGain.gain.exponentialRampToValueAtTime(0.0001, now + 3.2);
+            baseGain.connect(suite.masterGain);
+
+            const filter = ctx.createBiquadFilter();
+            filter.type = "lowpass";
+            filter.frequency.setValueAtTime(4800, now);
+            filter.frequency.exponentialRampToValueAtTime(900, now + 2.6);
+            filter.Q.value = 1.5;
+            filter.connect(baseGain);
+
+            const variantSettings = {
+              nebula: { start: 180, end: 720, chord: 540 },
+              crystal: { start: 260, end: 980, chord: 840 },
+              rift: { start: 120, end: 420, chord: 240 },
+            };
+            const settings = variantSettings[variant] || variantSettings.nebula;
+
+            suite.scheduleSweep({
+              type: "sawtooth",
+              start: settings.start,
+              end: settings.end,
+              duration: 2.6,
+              startTime: now,
+              peak: 0.55,
+              destination: filter,
+            });
+            suite.scheduleSweep({
+              type: "triangle",
+              start: settings.chord,
+              end: settings.end * 1.15,
+              duration: 2.1,
+              startTime: now + 0.12,
+              peak: 0.28,
+              destination: filter,
+            });
+
+            const noiseBuffer = suite.getNoiseBuffer();
+            if (noiseBuffer) {
+              const noise = ctx.createBufferSource();
+              noise.buffer = noiseBuffer;
+              const noiseGain = ctx.createGain();
+              noiseGain.gain.setValueAtTime(0.0001, now);
+              noiseGain.gain.exponentialRampToValueAtTime(
+                variant === "crystal" ? 0.14 : 0.2,
+                now + 0.06
+              );
+              noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.6);
+              noise.connect(noiseGain).connect(baseGain);
+              noise.start(now);
+              noise.stop(now + 1.6);
+            }
+          };
+
+          suite.playControlAdjust = (variant, intensity = 0.5) => {
+            const ctx = suite.ensureContext();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+            const last = suite.cooldowns.get("control") || 0;
+            if (now - last < 0.08) return;
+            suite.cooldowns.set("control", now);
+            const blip = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const baseFreq =
+              variant === "crystal" ? 520 : variant === "rift" ? 320 : 440;
+            blip.type = "sine";
+            blip.frequency.setValueAtTime(
+              baseFreq + intensity * 220,
+              now
+            );
+            blip.frequency.exponentialRampToValueAtTime(
+              Math.max(90, baseFreq * 0.4),
+              now + 0.18
+            );
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(0.18, now + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
+            blip.connect(gain).connect(suite.masterGain);
+            blip.start(now);
+            blip.stop(now + 0.3);
+          };
+
+          suite.playToggle = (variant, isOn) => {
+            const ctx = suite.ensureContext();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+            const blip = ctx.createOscillator();
+            const gain = ctx.createGain();
+            blip.type = "square";
+            const base =
+              variant === "rift" ? 180 : variant === "crystal" ? 260 : 220;
+            blip.frequency.setValueAtTime(base, now);
+            blip.frequency.linearRampToValueAtTime(
+              isOn ? base * 1.8 : base * 0.6,
+              now + 0.18
+            );
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(0.12, now + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
+            blip.connect(gain).connect(suite.masterGain);
+            blip.start(now);
+            blip.stop(now + 0.26);
+          };
+
+          suite.playActionPulse = (variant) => {
+            const ctx = suite.ensureContext();
+            if (!ctx) return;
+            const now = ctx.currentTime;
+            const burstGain = ctx.createGain();
+            burstGain.gain.setValueAtTime(0.0001, now);
+            burstGain.gain.exponentialRampToValueAtTime(0.35, now + 0.04);
+            burstGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
+            burstGain.connect(suite.masterGain);
+
+            const freq =
+              variant === "rift" ? 160 : variant === "crystal" ? 320 : 260;
+            suite.scheduleSweep({
+              type: "sawtooth",
+              start: freq,
+              end: freq * 2.2,
+              duration: 0.6,
+              startTime: now,
+              peak: 0.24,
+              destination: burstGain,
+            });
+
+            const noiseBuffer = suite.getNoiseBuffer();
+            if (noiseBuffer) {
+              const fizz = ctx.createBufferSource();
+              fizz.buffer = noiseBuffer;
+              const fizzGain = ctx.createGain();
+              fizzGain.gain.setValueAtTime(0.04, now);
+              fizzGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
+              fizz.connect(fizzGain).connect(burstGain);
+              fizz.start(now);
+              fizz.stop(now + 0.5);
+            }
+          };
+
+          return suite;
+        })();
+        const experience = {
+          activeDemo: null,
+          activeCard: null,
+          veil: null,
+          open(demo) {
+            if (!demo) return;
+            if (this.activeDemo === demo) {
+              this.close();
+              return;
+            }
+            this.close();
+            const card = demo.canvas.closest(".demo-card");
+            if (!card) return;
+            this.activeDemo = demo;
+            this.activeCard = card;
+            document.body.classList.add("experience-open");
+            card.classList.add("is-active");
+            card.focus({ preventScroll: true });
+            const launch = card.querySelector("[data-experience-launch]");
+            if (launch) {
+              launch.setAttribute("aria-pressed", "true");
+            }
+            if (this.veil) {
+              this.veil.setAttribute("aria-hidden", "false");
+            }
+            requestAnimationFrame(() => demo.handleResize());
+          },
+          close() {
+            const card = this.activeCard;
+            if (card) {
+              card.classList.remove("is-active");
+              const launch = card.querySelector("[data-experience-launch]");
+              if (launch) {
+                launch.setAttribute("aria-pressed", "false");
+              }
+              card.blur();
+            }
+            if (this.veil) {
+              this.veil.setAttribute("aria-hidden", "true");
+            }
+            document.body.classList.remove("experience-open");
+            this.activeCard = null;
+            this.activeDemo = null;
+          },
+        };
+
+        class AlienDemo {
+          constructor({ canvas, controls, variant, card }) {
+            this.canvas = canvas;
+            this.controlsRoot = controls;
+            this.variant = variant;
+            this.card = card;
+            this.renderer = new THREE.WebGLRenderer({
+              canvas: this.canvas,
+              antialias: true,
+              alpha: true,
+            });
+            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            this.scene = new THREE.Scene();
+            this.camera = new THREE.PerspectiveCamera(62, 1, 0.1, 2000);
+            this.camera.position.set(0, 4.5, 16);
+            this.params = this.createDefaultParams();
+            this.objects = {};
+            this.outputs = {};
+            this.controlElements = {};
+            this.lastTime = 0;
+            this.isRunning = false;
+            this.flashTimeout = null;
+            this.startOverlay = null;
+            this.startButton = null;
+            this.startLabel = null;
+            this.startHint = null;
+            this.startCaption = null;
+            this.statusChip = null;
+            this.variantTitle =
+              this.variant === "nebula"
+                ? "Nebula Runway"
+                : this.variant === "crystal"
+                ? "Crystal Skyline"
+                : this.variant === "rift"
+                ? "Quantum Rift"
+                : "Simulation";
+            this.setupScene();
+            this.registerControls();
+            this.bindStartInterface();
+            this.handleResize();
+            this.boundResize = () => this.handleResize();
+            window.addEventListener("resize", this.boundResize);
+            this.resizeObserver = new ResizeObserver(() => this.handleResize());
+            this.resizeObserver.observe(this.canvas);
+          }
+
+          createDefaultParams() {
+            switch (this.variant) {
+              case "nebula":
+                return {
+                  warp: 0.82,
+                  nebulaPulse: 0.9,
+                  escortTightness: 0.6,
+                  starSpeed: 0.58,
+                  droneSpin: 0.74,
+                  riftGlow: 0.65,
+                  autopilot: true,
+                  escortMode: true,
+                  shockwave: false,
+                };
+              case "crystal":
+                return {
+                  skylineDensity: 0.96,
+                  towerGlow: 1.05,
+                  auroraSpan: 0.72,
+                  trafficFlow: 0.68,
+                  sentinelDrift: 0.56,
+                  gridPulse: 0.64,
+                  autopilot: true,
+                  tremor: false,
+                  auroraFlux: true,
+                };
+              case "rift":
+                return {
+                  riftStability: 0.92,
+                  portalTurbulence: 1.1,
+                  shardDensity: 0.58,
+                  streamVelocity: 0.72,
+                  haloCharge: 0.66,
+                  singularity: 0.84,
+                  autopilot: true,
+                  fluxLock: false,
+                  riftEchoes: true,
+                };
+              default:
+                return {};
+            }
+          }
+          setupScene() {
+            if (this.variant === "nebula") {
+              this.setupNebulaScene();
+            } else if (this.variant === "crystal") {
+              this.setupCrystalScene();
+            } else if (this.variant === "rift") {
+              this.setupRiftScene();
+            }
+          }
+
+          registerControls() {
+            if (!this.controlsRoot) return;
+            const rangeControls = this.controlsRoot.querySelectorAll(
+              '.control[data-param] input[type="range"]'
+            );
+            rangeControls.forEach((input) => {
+              const control = input.closest(".control");
+              const param = control.dataset.param;
+              const type = control.classList.contains("dial")
+                ? "dial"
+                : "slider";
+              const descriptor = {
+                element: control,
+                input,
+                type,
+                min: parseFloat(input.min),
+                max: parseFloat(input.max),
+              };
+              this.controlElements[param] = descriptor;
+              if (this.params[param] !== undefined) {
+                input.value = this.params[param];
+              } else {
+                this.params[param] = parseFloat(input.value);
+              }
+              this.updateRangeVisual(param);
+              input.addEventListener("input", () => {
+                this.params[param] = parseFloat(input.value);
+                this.updateRangeVisual(param);
+                const span = descriptor.max - descriptor.min || 1;
+                const normalized =
+                  (this.params[param] - descriptor.min) / span;
+                audioSuite.playControlAdjust(this.variant, normalized);
+                missionControl.refreshDemo(this);
+              });
+            });
+
+            const toggles = this.controlsRoot.querySelectorAll(
+              '.toggle[data-param] input[type="checkbox"]'
+            );
+            toggles.forEach((input) => {
+              const control = input.closest(".toggle");
+              const param = control.dataset.param;
+              const descriptor = { element: control, input, type: "toggle" };
+              this.controlElements[param] = descriptor;
+              if (this.params[param] !== undefined) {
+                input.checked = !!this.params[param];
+              } else {
+                this.params[param] = input.checked;
+              }
+              this.updateToggleVisual(param);
+              input.addEventListener("change", () => {
+                this.params[param] = input.checked;
+                this.updateToggleVisual(param);
+                audioSuite.playToggle(this.variant, input.checked);
+                missionControl.refreshDemo(this);
+              });
+            });
+
+            this.controlsRoot
+              .querySelectorAll("[data-output]")
+              .forEach((el) => {
+                this.outputs[el.dataset.output] = el;
+              });
+
+            this.controlsRoot
+              .querySelectorAll("[data-action]")
+              .forEach((btn) => {
+                btn.addEventListener("click", () =>
+                  this.handleAction(btn.dataset.action)
+                );
+              });
+            this.refreshTelemetryOutputs();
+          }
+
+          bindStartInterface() {
+            if (!this.card) return;
+            this.card.classList.add("simulation-idle");
+            this.startOverlay = this.card.querySelector("[data-start-overlay]");
+            this.startButton = this.card.querySelector(
+              "[data-simulation-start]"
+            );
+            this.startLabel = this.card.querySelector("[data-start-label]");
+            this.startHint = this.card.querySelector("[data-start-hint]");
+            this.startCaption = this.card.querySelector(
+              "[data-start-caption]"
+            );
+            this.statusChip = this.card.querySelector(".status-chip");
+            if (this.startOverlay) {
+              this.startOverlay.setAttribute("aria-hidden", "false");
+            }
+            if (this.startButton) {
+              this.startButton.setAttribute("aria-pressed", "false");
+              this.startButton.addEventListener("click", () =>
+                this.startSequence()
+              );
+            }
+            missionControl.setStatus(this.variant, "Standby", "idle");
+            missionControl.refreshDemo(this);
+          }
+
+          startSequence() {
+            if (!this.isRunning) {
+              this.isRunning = true;
+              this.lastTime = 0;
+              if (this.card) {
+                this.card.classList.remove("simulation-idle");
+                this.card.classList.add("simulation-live");
+              }
+              if (this.startButton) {
+                this.startButton.setAttribute("aria-pressed", "true");
+                this.startButton.classList.add("is-active");
+              }
+              if (this.startOverlay) {
+                this.startOverlay.setAttribute("aria-hidden", "true");
+              }
+              if (this.startLabel) {
+                this.startLabel.textContent = `${this.variantTitle} Live`;
+              }
+              if (this.startHint) {
+                this.startHint.textContent = "Tap to surge thrusters";
+              }
+              if (this.startCaption) {
+                this.startCaption.textContent =
+                  "Live telemetry — adjust in real time.";
+              }
+              if (this.statusChip) {
+                this.statusChip.textContent = "Simulation Live";
+                this.statusChip.classList.add("is-online");
+              }
+              missionControl.setStatus(this.variant, "Simulation Live", "live");
+              audioSuite.playLaunchCue(this.variant);
+            }
+            this.triggerLaunchCelebration();
+            this.renderer.render(this.scene, this.camera);
+            missionControl.refreshDemo(this);
+          }
+
+          triggerLaunchCelebration() {
+            if (this.variant === "nebula") {
+              this.triggerNebulaBoost();
+            } else if (this.variant === "crystal") {
+              this.triggerCrystalScan();
+            } else if (this.variant === "rift") {
+              this.triggerRiftCollapse();
+            }
+            audioSuite.playActionPulse(this.variant);
+            if (this.card) {
+              this.card.classList.add("start-flash");
+              if (this.flashTimeout) {
+                clearTimeout(this.flashTimeout);
+              }
+              this.flashTimeout = window.setTimeout(() => {
+                this.card?.classList.remove("start-flash");
+                this.flashTimeout = null;
+              }, 800);
+            }
+          }
+
+          updateRangeVisual(param) {
+            const descriptor = this.controlElements[param];
+            if (!descriptor) return;
+            const { element, input, min, max, type } = descriptor;
+            const value = parseFloat(input.value);
+            const normalized = (value - min) / (max - min);
+            const label = element.querySelector(".value");
+            if (label) {
+              label.textContent = value.toFixed(2);
+            }
+            if (type === "dial") {
+              const rotation = normalized * 270 - 135;
+              const face = element.querySelector(".dial-face");
+              if (face) {
+                face.style.setProperty("--dial-rotation", `${rotation}deg`);
+              }
+            } else {
+              element.style.setProperty(
+                "--slider-progress",
+                `${(normalized * 100).toFixed(1)}%`
+              );
+            }
+          }
+
+          updateToggleVisual(param) {
+            const descriptor = this.controlElements[param];
+            if (!descriptor) return;
+            const { element, input } = descriptor;
+            if (element) {
+              element.classList.toggle("is-active", input.checked);
+            }
+          }
+
+          handleAction(action) {
+            if (action === "nebula-randomize") {
+              this.randomizeParams([
+                "warp",
+                "nebulaPulse",
+                "escortTightness",
+                "starSpeed",
+                "droneSpin",
+                "riftGlow",
+              ]);
+            } else if (action === "nebula-boost") {
+              this.triggerNebulaBoost();
+            } else if (action === "crystal-scan") {
+              this.triggerCrystalScan();
+            } else if (action === "crystal-randomize") {
+              this.randomizeParams([
+                "skylineDensity",
+                "towerGlow",
+                "auroraSpan",
+                "trafficFlow",
+                "sentinelDrift",
+                "gridPulse",
+              ]);
+            } else if (action === "rift-collapse") {
+              this.triggerRiftCollapse();
+            } else if (action === "rift-randomize") {
+              this.randomizeParams([
+                "riftStability",
+                "portalTurbulence",
+                "shardDensity",
+                "streamVelocity",
+                "haloCharge",
+                "singularity",
+              ]);
+            }
+            audioSuite.playActionPulse(this.variant);
+          }
+
+          randomizeParams(paramList) {
+            paramList.forEach((param) => {
+              const descriptor = this.controlElements[param];
+              if (!descriptor) return;
+              const randomValue =
+                descriptor.min +
+                Math.random() * (descriptor.max - descriptor.min);
+              this.params[param] = parseFloat(randomValue.toFixed(2));
+              descriptor.input.value = this.params[param];
+              this.updateRangeVisual(param);
+            });
+            missionControl.refreshDemo(this);
+          }
+
+          resetToDefaults() {
+            const defaults = this.createDefaultParams();
+            Object.entries(defaults).forEach(([param, value]) => {
+              this.params[param] = value;
+              const descriptor = this.controlElements[param];
+              if (!descriptor) return;
+              if (descriptor.type === "toggle") {
+                descriptor.input.checked = !!value;
+                this.updateToggleVisual(param);
+              } else {
+                descriptor.input.value = value;
+                this.updateRangeVisual(param);
+              }
+            });
+            this.refreshTelemetryOutputs();
+            if (!this.isRunning) {
+              missionControl.setStatus(this.variant, "Standby", "idle");
+            }
+            missionControl.refreshDemo(this);
+          }
+
+          collectMissionMetrics() {
+            switch (this.variant) {
+              case "nebula":
+                return {
+                  autopilot: !!this.params.autopilot,
+                  metrics: {
+                    warp: this.params.warp,
+                    bloom: this.params.nebulaPulse,
+                    stream: this.params.starSpeed,
+                  },
+                };
+              case "crystal":
+                return {
+                  autopilot: !!this.params.autopilot,
+                  metrics: {
+                    glow: this.params.towerGlow,
+                    traffic: this.params.trafficFlow,
+                    aurora: this.params.auroraSpan,
+                  },
+                };
+              case "rift":
+                return {
+                  autopilot: !!this.params.autopilot,
+                  metrics: {
+                    stability: this.params.riftStability,
+                    stream: this.params.streamVelocity,
+                    halo: this.params.haloCharge,
+                  },
+                };
+              default:
+                return null;
+            }
+          }
+
+          refreshTelemetryOutputs() {
+            Object.entries(this.controlElements).forEach(([param, descriptor]) => {
+              if (descriptor.type === "toggle") {
+                this.updateToggleVisual(param);
+              } else {
+                this.updateRangeVisual(param);
+              }
+            });
+            if (this.variant === "nebula") {
+              if (this.outputs.warp) {
+                this.outputs.warp.textContent = (this.params.warp * 9.5).toFixed(2);
+              }
+              if (this.outputs.escort) {
+                this.outputs.escort.textContent = `${Math.round(
+                  this.params.escortTightness * 100
+                )}%`;
+              }
+              if (this.outputs.nebula) {
+                this.outputs.nebula.textContent = this.params.nebulaPulse.toFixed(2);
+              }
+              if (this.outputs.stream) {
+                this.outputs.stream.textContent = this.params.starSpeed.toFixed(2);
+              }
+            } else if (this.variant === "crystal") {
+              if (this.outputs.density) {
+                this.outputs.density.textContent = this.params.skylineDensity.toFixed(2);
+              }
+              if (this.outputs.traffic) {
+                this.outputs.traffic.textContent = this.params.trafficFlow.toFixed(2);
+              }
+              if (this.outputs.aurora) {
+                this.outputs.aurora.textContent = this.params.auroraSpan.toFixed(2);
+              }
+              if (this.outputs.sentinel) {
+                this.outputs.sentinel.textContent = this.params.sentinelDrift.toFixed(2);
+              }
+            } else if (this.variant === "rift") {
+              if (this.outputs.rift) {
+                this.outputs.rift.textContent = this.params.riftStability.toFixed(2);
+              }
+              if (this.outputs.stream) {
+                this.outputs.stream.textContent = this.params.streamVelocity.toFixed(2);
+              }
+              if (this.outputs.shards) {
+                this.outputs.shards.textContent = this.params.shardDensity.toFixed(2);
+              }
+              if (this.outputs.halo) {
+                this.outputs.halo.textContent = this.params.haloCharge.toFixed(2);
+              }
+            }
+          }
+
+          triggerNebulaBoost() {
+            if (this.objects.warpBurst) {
+              this.objects.warpBurst.strength = 1.0;
+            }
+          }
+
+          triggerCrystalScan() {
+            if (this.objects.scanPulse) {
+              this.objects.scanPulse.strength = 1.0;
+            }
+          }
+
+          triggerRiftCollapse() {
+            if (this.objects.collapsePulse) {
+              this.objects.collapsePulse.strength = 1.0;
+            }
+          }
+          setupNebulaScene() {
+            this.scene.fog = new THREE.FogExp2(0x040016, 0.012);
+            const ambient = new THREE.AmbientLight(0x4d7bff, 0.4);
+            this.scene.add(ambient);
+            const dir = new THREE.DirectionalLight(0x7efaff, 1.1);
+            dir.position.set(12, 24, 18);
+            this.scene.add(dir);
+
+            const starCount = 2200;
+            const positions = new Float32Array(starCount * 3);
+            const colors = new Float32Array(starCount * 3);
+            const speeds = new Float32Array(starCount);
+            for (let i = 0; i < starCount; i++) {
+              const i3 = i * 3;
+              positions[i3] = (Math.random() - 0.5) * 160;
+              positions[i3 + 1] = (Math.random() - 0.5) * 140;
+              positions[i3 + 2] = -Math.random() * 320;
+              const col = new THREE.Color().setHSL(
+                0.58 + Math.random() * 0.12,
+                0.85,
+                0.55 + Math.random() * 0.2
+              );
+              colors[i3] = col.r;
+              colors[i3 + 1] = col.g;
+              colors[i3 + 2] = col.b;
+              speeds[i] = 35 + Math.random() * 55;
+            }
+            const starGeometry = new THREE.BufferGeometry();
+            starGeometry.setAttribute(
+              "position",
+              new THREE.BufferAttribute(positions, 3)
+            );
+            starGeometry.setAttribute(
+              "color",
+              new THREE.BufferAttribute(colors, 3)
+            );
+            const starMaterial = new THREE.PointsMaterial({
+              size: 0.9,
+              vertexColors: true,
+              transparent: true,
+              depthWrite: false,
+              blending: THREE.AdditiveBlending,
+            });
+            const starfield = new THREE.Points(starGeometry, starMaterial);
+            this.scene.add(starfield);
+
+            const nebulaUniforms = {
+              time: { value: 0 },
+              pulse: { value: this.params.nebulaPulse },
+              warp: { value: this.params.warp },
+            };
+            const nebulaMaterial = new THREE.ShaderMaterial({
+              uniforms: nebulaUniforms,
+              transparent: true,
+              side: THREE.BackSide,
+              blending: THREE.AdditiveBlending,
+              vertexShader: `
+                            varying vec3 vPosition;
+                            void main() {
+                                vPosition = position;
+                                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                                gl_Position = projectionMatrix * mvPosition;
+                            }
+                        `,
+              fragmentShader: `
+                            varying vec3 vPosition;
+                            uniform float time;
+                            uniform float pulse;
+                            uniform float warp;
+                            void main() {
+                                float radius = length(vPosition) * 0.018;
+                                float glow = sin(radius * 4.0 - time * 0.6) * 0.5 + 0.5;
+                                float band = sin(vPosition.y * 0.05 + time * 0.7 + warp * 2.0);
+                                float veil = smoothstep(0.2, 1.2, glow + band * 0.35);
+                                float intensity = clamp(veil * pulse, 0.0, 1.0);
+                                vec3 colour = mix(vec3(0.04, 0.12, 0.3), vec3(0.4, 0.8, 1.0), intensity);
+                                gl_FragColor = vec4(colour, intensity * 0.55);
+                            }
+                        `,
+            });
+            const nebula = new THREE.Mesh(
+              new THREE.SphereGeometry(160, 64, 64),
+              nebulaMaterial
+            );
+            this.scene.add(nebula);
+
+            const droneGeo = new THREE.SphereGeometry(0.22, 12, 12);
+            const droneMat = new THREE.MeshBasicMaterial({
+              color: 0x8ff6ff,
+              transparent: true,
+              opacity: 0.9,
+            });
+            const droneCount = 80;
+            const droneMesh = new THREE.InstancedMesh(
+              droneGeo,
+              droneMat,
+              droneCount
+            );
+            this.scene.add(droneMesh);
+            const droneData = [];
+            for (let i = 0; i < droneCount; i++) {
+              droneData.push({
+                angle: Math.random() * Math.PI * 2,
+                radius: 4 + Math.random() * 6,
+                vertical: (Math.random() - 0.5) * 4,
+                speed: 0.6 + Math.random() * 1.6,
+                flutter: Math.random() * 2,
+              });
+            }
+
+            const pathCurve = new THREE.CatmullRomCurve3([
+              new THREE.Vector3(-6, 2, -16),
+              new THREE.Vector3(-2, 0, -10),
+              new THREE.Vector3(0, 0, -4),
+              new THREE.Vector3(4, 1.5, -12),
+              new THREE.Vector3(2, -1.5, -22),
+              new THREE.Vector3(-2, 0.5, -28),
+            ]);
+            const pathGeometry = new THREE.TubeGeometry(
+              pathCurve,
+              240,
+              0.08,
+              8,
+              false
+            );
+            const pathMaterial = new THREE.MeshBasicMaterial({
+              color: 0x64faff,
+              transparent: true,
+              opacity: 0.7,
+            });
+            const flightPath = new THREE.Mesh(pathGeometry, pathMaterial);
+            this.scene.add(flightPath);
+
+            const warpBurst = { strength: 0 };
+
+            this.objects.starfield = {
+              geometry: starGeometry,
+              positions,
+              speeds,
+              count: starCount,
+            };
+            this.objects.nebula = { mesh: nebula, uniforms: nebulaUniforms };
+            this.objects.drones = {
+              mesh: droneMesh,
+              data: droneData,
+              dummy: new THREE.Object3D(),
+            };
+            this.objects.flightPath = {
+              mesh: flightPath,
+              material: pathMaterial,
+            };
+            this.objects.warpBurst = warpBurst;
+          }
+          setupCrystalScene() {
+            this.scene.fog = new THREE.FogExp2(0x030914, 0.035);
+            const ambient = new THREE.AmbientLight(0x4ca0ff, 0.28);
+            this.scene.add(ambient);
+            const hemi = new THREE.HemisphereLight(0x61f7ff, 0x02030b, 0.85);
+            this.scene.add(hemi);
+            const spot = new THREE.SpotLight(
+              0xffa26b,
+              0.9,
+              0,
+              Math.PI / 6,
+              0.4,
+              1.5
+            );
+            spot.position.set(12, 30, 6);
+            this.scene.add(spot);
+
+            const ground = new THREE.Mesh(
+              new THREE.PlaneGeometry(140, 140, 1, 1),
+              new THREE.MeshStandardMaterial({
+                color: 0x050b18,
+                metalness: 0.8,
+                roughness: 0.12,
+                emissive: 0x041b40,
+                emissiveIntensity: 0.4,
+              })
+            );
+            ground.rotation.x = -Math.PI / 2;
+            this.scene.add(ground);
+
+            const buildingGeo = new THREE.BoxGeometry(1, 1, 1);
+            const buildingMat = new THREE.MeshStandardMaterial({
+              color: 0x102054,
+              metalness: 0.6,
+              roughness: 0.2,
+              emissive: 0x2cc8ff,
+              emissiveIntensity: 0.5,
+            });
+            const buildingCount = 320;
+            const buildings = new THREE.InstancedMesh(
+              buildingGeo,
+              buildingMat,
+              buildingCount
+            );
+            this.scene.add(buildings);
+            const buildingData = [];
+            const dummy = new THREE.Object3D();
+            for (let i = 0; i < buildingCount; i++) {
+              const radius = Math.random() * 46 - 23;
+              const angle = Math.random() * Math.PI * 2;
+              const dist = 8 + Math.random() * 32;
+              const x = Math.cos(angle) * dist;
+              const z = Math.sin(angle) * dist;
+              const baseHeight = 1 + Math.random() * 12;
+              dummy.position.set(x, baseHeight / 2, z);
+              dummy.scale.set(
+                0.8 + Math.random() * 0.6,
+                baseHeight,
+                0.8 + Math.random() * 0.6
+              );
+              dummy.rotation.y = Math.random() * Math.PI;
+              dummy.updateMatrix();
+              buildings.setMatrixAt(i, dummy.matrix);
+              buildingData.push({
+                x,
+                z,
+                baseHeight,
+                pulseOffset: Math.random() * Math.PI * 2,
+                shimmer: 0.4 + Math.random() * 0.6,
+              });
+            }
+
+            const trafficCount = 280;
+            const trafficPositions = new Float32Array(trafficCount * 3);
+            const trafficSpeeds = new Float32Array(trafficCount);
+            for (let i = 0; i < trafficCount; i++) {
+              const laneRadius = 6 + Math.random() * 28;
+              const angle = Math.random() * Math.PI * 2;
+              trafficPositions[i * 3] = Math.cos(angle) * laneRadius;
+              trafficPositions[i * 3 + 1] = 1.8 + Math.random() * 2;
+              trafficPositions[i * 3 + 2] = Math.sin(angle) * laneRadius;
+              trafficSpeeds[i] = 0.6 + Math.random() * 1.8;
+            }
+            const trafficGeometry = new THREE.BufferGeometry();
+            trafficGeometry.setAttribute(
+              "position",
+              new THREE.BufferAttribute(trafficPositions, 3)
+            );
+            const trafficMaterial = new THREE.PointsMaterial({
+              size: 0.18,
+              color: 0xffb580,
+              transparent: true,
+              blending: THREE.AdditiveBlending,
+              depthWrite: false,
+            });
+            const traffic = new THREE.Points(trafficGeometry, trafficMaterial);
+            this.scene.add(traffic);
+
+            const auroraUniforms = {
+              time: { value: 0 },
+              span: { value: this.params.auroraSpan },
+            };
+            const auroraMaterial = new THREE.ShaderMaterial({
+              transparent: true,
+              side: THREE.DoubleSide,
+              uniforms: auroraUniforms,
+              blending: THREE.AdditiveBlending,
+              vertexShader: `
+                            varying vec2 vUv;
+                            void main() {
+                                vUv = uv;
+                                vec3 pos = position;
+                                pos.y += sin(uv.x * 10.0) * 0.2;
+                                gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+                            }
+                        `,
+              fragmentShader: `
+                            varying vec2 vUv;
+                            uniform float time;
+                            uniform float span;
+                            void main() {
+                                float wave = sin(vUv.x * 14.0 + time * 1.2) * 0.5 + 0.5;
+                                float glow = smoothstep(0.0, 0.45 + span * 0.4, 1.0 - abs(vUv.y * 2.0 - 1.0));
+                                vec3 colour = mix(vec3(0.05, 0.2, 0.5), vec3(0.6, 0.9, 1.0), wave * glow);
+                                float alpha = glow * (0.35 + span * 0.3);
+                                gl_FragColor = vec4(colour, alpha);
+                            }
+                        `,
+            });
+            const aurora = new THREE.Mesh(
+              new THREE.PlaneGeometry(42, 12, 32, 8),
+              auroraMaterial
+            );
+            aurora.position.set(0, 10, -18);
+            aurora.rotation.y = Math.PI;
+            this.scene.add(aurora);
+
+            const sentinel = new THREE.Mesh(
+              new THREE.IcosahedronGeometry(1.2, 1),
+              new THREE.MeshStandardMaterial({
+                color: 0x62f8ff,
+                metalness: 0.8,
+                roughness: 0.15,
+                emissive: 0x1e99ff,
+                emissiveIntensity: 0.9,
+              })
+            );
+            sentinel.position.set(0, 6, 12);
+            this.scene.add(sentinel);
+
+            const scanPulse = { strength: 0 };
+
+            this.objects.buildings = {
+              mesh: buildings,
+              data: buildingData,
+              dummy,
+              material: buildingMat,
+            };
+            this.objects.traffic = {
+              geometry: trafficGeometry,
+              positions: trafficPositions,
+              speeds: trafficSpeeds,
+            };
+            this.objects.aurora = { mesh: aurora, uniforms: auroraUniforms };
+            this.objects.sentinel = sentinel;
+            this.objects.sentinelMaterial = sentinel.material;
+            this.objects.scanPulse = scanPulse;
+          }
+          setupRiftScene() {
+            this.scene.fog = new THREE.FogExp2(0x070012, 0.016);
+            const ambient = new THREE.AmbientLight(0x8fb8ff, 0.32);
+            this.scene.add(ambient);
+            const point = new THREE.PointLight(0xff64f6, 2.4, 0, 2.0);
+            point.position.set(0, 4, 0);
+            this.scene.add(point);
+            const rim = new THREE.PointLight(0x64c8ff, 1.6, 0, 2.2);
+            rim.position.set(-6, 8, -10);
+            this.scene.add(rim);
+
+            const platform = new THREE.Mesh(
+              new THREE.CylinderGeometry(9, 13, 1.4, 32, 1, true),
+              new THREE.MeshStandardMaterial({
+                color: 0x0d0424,
+                metalness: 0.7,
+                roughness: 0.2,
+                emissive: 0x341466,
+                emissiveIntensity: 0.6,
+                side: THREE.DoubleSide,
+              })
+            );
+            platform.rotation.x = Math.PI / 2;
+            platform.position.y = -2.8;
+            this.scene.add(platform);
+
+            const portalUniforms = {
+              time: { value: 0 },
+              turbulence: { value: this.params.portalTurbulence },
+              glow: { value: this.params.haloCharge },
+            };
+            const portalMaterial = new THREE.ShaderMaterial({
+              uniforms: portalUniforms,
+              transparent: true,
+              side: THREE.DoubleSide,
+              blending: THREE.AdditiveBlending,
+              vertexShader: `
+                            varying vec2 vUv;
+                            void main() {
+                                vUv = uv;
+                                vec3 pos = position;
+                                float ripple = sin(uv.x * 12.0 + uv.y * 18.0);
+                                pos.z += ripple * 0.3;
+                                gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+                            }
+                        `,
+              fragmentShader: `
+                            varying vec2 vUv;
+                            uniform float time;
+                            uniform float turbulence;
+                            uniform float glow;
+                            void main() {
+                                float r = length(vUv - 0.5) * 2.0;
+                                float wave = sin((r * 7.0 - time * 1.4) + turbulence * 2.0);
+                                float intensity = smoothstep(1.4, 0.0, r) * (0.4 + glow * 0.6);
+                                vec3 colour = mix(vec3(0.2, 0.0, 0.4), vec3(0.9, 0.4, 1.0), intensity + wave * 0.2);
+                                gl_FragColor = vec4(colour, intensity);
+                            }
+                        `,
+            });
+            const portal = new THREE.Mesh(
+              new THREE.TorusGeometry(6, 0.6, 32, 256),
+              portalMaterial
+            );
+            portal.rotation.x = Math.PI / 2;
+            this.scene.add(portal);
+
+            const shardCount = 260;
+            const shardGeo = new THREE.IcosahedronGeometry(0.34, 0);
+            const shardMat = new THREE.MeshStandardMaterial({
+              color: 0x8af8ff,
+              emissive: 0x3654ff,
+              emissiveIntensity: 0.8,
+              roughness: 0.25,
+              metalness: 0.75,
+            });
+            const shards = new THREE.InstancedMesh(
+              shardGeo,
+              shardMat,
+              shardCount
+            );
+            const shardData = [];
+            const dummy = new THREE.Object3D();
+            for (let i = 0; i < shardCount; i++) {
+              const radius = 7 + Math.random() * 20;
+              const angle = Math.random() * Math.PI * 2;
+              const y = (Math.random() - 0.5) * 12;
+              dummy.position.set(
+                Math.cos(angle) * radius,
+                y,
+                Math.sin(angle) * radius
+              );
+              const baseScale = 0.4 + Math.random() * 1.2;
+              dummy.scale.setScalar(baseScale);
+              dummy.rotation.set(
+                Math.random() * Math.PI,
+                Math.random() * Math.PI,
+                Math.random() * Math.PI
+              );
+              dummy.updateMatrix();
+              shards.setMatrixAt(i, dummy.matrix);
+              shardData.push({
+                radius,
+                angle,
+                vertical: y,
+                speed: 0.2 + Math.random() * 0.8,
+                wobble: Math.random() * Math.PI * 2,
+                baseScale,
+                densityGate: Math.random(),
+              });
+            }
+            this.scene.add(shards);
+
+            const streamCount = 400;
+            const streamPositions = new Float32Array(streamCount * 3);
+            const streamSpeeds = new Float32Array(streamCount);
+            for (let i = 0; i < streamCount; i++) {
+              const r = 3 + Math.random() * 12;
+              const angle = Math.random() * Math.PI * 2;
+              const height = (Math.random() - 0.5) * 10;
+              streamPositions[i * 3] = Math.cos(angle) * r;
+              streamPositions[i * 3 + 1] = height;
+              streamPositions[i * 3 + 2] = Math.sin(angle) * r;
+              streamSpeeds[i] = 0.8 + Math.random() * 1.6;
+            }
+            const streamGeometry = new THREE.BufferGeometry();
+            streamGeometry.setAttribute(
+              "position",
+              new THREE.BufferAttribute(streamPositions, 3)
+            );
+            const streamMaterial = new THREE.PointsMaterial({
+              size: 0.2,
+              color: 0xff78f6,
+              transparent: true,
+              blending: THREE.AdditiveBlending,
+              depthWrite: false,
+            });
+            const stream = new THREE.Points(streamGeometry, streamMaterial);
+            this.scene.add(stream);
+
+            const collapsePulse = { strength: 0 };
+
+            this.objects.portal = {
+              mesh: portal,
+              uniforms: portalUniforms,
+              material: portalMaterial,
+            };
+            this.objects.shards = {
+              mesh: shards,
+              data: shardData,
+              dummy,
+              material: shardMat,
+            };
+            this.objects.stream = {
+              geometry: streamGeometry,
+              positions: streamPositions,
+              speeds: streamSpeeds,
+              material: streamMaterial,
+            };
+            this.objects.collapsePulse = collapsePulse;
+          }
+          handleResize() {
+            const width = this.canvas.clientWidth;
+            const height = this.canvas.clientHeight;
+            if (width === 0 || height === 0) return;
+            this.renderer.setSize(width, height, false);
+            this.camera.aspect = width / height;
+            this.camera.updateProjectionMatrix();
+          }
+
+          update(time) {
+            if (!this.isRunning) {
+              this.lastTime = time;
+              this.renderer.render(this.scene, this.camera);
+              return;
+            }
+            const delta = this.lastTime
+              ? Math.min(time - this.lastTime, 0.12)
+              : 0;
+            this.lastTime = time;
+            if (this.variant === "nebula") {
+              this.updateNebula(time, delta);
+            } else if (this.variant === "crystal") {
+              this.updateCrystal(time, delta);
+            } else if (this.variant === "rift") {
+              this.updateRift(time, delta);
+            }
+            this.renderer.render(this.scene, this.camera);
+          }
+          updateNebula(time, delta) {
+            const starfield = this.objects.starfield;
+            if (starfield) {
+              const { positions, speeds, geometry } = starfield;
+              for (let i = 0; i < positions.length; i += 3) {
+                const speed =
+                  speeds[i / 3] * (this.params.starSpeed * 0.8 + 0.4);
+                positions[i + 2] += speed * delta;
+                if (positions[i + 2] > 12) {
+                  positions[i] = (Math.random() - 0.5) * 160;
+                  positions[i + 1] = (Math.random() - 0.5) * 120;
+                  positions[i + 2] = -320;
+                }
+              }
+              geometry.attributes.position.needsUpdate = true;
+            }
+
+            const nebula = this.objects.nebula;
+            if (nebula) {
+              nebula.uniforms.time.value = time;
+              nebula.uniforms.pulse.value =
+                this.params.nebulaPulse +
+                (this.objects.warpBurst?.strength || 0) * 0.6;
+              nebula.uniforms.warp.value = this.params.warp;
+              nebula.mesh.rotation.y +=
+                0.02 * delta * (1 + this.params.warp * 0.6);
+              nebula.mesh.rotation.x = Math.sin(time * 0.28) * 0.06;
+            }
+
+            const drones = this.objects.drones;
+            if (drones) {
+              const { mesh, data, dummy } = drones;
+              const cohesion = this.params.escortTightness;
+              data.forEach((item, index) => {
+                const radius = 3 + item.radius * (1 - cohesion * 0.6);
+                const height =
+                  item.vertical +
+                  Math.sin(time * item.speed + item.flutter) *
+                    0.8 *
+                    this.params.droneSpin;
+                const angle =
+                  item.angle +
+                  time * item.speed * (this.params.escortMode ? 1 : -0.6);
+                dummy.position.set(
+                  Math.cos(angle) * radius,
+                  height,
+                  Math.sin(angle) * radius - 10
+                );
+                dummy.scale.setScalar(
+                  0.7 + Math.sin(time * 1.2 + item.flutter) * 0.12
+                );
+                dummy.lookAt(0, 0, -20);
+                dummy.updateMatrix();
+                mesh.setMatrixAt(index, dummy.matrix);
+              });
+              mesh.instanceMatrix.needsUpdate = true;
+            }
+
+            const flightPath = this.objects.flightPath;
+            if (flightPath) {
+              const { mesh, material } = flightPath;
+              const glow = this.params.riftGlow;
+              material.opacity = 0.18 + glow * 0.55;
+              const hue = 0.52 + glow * 0.12;
+              material.color.setHSL(hue, 0.95, 0.55 + glow * 0.18);
+              mesh.rotation.y = time * 0.12 * (0.6 + glow * 0.9);
+            }
+
+            if (
+              this.params.shockwave &&
+              this.objects.warpBurst.strength < 0.001
+            ) {
+              this.objects.warpBurst.strength = 0.35;
+            }
+
+            if (this.objects.warpBurst) {
+              const burst = this.objects.warpBurst;
+              if (burst.strength > 0) {
+                burst.strength *= 0.92;
+                this.camera.position.z = 15 - burst.strength * 6;
+              } else {
+                this.camera.position.z = 15 - this.params.warp * 2.2;
+              }
+            }
+
+            if (this.params.autopilot) {
+              const sway = Math.sin(time * 0.42) * this.params.warp * 2.1;
+              this.camera.position.x = sway;
+              this.camera.position.y = 3.2 + Math.sin(time * 0.7) * 0.8;
+              this.camera.lookAt(0, 0, -12);
+            }
+
+            if (this.outputs.warp) {
+              this.outputs.warp.textContent = (this.params.warp * 9.5).toFixed(
+                2
+              );
+            }
+            if (this.outputs.escort) {
+              this.outputs.escort.textContent = `${Math.round(
+                this.params.escortTightness * 100
+              )}%`;
+            }
+            if (this.outputs.nebula) {
+              this.outputs.nebula.textContent =
+                this.params.nebulaPulse.toFixed(2);
+            }
+            if (this.outputs.stream) {
+              this.outputs.stream.textContent =
+                this.params.starSpeed.toFixed(2);
+            }
+          }
+          updateCrystal(time, delta) {
+            const buildings = this.objects.buildings;
+            if (buildings) {
+              const { mesh, data, dummy, material } = buildings;
+              const density = this.params.skylineDensity;
+              data.forEach((item, index) => {
+                const pulse =
+                  Math.sin(time * 0.8 + item.pulseOffset) * 0.5 + 0.5;
+                const height =
+                  item.baseHeight * (0.8 + density * 0.6 + pulse * 0.4);
+                dummy.position.set(item.x, height / 2, item.z);
+                dummy.scale.set(
+                  0.8 + item.shimmer * 0.2,
+                  height,
+                  0.8 + item.shimmer * 0.2
+                );
+                dummy.rotation.y +=
+                  0.0006 * delta * (this.params.gridPulse + 0.4);
+                dummy.updateMatrix();
+                mesh.setMatrixAt(index, dummy.matrix);
+              });
+              mesh.instanceMatrix.needsUpdate = true;
+              if (material) {
+                const glow = 0.35 + this.params.towerGlow * 0.7;
+                material.emissiveIntensity = glow;
+                material.color.setHSL(
+                  0.6,
+                  0.58,
+                  0.16 + this.params.towerGlow * 0.12
+                );
+              }
+            }
+
+            const traffic = this.objects.traffic;
+            if (traffic) {
+              const { positions, speeds, geometry } = traffic;
+              for (let i = 0; i < positions.length; i += 3) {
+                const radius = Math.sqrt(
+                  positions[i] * positions[i] +
+                    positions[i + 2] * positions[i + 2]
+                );
+                const angle = Math.atan2(positions[i + 2], positions[i]);
+                const speed = speeds[i / 3] * (0.4 + this.params.trafficFlow);
+                const newAngle = angle + speed * delta * 0.6;
+                positions[i] = Math.cos(newAngle) * radius;
+                positions[i + 2] = Math.sin(newAngle) * radius;
+                positions[i + 1] =
+                  1.6 + Math.sin(time * 1.2 + radius * 0.2) * 0.4;
+              }
+              geometry.attributes.position.needsUpdate = true;
+            }
+
+            const aurora = this.objects.aurora;
+            if (aurora) {
+              aurora.uniforms.time.value = time;
+              aurora.uniforms.span.value = this.params.auroraFlux
+                ? this.params.auroraSpan
+                : this.params.auroraSpan * 0.4;
+              aurora.mesh.rotation.y = Math.PI + Math.sin(time * 0.12) * 0.2;
+            }
+
+            const sentinel = this.objects.sentinel;
+            if (sentinel) {
+              sentinel.rotation.y +=
+                0.25 * delta * (this.params.sentinelDrift + 0.6);
+              sentinel.position.y =
+                6 +
+                Math.sin(time * 0.8) * 0.6 +
+                (this.params.tremor ? Math.sin(time * 6.0) * 0.4 : 0);
+            }
+
+            const sentinelMaterial = this.objects.sentinelMaterial;
+            if (sentinelMaterial) {
+              const halo = 0.7 + this.params.towerGlow * 0.6;
+              sentinelMaterial.emissiveIntensity = halo;
+              sentinelMaterial.color.setHSL(
+                0.55,
+                0.9,
+                0.45 + this.params.towerGlow * 0.18
+              );
+            }
+
+            if (this.objects.scanPulse) {
+              const pulse = this.objects.scanPulse;
+              if (pulse.strength > 0) {
+                pulse.strength *= 0.88;
+                this.camera.position.y = 5 + pulse.strength * 3;
+              } else {
+                this.camera.position.y = 5;
+              }
+            }
+
+            if (this.params.autopilot) {
+              const orbit = time * 0.16;
+              const radius = 24 - this.params.skylineDensity * 6;
+              this.camera.position.x = Math.cos(orbit) * radius;
+              this.camera.position.z = Math.sin(orbit) * radius;
+              this.camera.lookAt(0, 6, 0);
+            }
+
+            if (this.outputs.density) {
+              this.outputs.density.textContent =
+                this.params.skylineDensity.toFixed(2);
+            }
+            if (this.outputs.traffic) {
+              this.outputs.traffic.textContent =
+                this.params.trafficFlow.toFixed(2);
+            }
+            if (this.outputs.aurora) {
+              this.outputs.aurora.textContent =
+                this.params.auroraSpan.toFixed(2);
+            }
+            if (this.outputs.sentinel) {
+              this.outputs.sentinel.textContent =
+                this.params.sentinelDrift.toFixed(2);
+            }
+          }
+          updateRift(time, delta) {
+            const portal = this.objects.portal;
+            if (portal) {
+              const { mesh, uniforms } = portal;
+              uniforms.time.value = time;
+              uniforms.turbulence.value =
+                this.params.portalTurbulence + this.params.singularity * 0.35;
+              const echoPulse = this.params.riftEchoes
+                ? Math.sin(time * 2.2) * this.params.singularity * 0.15
+                : 0;
+              uniforms.glow.value = this.params.haloCharge + echoPulse;
+              mesh.rotation.z = Math.sin(time * 0.32) * 0.2;
+              mesh.rotation.y += delta * (0.4 + this.params.singularity * 0.9);
+            }
+
+            const shards = this.objects.shards;
+            if (shards) {
+              const { mesh, data, dummy, material } = shards;
+              const density = Math.min(
+                1,
+                Math.max(0, (this.params.shardDensity - 0.1) / 1.1)
+              );
+              data.forEach((item, index) => {
+                const radius =
+                  item.radius +
+                  Math.sin(time * 0.2 + item.wobble) *
+                    this.params.riftStability;
+                const angle =
+                  item.angle +
+                  delta *
+                    (0.4 + this.params.riftStability * 0.6 + this.params.singularity * 0.3);
+                const y =
+                  item.vertical +
+                  Math.sin(time * 0.6 + item.wobble) *
+                    this.params.streamVelocity +
+                    (this.params.riftEchoes
+                      ? Math.sin(time * 2.8 + item.wobble) *
+                        this.params.singularity * 0.35
+                      : 0);
+                dummy.position.set(
+                  Math.cos(angle) * radius,
+                  y,
+                  Math.sin(angle) * radius
+                );
+                dummy.rotation.x += 0.4 * delta;
+                dummy.rotation.y += 0.35 * delta;
+                const active = item.densityGate <= density + 0.05;
+                const scale = active
+                  ? item.baseScale * (0.6 + this.params.singularity * 0.5)
+                  : item.baseScale * 0.04;
+                dummy.scale.setScalar(scale);
+                dummy.updateMatrix();
+                mesh.setMatrixAt(index, dummy.matrix);
+                item.angle = angle;
+              });
+              mesh.instanceMatrix.needsUpdate = true;
+              if (material) {
+                material.emissiveIntensity =
+                  0.45 +
+                  this.params.haloCharge * 0.7 +
+                  (this.params.riftEchoes
+                    ? Math.sin(time * 2.4) * 0.2
+                    : 0);
+              }
+            }
+
+            const stream = this.objects.stream;
+            if (stream) {
+              const { positions, speeds, geometry, material } = stream;
+              for (let i = 0; i < positions.length; i += 3) {
+                const velocity = speeds[i / 3] * this.params.streamVelocity;
+                positions[i + 1] +=
+                  velocity * delta * (this.params.fluxLock ? 0.4 : 1.0);
+                if (positions[i + 1] > 8) {
+                  positions[i + 1] = -8;
+                }
+              }
+              geometry.attributes.position.needsUpdate = true;
+              if (material) {
+                material.size = 0.14 + this.params.singularity * 0.12;
+                material.opacity = this.params.riftEchoes ? 0.9 : 0.55;
+                material.color.setHSL(
+                  0.82 + this.params.haloCharge * 0.08,
+                  1,
+                  0.58 + this.params.haloCharge * 0.15
+                );
+                material.needsUpdate = true;
+              }
+            }
+
+            if (this.objects.collapsePulse) {
+              const pulse = this.objects.collapsePulse;
+              if (pulse.strength > 0) {
+                pulse.strength *= 0.86;
+                this.camera.position.y = 4 + pulse.strength * 3;
+              } else {
+                this.camera.position.y = 4;
+              }
+            }
+
+            if (this.params.autopilot) {
+              const loop = time * (0.18 + this.params.singularity * 0.06);
+              const radius = 14 + this.params.riftStability * 4;
+              this.camera.position.x = Math.cos(loop) * radius;
+              this.camera.position.z = Math.sin(loop) * radius;
+              this.camera.position.y =
+                3.2 +
+                Math.sin(time * (0.4 + this.params.singularity * 0.6)) *
+                  (1.6 + this.params.singularity * 0.8);
+              this.camera.lookAt(0, 0, 0);
+            }
+
+            if (this.outputs.rift) {
+              this.outputs.rift.textContent =
+                this.params.riftStability.toFixed(2);
+            }
+            if (this.outputs.stream) {
+              this.outputs.stream.textContent =
+                this.params.streamVelocity.toFixed(2);
+            }
+            if (this.outputs.shards) {
+              this.outputs.shards.textContent =
+                this.params.shardDensity.toFixed(2);
+            }
+            if (this.outputs.halo) {
+              this.outputs.halo.textContent = this.params.haloCharge.toFixed(2);
+            }
+          }
+        }
+
+        experience.veil = document.querySelector(".experience-veil");
+        if (experience.veil) {
+          experience.veil.addEventListener("click", () => experience.close());
+        }
+
+        document.querySelectorAll(".demo-card").forEach((card) => {
+          const canvas = card.querySelector("canvas");
+          const controls = card.querySelector(".control-hub");
+          const variant = card.dataset.demo;
+          const demo = new AlienDemo({ canvas, controls, variant, card });
+          demos.push(demo);
+          missionControl.registerDemo(demo);
+
+          const launchButton = card.querySelector("[data-experience-launch]");
+          if (launchButton) {
+            launchButton.setAttribute("aria-pressed", "false");
+            launchButton.addEventListener("click", () => {
+              demo.startSequence();
+              experience.open(demo);
+            });
+          }
+
+          const closeButton = card.querySelector("[data-experience-close]");
+          if (closeButton) {
+            closeButton.addEventListener("click", (event) => {
+              event.stopPropagation();
+              experience.close();
+            });
+          }
+
+          card.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+              experience.close();
+            }
+          });
+        });
+
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            experience.close();
+          }
+        });
+
+        function animate(time) {
+          const t = time * 0.001;
+          demos.forEach((demo) => demo.update(t));
+          requestAnimationFrame(animate);
+        }
+
+        requestAnimationFrame(animate);
+      })();
+    </script>
+  </body>
+</html>
