@@ -24,6 +24,10 @@
         --accent-3: #fa5cff;
         --text-soft: rgba(200, 235, 255, 0.86);
         --text-muted: rgba(170, 210, 255, 0.68);
+        --experience-padding: clamp(1.2rem, 4vw, 3rem);
+        --experience-gap: clamp(1.4rem, 4vw, 3rem);
+        --control-panel-width: min(420px, 38vw);
+        --stage-radius: 28px;
       }
 
       *,
@@ -68,6 +72,46 @@
         mix-blend-mode: screen;
         pointer-events: none;
         z-index: 0;
+      }
+
+      .audio-toggle {
+        position: fixed;
+        top: clamp(1rem, 3vw, 2rem);
+        right: clamp(1rem, 3vw, 2.4rem);
+        z-index: 40;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.55rem 1.1rem;
+        border-radius: 999px;
+        border: 1px solid rgba(124, 244, 255, 0.45);
+        background: rgba(6, 18, 42, 0.78);
+        color: rgba(214, 248, 255, 0.92);
+        font-size: 0.85rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: transform 0.25s ease, box-shadow 0.25s ease,
+          background 0.25s ease;
+      }
+
+      .audio-toggle:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 18px 40px rgba(60, 140, 255, 0.35);
+      }
+
+      .audio-toggle[aria-pressed="true"] {
+        background: rgba(18, 24, 46, 0.78);
+        border-color: rgba(180, 120, 255, 0.4);
+        color: rgba(220, 210, 255, 0.9);
+      }
+
+      .audio-toggle .icon {
+        font-size: 1.05rem;
+      }
+
+      .audio-toggle .label {
+        font-size: 0.75rem;
       }
 
       .page {
@@ -188,194 +232,6 @@
       .demo-card.simulation-live canvas.view {
         animation: viewPulse 14s ease-in-out infinite;
       }
-      .start-overlay {
-        position: absolute;
-        z-index: 5;
-        display: grid;
-        place-items: center;
-        justify-items: center;
-        gap: 0.75rem;
-        text-align: center;
-        transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
-      }
-      .demo-card:not(.simulation-live) .start-overlay {
-        inset: 0;
-        background: radial-gradient(
-            circle at 22% 26%,
-            rgba(124, 244, 255, 0.24),
-            transparent 60%
-          ),
-          radial-gradient(
-            circle at 78% 32%,
-            rgba(250, 92, 255, 0.16),
-            transparent 58%
-          );
-        backdrop-filter: blur(18px) saturate(180%);
-      }
-      .demo-card.simulation-live .start-overlay {
-        opacity: 0;
-        pointer-events: none;
-        transform: scale(1.06);
-        background: none;
-        backdrop-filter: none;
-      }
-      .start-core {
-        position: relative;
-        display: grid;
-        gap: 0.7rem;
-        justify-items: center;
-        padding: clamp(1rem, 3vw, 1.6rem);
-      }
-      .demo-card.simulation-live .start-core {
-        padding: 0;
-        gap: 0.45rem;
-        justify-items: end;
-      }
-      .demo-card:not(.simulation-live) .start-core::before {
-        content: "";
-        position: absolute;
-        inset: -18% -22%;
-        border-radius: 50%;
-        background: radial-gradient(
-          circle,
-          rgba(124, 244, 255, 0.22),
-          transparent 62%
-        );
-        filter: blur(2px);
-        animation: startHalo 6s ease-in-out infinite;
-      }
-      .start-rings {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-      }
-      .start-rings span {
-        position: absolute;
-        inset: 0;
-        border-radius: 50%;
-        border: 1px solid rgba(124, 244, 255, 0.32);
-        animation: startRing 4.6s linear infinite;
-      }
-      .start-rings span:nth-child(2) {
-        border-color: rgba(154, 107, 255, 0.28);
-        animation-delay: -1.6s;
-      }
-      .start-rings span:nth-child(3) {
-        border-color: rgba(250, 92, 255, 0.25);
-        animation-delay: -3.2s;
-      }
-      .start-trigger {
-        position: relative;
-        display: grid;
-        place-items: center;
-        gap: 0.25rem;
-        width: clamp(170px, 24vw, 230px);
-        aspect-ratio: 1;
-        border-radius: 50%;
-        border: none;
-        font-family: inherit;
-        text-transform: uppercase;
-        letter-spacing: 0.26em;
-        font-size: 0.78rem;
-        color: rgba(5, 8, 16, 0.92);
-        cursor: pointer;
-        background: conic-gradient(
-          from 210deg,
-          rgba(124, 244, 255, 0.95),
-          rgba(154, 107, 255, 0.95),
-          rgba(250, 92, 255, 0.95),
-          rgba(124, 244, 255, 0.95)
-        );
-        box-shadow: 0 0 68px rgba(124, 244, 255, 0.6),
-          0 0 0 2px rgba(124, 244, 255, 0.32),
-          inset 0 0 28px rgba(255, 255, 255, 0.5);
-        overflow: hidden;
-        transition: transform 0.35s ease, box-shadow 0.35s ease;
-      }
-      .start-trigger span {
-        position: relative;
-        z-index: 2;
-      }
-      .start-trigger .start-flare,
-      .start-trigger::before,
-      .start-trigger::after {
-        content: "";
-        position: absolute;
-        inset: -36%;
-        border-radius: 50%;
-        mix-blend-mode: screen;
-        pointer-events: none;
-        filter: blur(6px);
-      }
-      .start-trigger::before {
-        background: radial-gradient(
-          circle,
-          rgba(255, 255, 255, 0.8),
-          rgba(124, 244, 255, 0.2) 60%,
-          transparent 72%
-        );
-        animation: startFlare 5.6s linear infinite;
-      }
-      .start-trigger::after {
-        inset: -45%;
-        background: radial-gradient(
-          circle,
-          rgba(154, 107, 255, 0.55),
-          transparent 68%
-        );
-        animation: startFlare 6.2s linear infinite;
-        animation-delay: -1.4s;
-      }
-      .start-trigger .start-flare {
-        inset: -52%;
-        background: conic-gradient(
-          from 120deg,
-          rgba(124, 244, 255, 0.35),
-          rgba(250, 92, 255, 0.5),
-          rgba(124, 244, 255, 0.35)
-        );
-        animation: startSweep 7s linear infinite;
-        opacity: 0.5;
-      }
-      .start-trigger:hover {
-        transform: scale(1.06);
-        box-shadow: 0 0 90px rgba(124, 244, 255, 0.78),
-          0 0 0 3px rgba(154, 107, 255, 0.55),
-          inset 0 0 36px rgba(255, 255, 255, 0.6);
-      }
-      .demo-card.simulation-live .start-trigger {
-        width: clamp(120px, 18vw, 170px);
-        font-size: 0.7rem;
-        letter-spacing: 0.22em;
-        box-shadow: 0 0 50px rgba(124, 244, 255, 0.52),
-          0 0 0 2px rgba(124, 244, 255, 0.28),
-          inset 0 0 24px rgba(255, 255, 255, 0.45);
-      }
-      .demo-card.simulation-live .start-trigger:hover {
-        transform: scale(1.04);
-      }
-      .start-label {
-        font-size: 0.92rem;
-        text-shadow: 0 0 12px rgba(0, 10, 24, 0.45);
-      }
-      .start-hint {
-        font-size: 0.62rem;
-        letter-spacing: 0.32em;
-        color: rgba(8, 16, 26, 0.78);
-      }
-      .start-caption {
-        margin: 0;
-        font-size: 0.72rem;
-        letter-spacing: 0.22em;
-        text-transform: uppercase;
-        color: rgba(210, 240, 255, 0.82);
-        max-width: 22ch;
-      }
-      .demo-card.simulation-live .start-caption {
-        color: rgba(200, 235, 255, 0.68);
-        font-size: 0.68rem;
-        max-width: none;
-      }
       .status-chip.is-online {
         border-color: rgba(124, 255, 200, 0.55);
         background: rgba(20, 54, 78, 0.65);
@@ -387,50 +243,212 @@
         box-shadow: 0 0 18px rgba(140, 255, 210, 0.95);
       }
       .experience-veil {
-        position: fixed;
-        inset: 0;
-        background: radial-gradient(
-            circle at 30% 20%,
-            rgba(126, 244, 255, 0.14),
-            rgba(8, 6, 28, 0.82) 55%
-          ),
-          radial-gradient(
-            circle at 70% 80%,
-            rgba(250, 92, 255, 0.16),
-            rgba(3, 0, 14, 0.85) 60%
-          );
-        backdrop-filter: blur(18px) saturate(120%);
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.4s ease;
-        z-index: 14;
+        display: none;
       }
 
-      body.experience-open .experience-veil {
-        opacity: 0.7;
+      .experience-stage {
+        position: fixed;
+        top: var(--experience-padding);
+        right: var(--experience-padding);
+        bottom: var(--experience-padding);
+        left: calc(
+          var(--experience-padding) + var(--control-panel-width) +
+            var(--experience-gap)
+        );
+        border-radius: var(--stage-radius);
+        border: 1px solid rgba(124, 244, 255, 0.28);
+        background: radial-gradient(
+            circle at 35% 20%,
+            rgba(120, 244, 255, 0.14),
+            transparent 55%
+          ),
+          radial-gradient(
+            circle at 80% 70%,
+            rgba(154, 107, 255, 0.18),
+            rgba(3, 2, 20, 0.94) 70%
+          ),
+          linear-gradient(160deg, rgba(4, 14, 36, 0.9), rgba(2, 4, 16, 0.92));
+        box-shadow: 0 32px 90px rgba(6, 12, 46, 0.65);
+        display: flex;
+        flex-direction: column;
+        gap: clamp(1rem, 2vw, 1.6rem);
+        padding: clamp(1.2rem, 2.6vw, 2rem);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateY(18px);
+        transition: opacity 0.4s ease, transform 0.4s ease, visibility 0.4s ease;
+        z-index: 26;
+        --stage-accent: rgba(124, 244, 255, 0.8);
+        --stage-accent-soft: rgba(124, 244, 255, 0.18);
+      }
+
+      .experience-stage.is-active {
+        opacity: 1;
+        visibility: visible;
         pointer-events: auto;
+        transform: translateY(0);
+      }
+
+      .experience-stage[data-variant="crystal"] {
+        --stage-accent: rgba(255, 180, 130, 0.82);
+        --stage-accent-soft: rgba(255, 180, 130, 0.22);
+      }
+
+      .experience-stage[data-variant="rift"] {
+        --stage-accent: rgba(250, 128, 255, 0.82);
+        --stage-accent-soft: rgba(250, 128, 255, 0.22);
+      }
+
+      .stage-chrome {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .stage-identity {
+        display: grid;
+        gap: 0.25rem;
+      }
+
+      .stage-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.24em;
+        color: rgba(200, 235, 255, 0.78);
+      }
+
+      .stage-title {
+        margin: 0;
+        font-size: clamp(1.4rem, 3vw, 2rem);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .stage-meta {
+        display: flex;
+        align-items: center;
+        gap: clamp(0.6rem, 1.6vw, 1.2rem);
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        margin-right: clamp(0.6rem, 4vw, 3rem);
+      }
+
+      .stage-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.45rem 0.85rem;
+        border-radius: 999px;
+        border: 1px solid var(--stage-accent-soft);
+        background: rgba(10, 24, 42, 0.65);
+        color: rgba(210, 245, 255, 0.85);
+        font-size: 0.8rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .stage-status::before {
+        content: "";
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+        background: var(--stage-accent);
+        box-shadow: 0 0 20px var(--stage-accent);
+      }
+
+      .stage-close {
+        border-radius: 14px;
+        border: 1px solid rgba(124, 244, 255, 0.3);
+        background: rgba(6, 16, 36, 0.7);
+        color: rgba(214, 248, 255, 0.92);
+        padding: 0.5rem 1.1rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        font-size: 0.72rem;
+        cursor: pointer;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+      }
+
+      .stage-close:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 32px rgba(80, 160, 255, 0.4);
+      }
+
+      .stage-window {
+        position: relative;
+        flex: 1;
+        border-radius: 22px;
+        overflow: hidden;
+        background: radial-gradient(
+            circle at 30% 30%,
+            rgba(124, 244, 255, 0.16),
+            rgba(12, 24, 46, 0.86) 60%
+          ),
+          radial-gradient(
+            circle at 70% 70%,
+            var(--stage-accent-soft),
+            rgba(2, 4, 12, 0.95) 70%
+          );
+        box-shadow: inset 0 0 40px rgba(20, 40, 80, 0.4);
+        display: grid;
+        place-items: center;
+        min-height: 320px;
+      }
+
+      .stage-window.has-feed {
+        box-shadow: inset 0 0 55px rgba(40, 80, 140, 0.45);
+      }
+
+      .stage-window canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .stage-placeholder {
+        max-width: 32ch;
+        text-align: center;
+        color: rgba(190, 225, 255, 0.72);
+        font-size: 0.9rem;
+        line-height: 1.6;
+        letter-spacing: 0.08em;
+        transition: opacity 0.3s ease;
+        padding: 0 1rem;
+      }
+
+      .stage-window.has-feed .stage-placeholder {
+        opacity: 0;
+        visibility: hidden;
       }
 
       .demo-card.is-active {
         position: fixed;
-        inset: clamp(1.2rem, 4vw, 2.8rem) clamp(1.2rem, 4vw, 3rem);
-        max-width: none;
-        width: auto;
-        min-height: min(88vh, 960px);
-        max-height: 92vh;
-        z-index: 24;
-        box-shadow: 0 40px 140px rgba(6, 20, 80, 0.85);
+        top: var(--experience-padding);
+        bottom: var(--experience-padding);
+        left: var(--experience-padding);
+        width: var(--control-panel-width);
+        max-width: min(440px, 40vw);
+        min-height: auto;
+        max-height: none;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        z-index: 27;
+        box-shadow: 0 34px 120px rgba(6, 20, 80, 0.85);
       }
 
       body.experience-open .demo-card:not(.is-active) {
-        opacity: 0;
-        transform: scale(0.96);
-        filter: blur(10px);
-        pointer-events: none;
+        display: none;
       }
 
       .demo-card.is-active .overlay {
         pointer-events: auto;
+        flex: 1;
+        overflow-y: auto;
       }
 
       .demo-card.is-active canvas.view {
@@ -857,60 +875,6 @@
         }
       }
 
-      @keyframes startRing {
-        0% {
-          transform: scale(0.6);
-          opacity: 0.6;
-        }
-        55% {
-          opacity: 0.85;
-        }
-        100% {
-          transform: scale(1.8);
-          opacity: 0;
-        }
-      }
-
-      @keyframes startHalo {
-        0%,
-        100% {
-          transform: scale(1);
-          opacity: 0.35;
-        }
-        50% {
-          transform: scale(1.12);
-          opacity: 0.6;
-        }
-      }
-
-      @keyframes startFlare {
-        0% {
-          transform: rotate(0deg);
-          opacity: 0.55;
-        }
-        50% {
-          opacity: 0.85;
-        }
-        100% {
-          transform: rotate(360deg);
-          opacity: 0.55;
-        }
-      }
-
-      @keyframes startSweep {
-        0% {
-          transform: rotate(0deg) scale(1);
-          opacity: 0.45;
-        }
-        50% {
-          opacity: 0.75;
-        }
-        100% {
-          transform: rotate(360deg) scale(1.05);
-          opacity: 0.45;
-        }
-      }
-
       @keyframes startFlash {
         0% {
           filter: saturate(1) brightness(1);
@@ -953,12 +917,6 @@
           flex-direction: column;
           align-items: flex-start;
         }
-        .start-trigger {
-          width: min(68vw, 220px);
-        }
-        .demo-card:not(.simulation-live) .start-overlay {
-          padding: 1.6rem;
-        }
       }
     </style>
   </head>
@@ -979,30 +937,6 @@
       <main class="demo-grid">
         <article class="demo-card" data-demo="nebula" tabindex="-1">
           <canvas id="nebulaCanvas" class="view"></canvas>
-          <div class="start-overlay" data-start-overlay>
-            <div class="start-core">
-              <div class="start-rings" aria-hidden="true">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-              <button
-                type="button"
-                class="start-trigger"
-                data-simulation-start
-                aria-label="Start Nebula simulation"
-              >
-                <span class="start-flare" aria-hidden="true"></span>
-                <span class="start-label" data-start-label>
-                  Ignite Nebula Runway
-                </span>
-                <span class="start-hint" data-start-hint>Start Simulation</span>
-              </button>
-              <p class="start-caption" data-start-caption>
-                Thrusters on standby. Tune parameters freely.
-              </p>
-            </div>
-          </div>
           <button
             type="button"
             class="close-experience"
@@ -1156,30 +1090,6 @@
         </article>
         <article class="demo-card" data-demo="crystal" tabindex="-1">
           <canvas id="crystalCanvas" class="view"></canvas>
-          <div class="start-overlay" data-start-overlay>
-            <div class="start-core">
-              <div class="start-rings" aria-hidden="true">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-              <button
-                type="button"
-                class="start-trigger"
-                data-simulation-start
-                aria-label="Start Crystal simulation"
-              >
-                <span class="start-flare" aria-hidden="true"></span>
-                <span class="start-label" data-start-label>
-                  Wake the Skyline
-                </span>
-                <span class="start-hint" data-start-hint>Start Simulation</span>
-              </button>
-              <p class="start-caption" data-start-caption>
-                District grid idle. Dial anything before liftoff.
-              </p>
-            </div>
-          </div>
           <button
             type="button"
             class="close-experience"
@@ -1333,30 +1243,6 @@
         </article>
         <article class="demo-card" data-demo="rift" tabindex="-1">
           <canvas id="riftCanvas" class="view"></canvas>
-          <div class="start-overlay" data-start-overlay>
-            <div class="start-core">
-              <div class="start-rings" aria-hidden="true">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-              <button
-                type="button"
-                class="start-trigger"
-                data-simulation-start
-                aria-label="Start Rift simulation"
-              >
-                <span class="start-flare" aria-hidden="true"></span>
-                <span class="start-label" data-start-label>
-                  Breach the Rift
-                </span>
-                <span class="start-hint" data-start-hint>Start Simulation</span>
-              </button>
-              <p class="start-caption" data-start-caption>
-                Containment calm. Configure flux before breach.
-              </p>
-            </div>
-          </div>
           <button
             type="button"
             class="close-experience"
@@ -1510,6 +1396,31 @@
         </article>
       </main>
 
+      <section class="experience-stage" aria-hidden="true" data-stage>
+        <div class="stage-chrome">
+          <div class="stage-identity">
+            <span class="stage-label" data-stage-variant>Simulation Variant</span>
+            <h3 class="stage-title" data-stage-title>Live Simulation Window</h3>
+          </div>
+          <div class="stage-meta">
+            <span class="stage-status" data-stage-status>Awaiting selection</span>
+            <button
+              type="button"
+              class="stage-close"
+              data-stage-close
+              aria-label="Exit simulation view"
+            >
+              Exit View
+            </button>
+          </div>
+        </div>
+        <div class="stage-window" data-stage-window>
+          <div class="stage-placeholder" data-stage-placeholder>
+            Launch a simulation to engage the live viewport.
+          </div>
+        </div>
+      </section>
+
       <div class="experience-veil" aria-hidden="true"></div>
 
       <footer>
@@ -1522,6 +1433,16 @@
         >
       </footer>
     </div>
+    <button
+      type="button"
+      class="audio-toggle"
+      data-audio-toggle
+      aria-pressed="false"
+      aria-label="Mute simulation audio"
+    >
+      <span class="icon" aria-hidden="true">🔊</span>
+      <span class="label" data-audio-label>Sound On</span>
+    </button>
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"
       integrity="sha512-UoL10TWjQJJvYjOz43rxPvo6nEloxGIYsFioCZoqWVbL4zSfnxuuYgFRJYkYjxbNq/71tNd1IaFuyKxsfwWhmw=="
@@ -1537,6 +1458,8 @@
             masterGain: null,
             noiseBuffer: null,
             cooldowns: new Map(),
+            masterLevel: 0.26,
+            muted: false,
           };
 
           suite.ensureContext = () => {
@@ -1545,14 +1468,37 @@
             if (!suite.context) {
               suite.context = new AudioCtx();
               suite.masterGain = suite.context.createGain();
-              suite.masterGain.gain.value = 0.26;
+              suite.masterGain.gain.value = suite.muted
+                ? 0.0001
+                : suite.masterLevel;
               suite.masterGain.connect(suite.context.destination);
             }
             if (suite.context.state === "suspended") {
               suite.context.resume();
             }
+            if (suite.masterGain && suite.context) {
+              const target = suite.muted ? 0.0001 : suite.masterLevel;
+              suite.masterGain.gain.setValueAtTime(
+                target,
+                suite.context.currentTime || 0
+              );
+            }
             return suite.context;
           };
+
+          suite.setMuted = (value) => {
+            suite.muted = !!value;
+            const ctx = suite.ensureContext();
+            if (suite.masterGain && ctx) {
+              const target = suite.muted ? 0.0001 : suite.masterLevel;
+              suite.masterGain.gain.setTargetAtTime(target, ctx.currentTime, 0.05);
+            }
+            return suite.muted;
+          };
+
+          suite.toggleMute = () => suite.setMuted(!suite.muted);
+
+          suite.isMuted = () => suite.muted;
 
           suite.getNoiseBuffer = () => {
             const ctx = suite.context;
@@ -1750,14 +1696,20 @@
           activeDemo: null,
           activeCard: null,
           veil: null,
+          stage: null,
+          stageWindow: null,
+          stagePlaceholder: null,
+          stageVariant: null,
+          stageTitle: null,
+          stageStatus: null,
           open(demo) {
             if (!demo) return;
             if (this.activeDemo === demo) {
-              this.close();
+              this.updateStageStatus(demo);
               return;
             }
             this.close();
-            const card = demo.canvas.closest(".demo-card");
+            const card = demo.card || demo.canvas?.closest(".demo-card");
             if (!card) return;
             this.activeDemo = demo;
             this.activeCard = card;
@@ -1771,9 +1723,44 @@
             if (this.veil) {
               this.veil.setAttribute("aria-hidden", "false");
             }
+            if (this.stage) {
+              this.stage.classList.add("is-active");
+              this.stage.setAttribute("aria-hidden", "false");
+              this.stage.dataset.variant = demo.variant || "";
+            }
+            if (this.stageVariant) {
+              const label =
+                card.querySelector(".variant")?.textContent?.trim() ||
+                "Simulation Variant";
+              this.stageVariant.textContent = label;
+            }
+            if (this.stageTitle) {
+              const title =
+                card.querySelector("h2")?.textContent?.trim() ||
+                "Live Simulation Window";
+              this.stageTitle.textContent = title;
+            }
+            if (this.stageWindow) {
+              this.stageWindow.classList.add("has-feed");
+              if (this.stagePlaceholder) {
+                this.stagePlaceholder.setAttribute("aria-hidden", "true");
+              }
+              if (typeof demo.dockToStage === "function") {
+                demo.dockToStage(this.stageWindow);
+              } else if (demo.canvas) {
+                this.stageWindow.appendChild(demo.canvas);
+              }
+            }
+            this.updateStageStatus(demo);
             requestAnimationFrame(() => demo.handleResize());
           },
           close() {
+            if (
+              this.activeDemo &&
+              typeof this.activeDemo.returnToCard === "function"
+            ) {
+              this.activeDemo.returnToCard();
+            }
             const card = this.activeCard;
             if (card) {
               card.classList.remove("is-active");
@@ -1783,12 +1770,45 @@
               }
               card.blur();
             }
+            if (this.stageWindow) {
+              this.stageWindow.classList.remove("has-feed");
+            }
+            if (this.stagePlaceholder) {
+              this.stagePlaceholder.setAttribute("aria-hidden", "false");
+            }
+            if (this.stage) {
+              this.stage.classList.remove("is-active");
+              this.stage.removeAttribute("data-variant");
+              this.stage.setAttribute("aria-hidden", "true");
+            }
+            if (this.stageVariant) {
+              this.stageVariant.textContent = "Simulation Variant";
+            }
+            if (this.stageTitle) {
+              this.stageTitle.textContent = "Live Simulation Window";
+            }
             if (this.veil) {
               this.veil.setAttribute("aria-hidden", "true");
             }
             document.body.classList.remove("experience-open");
             this.activeCard = null;
             this.activeDemo = null;
+            this.updateStageStatus();
+          },
+          updateStageStatus(demo) {
+            if (!this.stageStatus) return;
+            if (!demo || demo !== this.activeDemo) {
+              this.stageStatus.textContent = "Awaiting selection";
+              return;
+            }
+            const label = demo.statusChip?.textContent?.trim();
+            if (label) {
+              this.stageStatus.textContent = label;
+            } else if (demo.isRunning) {
+              this.stageStatus.textContent = "Simulation Live";
+            } else {
+              this.stageStatus.textContent = "Standing by";
+            }
           },
         };
 
@@ -1798,6 +1818,10 @@
             this.controlsRoot = controls;
             this.variant = variant;
             this.card = card;
+            this.canvasHome = {
+              parent: this.canvas?.parentElement || null,
+              sibling: this.canvas?.nextElementSibling || null,
+            };
             this.renderer = new THREE.WebGLRenderer({
               canvas: this.canvas,
               antialias: true,
@@ -1814,20 +1838,9 @@
             this.lastTime = 0;
             this.isRunning = false;
             this.flashTimeout = null;
-            this.startOverlay = null;
-            this.startButton = null;
-            this.startLabel = null;
-            this.startHint = null;
-            this.startCaption = null;
             this.statusChip = null;
-            this.variantTitle =
-              this.variant === "nebula"
-                ? "Nebula Runway"
-                : this.variant === "crystal"
-                ? "Crystal Skyline"
-                : this.variant === "rift"
-                ? "Quantum Rift"
-                : "Simulation";
+            this.launchButton = null;
+            this.needsIdleRender = true;
             this.setupScene();
             this.registerControls();
             this.bindStartInterface();
@@ -1918,6 +1931,7 @@
               input.addEventListener("input", () => {
                 this.params[param] = parseFloat(input.value);
                 this.updateRangeVisual(param);
+                this.queueIdleRender();
                 const span = descriptor.max - descriptor.min || 1;
                 const normalized =
                   (this.params[param] - descriptor.min) / span;
@@ -1942,6 +1956,7 @@
               input.addEventListener("change", () => {
                 this.params[param] = input.checked;
                 this.updateToggleVisual(param);
+                this.queueIdleRender();
                 audioSuite.playToggle(this.variant, input.checked);
               });
             });
@@ -1961,61 +1976,64 @@
               });
           }
 
+          queueIdleRender() {
+            if (!this.isRunning) {
+              this.needsIdleRender = true;
+            }
+          }
+
           bindStartInterface() {
             if (!this.card) return;
             this.card.classList.add("simulation-idle");
-            this.startOverlay = this.card.querySelector("[data-start-overlay]");
-            this.startButton = this.card.querySelector(
-              "[data-simulation-start]"
-            );
-            this.startLabel = this.card.querySelector("[data-start-label]");
-            this.startHint = this.card.querySelector("[data-start-hint]");
-            this.startCaption = this.card.querySelector(
-              "[data-start-caption]"
-            );
             this.statusChip = this.card.querySelector(".status-chip");
-            if (this.startOverlay) {
-              this.startOverlay.setAttribute("aria-hidden", "false");
-            }
-            if (this.startButton) {
-              this.startButton.setAttribute("aria-pressed", "false");
-              this.startButton.addEventListener("click", () =>
-                this.startSequence()
+            this.launchButton = this.card.querySelector(
+              "[data-experience-launch]"
+            );
+          }
+
+          dockToStage(container) {
+            if (!container || !this.canvas) return;
+            container.appendChild(this.canvas);
+            this.canvas.classList.add("is-stage");
+            this.queueIdleRender();
+            this.handleResize();
+          }
+
+          returnToCard() {
+            if (!this.canvas || !this.canvasHome?.parent) return;
+            const { parent, sibling } = this.canvasHome;
+            if (sibling && sibling.parentNode === parent) {
+              parent.insertBefore(this.canvas, sibling);
+            } else {
+              parent.insertBefore(
+                this.canvas,
+                parent.firstElementChild || null
               );
             }
+            this.canvas.classList.remove("is-stage");
+            this.queueIdleRender();
+            this.handleResize();
           }
 
           startSequence() {
             if (!this.isRunning) {
               this.isRunning = true;
               this.lastTime = 0;
+              this.needsIdleRender = false;
               if (this.card) {
                 this.card.classList.remove("simulation-idle");
                 this.card.classList.add("simulation-live");
-              }
-              if (this.startButton) {
-                this.startButton.setAttribute("aria-pressed", "true");
-                this.startButton.classList.add("is-active");
-              }
-              if (this.startOverlay) {
-                this.startOverlay.setAttribute("aria-hidden", "true");
-              }
-              if (this.startLabel) {
-                this.startLabel.textContent = `${this.variantTitle} Live`;
-              }
-              if (this.startHint) {
-                this.startHint.textContent = "Tap to surge thrusters";
-              }
-              if (this.startCaption) {
-                this.startCaption.textContent =
-                  "Live telemetry — adjust in real time.";
               }
               if (this.statusChip) {
                 this.statusChip.textContent = "Simulation Live";
                 this.statusChip.classList.add("is-online");
               }
+              if (this.launchButton) {
+                this.launchButton.setAttribute("aria-pressed", "true");
+              }
               audioSuite.playLaunchCue(this.variant);
             }
+            experience.updateStageStatus?.(this);
             this.triggerLaunchCelebration();
             this.renderer.render(this.scene, this.camera);
           }
@@ -2123,6 +2141,7 @@
               descriptor.input.value = this.params[param];
               this.updateRangeVisual(param);
             });
+            this.queueIdleRender();
           }
 
           triggerNebulaBoost() {
@@ -2631,12 +2650,16 @@
             this.renderer.setSize(width, height, false);
             this.camera.aspect = width / height;
             this.camera.updateProjectionMatrix();
+            this.queueIdleRender();
           }
 
           update(time) {
             if (!this.isRunning) {
               this.lastTime = time;
-              this.renderer.render(this.scene, this.camera);
+              if (this.needsIdleRender) {
+                this.renderer.render(this.scene, this.camera);
+                this.needsIdleRender = false;
+              }
               return;
             }
             const delta = this.lastTime
@@ -3013,6 +3036,60 @@
         experience.veil = document.querySelector(".experience-veil");
         if (experience.veil) {
           experience.veil.addEventListener("click", () => experience.close());
+        }
+
+        experience.stage = document.querySelector("[data-stage]");
+        if (experience.stage) {
+          experience.stageWindow = experience.stage.querySelector(
+            "[data-stage-window]"
+          );
+          experience.stagePlaceholder = experience.stage.querySelector(
+            "[data-stage-placeholder]"
+          );
+          if (experience.stagePlaceholder) {
+            experience.stagePlaceholder.setAttribute("aria-hidden", "false");
+          }
+          experience.stageVariant = experience.stage.querySelector(
+            "[data-stage-variant]"
+          );
+          experience.stageTitle = experience.stage.querySelector(
+            "[data-stage-title]"
+          );
+          experience.stageStatus = experience.stage.querySelector(
+            "[data-stage-status]"
+          );
+          const stageClose = experience.stage.querySelector("[data-stage-close]");
+          if (stageClose) {
+            stageClose.addEventListener("click", (event) => {
+              event.stopPropagation();
+              experience.close();
+            });
+          }
+        }
+
+        const audioToggle = document.querySelector("[data-audio-toggle]");
+        if (audioToggle) {
+          const label = audioToggle.querySelector("[data-audio-label]");
+          const icon = audioToggle.querySelector(".icon");
+          const updateAudioToggle = () => {
+            const muted = audioSuite.isMuted();
+            audioToggle.setAttribute("aria-pressed", muted ? "true" : "false");
+            audioToggle.setAttribute(
+              "aria-label",
+              muted ? "Unmute simulation audio" : "Mute simulation audio"
+            );
+            if (label) {
+              label.textContent = muted ? "Sound Off" : "Sound On";
+            }
+            if (icon) {
+              icon.textContent = muted ? "🔇" : "🔊";
+            }
+          };
+          audioToggle.addEventListener("click", () => {
+            audioSuite.setMuted(!audioSuite.isMuted());
+            updateAudioToggle();
+          });
+          updateAudioToggle();
         }
 
         document.querySelectorAll(".demo-card").forEach((card) => {
