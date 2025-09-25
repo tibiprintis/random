@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hyperlane Mission Control</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Outfit:wght@300;400;600&display=swap");
+
+      :root {
+        color-scheme: dark;
+        font-size: clamp(14px, 1vw + 0.5rem, 18px);
+        --bg-base: #05040d;
+        --bg-hero: radial-gradient(circle at 20% -10%, rgba(120, 210, 255, 0.18), transparent 65%),
+          radial-gradient(circle at 80% 0%, rgba(255, 140, 255, 0.12), transparent 55%),
+          linear-gradient(160deg, #05040d 0%, #02010a 40%, #08001d 100%);
+        --grid-line: rgba(135, 210, 255, 0.1);
+        --surface: rgba(10, 16, 38, 0.85);
+        --surface-strong: rgba(14, 22, 46, 0.95);
+        --surface-soft: rgba(18, 22, 52, 0.45);
+        --accent: #7df1ff;
+        --accent-2: #9d70ff;
+        --accent-3: #ff5ff7;
+        --accent-4: #29f0b5;
+        --text-primary: rgba(230, 244, 255, 0.96);
+        --text-muted: rgba(176, 208, 236, 0.72);
+        --text-soft: rgba(145, 188, 220, 0.62);
+        --glow: 0 0 22px rgba(125, 241, 255, 0.55);
+        --card-radius: 26px;
+        scroll-behavior: smooth;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg-base);
+        font-family: "Outfit", "Rajdhani", "Segoe UI", sans-serif;
+        color: var(--text-primary);
+        letter-spacing: 0.04em;
+        overflow-x: hidden;
+        position: relative;
+      }
+
+      body::after {
+        content: "";
+        position: fixed;
+        inset: -5vh -5vw;
+        background: repeating-linear-gradient(
+            90deg,
+            rgba(125, 241, 255, 0.05) 0 1px,
+            transparent 1px 60px
+          ),
+          repeating-linear-gradient(
+            0deg,
+            rgba(90, 130, 255, 0.05) 0 1px,
+            transparent 1px 60px
+          );
+        opacity: 0.4;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .page {
+        position: relative;
+        z-index: 1;
+        width: min(1200px, calc(100% - 3.6rem));
+        margin: 0 auto;
+        padding-bottom: 8rem;
+      }
+
+      nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.6rem 0 1rem;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: linear-gradient(
+          180deg,
+          rgba(5, 4, 13, 0.95) 0%,
+          rgba(5, 4, 13, 0.86) 65%,
+          transparent
+        );
+        backdrop-filter: blur(12px);
+      }
+
+      .logo {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+        letter-spacing: 0.32em;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        font-family: "Rajdhani", sans-serif;
+      }
+
+      .logo::before {
+        content: "";
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 2px solid rgba(125, 241, 255, 0.4);
+        background: radial-gradient(circle, rgba(125, 241, 255, 0.3), transparent 70%);
+        box-shadow: 0 0 22px rgba(157, 112, 255, 0.6);
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 1.4rem;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        font-family: "Rajdhani", sans-serif;
+      }
+
+      .nav-links a {
+        padding: 0.4rem 0.75rem;
+        border-radius: 999px;
+        border: 1px solid transparent;
+        transition: border 0.3s ease, color 0.3s ease, background 0.3s ease;
+      }
+
+      .nav-links a:hover,
+      .nav-links a:focus {
+        border-color: rgba(125, 241, 255, 0.4);
+        color: var(--accent);
+        background: rgba(11, 26, 44, 0.42);
+      }
+
+      header {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: clamp(1.6rem, 4vw, 3.6rem);
+        align-items: center;
+        padding: clamp(2.4rem, 4vw, 5rem) 0;
+        position: relative;
+      }
+
+      header::before {
+        content: "";
+        position: absolute;
+        inset: -4rem -12vw 0;
+        background: var(--bg-hero);
+        filter: drop-shadow(0 0 160px rgba(125, 241, 255, 0.22));
+        z-index: -1;
+      }
+
+      header .intro {
+        display: grid;
+        gap: 1.2rem;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.35rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid rgba(125, 241, 255, 0.4);
+        background: rgba(10, 30, 48, 0.4);
+        font-size: 0.75rem;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2.8rem, 6.2vw, 4.8rem);
+        font-family: "Rajdhani", sans-serif;
+        text-transform: uppercase;
+        line-height: 1.02;
+      }
+
+      .intro p {
+        margin: 0;
+        max-width: 52ch;
+        color: var(--text-muted);
+        line-height: 1.6;
+        font-size: 1.05rem;
+      }
+
+      .cta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: center;
+      }
+
+      .cta {
+        padding: 0.85rem 1.6rem;
+        border-radius: 999px;
+        background: linear-gradient(120deg, var(--accent) 0%, var(--accent-2) 100%);
+        color: #02101f;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: transform 0.4s ease, box-shadow 0.4s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+      }
+
+      .cta:hover {
+        transform: translateY(-2px) scale(1.01);
+        box-shadow: var(--glow);
+      }
+
+      .cta.secondary {
+        background: transparent;
+        border: 1px solid rgba(125, 241, 255, 0.35);
+        color: var(--text-primary);
+      }
+
+      .hero-visual {
+        position: relative;
+        background: var(--surface);
+        border-radius: var(--card-radius);
+        padding: 2.4rem;
+        border: 1px solid rgba(125, 241, 255, 0.3);
+        box-shadow: 0 30px 90px rgba(5, 0, 48, 0.65);
+        overflow: hidden;
+      }
+
+      .hero-visual::before {
+        content: "";
+        position: absolute;
+        inset: -40% 10% 45% 35%;
+        background: radial-gradient(circle, rgba(125, 241, 255, 0.18), transparent 65%);
+        filter: blur(30px);
+        opacity: 0.9;
+        animation: pulse 8s infinite ease-in-out;
+      }
+
+      .hero-visual::after {
+        content: "";
+        position: absolute;
+        inset: 20% -30% -20% 40%;
+        background: radial-gradient(circle, rgba(157, 112, 255, 0.22), transparent 65%);
+        filter: blur(30px);
+        opacity: 0.7;
+        animation: pulse 9s infinite reverse ease-in-out;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.7;
+        }
+        50% {
+          transform: scale(1.18);
+          opacity: 1;
+        }
+      }
+
+      .orbital-map {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        border-radius: 50%;
+        border: 1px solid rgba(125, 241, 255, 0.3);
+        display: grid;
+        place-items: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .orbital-map svg {
+        width: 85%;
+        filter: drop-shadow(0 0 15px rgba(125, 241, 255, 0.35));
+      }
+
+      .orbit-dots span {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: linear-gradient(120deg, var(--accent), var(--accent-2));
+        box-shadow: var(--glow);
+        animation: orbit 16s linear infinite;
+        transform-origin: -110px center;
+      }
+
+      .orbit-dots span:nth-child(2) {
+        animation-duration: 24s;
+        transform-origin: -135px center;
+        animation-delay: -4s;
+      }
+
+      .orbit-dots span:nth-child(3) {
+        animation-duration: 32s;
+        transform-origin: -160px center;
+        animation-delay: -8s;
+      }
+
+      @keyframes orbit {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      section {
+        margin-top: clamp(3.4rem, 6vw, 5.4rem);
+        display: grid;
+        gap: clamp(1.6rem, 3vw, 2.6rem);
+      }
+
+      .section-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .section-heading h2 {
+        margin: 0;
+        font-family: "Rajdhani", sans-serif;
+        font-size: clamp(1.8rem, 3.2vw, 2.6rem);
+        text-transform: uppercase;
+      }
+
+      .section-heading p {
+        margin: 0;
+        color: var(--text-soft);
+        max-width: 56ch;
+      }
+
+      .grid {
+        display: grid;
+        gap: clamp(1.4rem, 2.2vw, 2rem);
+      }
+
+      .grid.features {
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      }
+
+      .feature-card {
+        position: relative;
+        padding: 1.8rem;
+        border-radius: var(--card-radius);
+        background: var(--surface);
+        border: 1px solid rgba(125, 241, 255, 0.25);
+        backdrop-filter: blur(14px);
+        overflow: hidden;
+        transition: transform 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+      }
+
+      .feature-card::before {
+        content: attr(data-sigil);
+        position: absolute;
+        top: -0.6rem;
+        right: 1.2rem;
+        font-size: 5rem;
+        font-family: "Rajdhani", sans-serif;
+        color: rgba(125, 241, 255, 0.08);
+        letter-spacing: 0.18em;
+        pointer-events: none;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-6px);
+        border-color: rgba(125, 241, 255, 0.45);
+        box-shadow: 0 24px 60px rgba(4, 8, 32, 0.65);
+      }
+
+      .feature-card h3 {
+        margin: 0 0 0.6rem;
+        font-family: "Rajdhani", sans-serif;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .feature-card p {
+        margin: 0;
+        color: var(--text-muted);
+        line-height: 1.6;
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 1.2rem;
+      }
+
+      .metric {
+        padding: 1.6rem;
+        border-radius: var(--card-radius);
+        background: var(--surface-strong);
+        border: 1px solid rgba(125, 241, 255, 0.3);
+        display: grid;
+        gap: 0.35rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .metric::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 20% 20%, rgba(125, 241, 255, 0.2), transparent 65%);
+        opacity: 0;
+        transition: opacity 0.6s ease;
+      }
+
+      .metric:hover::before {
+        opacity: 0.9;
+      }
+
+      .metric span {
+        font-size: clamp(2rem, 4vw, 2.8rem);
+        font-weight: 600;
+        color: var(--accent);
+        font-family: "Rajdhani", sans-serif;
+      }
+
+      .metric small {
+        color: var(--text-soft);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .timeline {
+        position: relative;
+        padding-left: clamp(1rem, 3vw, 2.4rem);
+        border-left: 1px dashed rgba(125, 241, 255, 0.35);
+        display: grid;
+        gap: 1.8rem;
+      }
+
+      .milestone {
+        position: relative;
+        padding-left: 1.2rem;
+      }
+
+      .milestone::before {
+        content: "";
+        position: absolute;
+        left: -1.65rem;
+        top: 0.35rem;
+        width: 0.85rem;
+        height: 0.85rem;
+        border-radius: 50%;
+        background: linear-gradient(120deg, var(--accent-3), var(--accent-2));
+        box-shadow: var(--glow);
+      }
+
+      .milestone h4 {
+        margin: 0 0 0.4rem;
+        font-family: "Rajdhani", sans-serif;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .milestone p {
+        margin: 0;
+        color: var(--text-muted);
+      }
+
+      .systems-grid {
+        display: grid;
+        gap: 1.4rem;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+
+      .system {
+        padding: 1.4rem;
+        border-radius: var(--card-radius);
+        background: var(--surface);
+        border: 1px solid rgba(125, 241, 255, 0.28);
+        display: grid;
+        gap: 0.6rem;
+      }
+
+      .system h3 {
+        margin: 0;
+        font-family: "Rajdhani", sans-serif;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .system ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 0.5rem;
+        color: var(--text-muted);
+      }
+
+      .system ul li::before {
+        content: "⌁";
+        margin-right: 0.5rem;
+        color: var(--accent);
+      }
+
+      .scanner {
+        display: grid;
+        gap: 1rem;
+        padding: 2rem;
+        border-radius: var(--card-radius);
+        border: 1px solid rgba(125, 241, 255, 0.35);
+        background: linear-gradient(160deg, rgba(10, 18, 45, 0.7), rgba(15, 12, 50, 0.8));
+        overflow: hidden;
+      }
+
+      .scanner .scan-bar {
+        position: relative;
+        height: 200px;
+        border-radius: 18px;
+        border: 1px solid rgba(125, 241, 255, 0.3);
+        background: rgba(8, 16, 28, 0.85);
+        overflow: hidden;
+      }
+
+      .scan-line {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          rgba(125, 241, 255, 0.04),
+          rgba(125, 241, 255, 0.18),
+          rgba(125, 241, 255, 0.04)
+        );
+        animation: sweep 6s linear infinite;
+      }
+
+      @keyframes sweep {
+        0% {
+          transform: translateY(-100%);
+        }
+        50% {
+          transform: translateY(40%);
+        }
+        100% {
+          transform: translateY(-100%);
+        }
+      }
+
+      .scan-data {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+        color: var(--text-soft);
+        font-family: "Rajdhani", sans-serif;
+        font-size: 0.9rem;
+      }
+
+      .scan-data span strong {
+        display: block;
+        color: var(--accent);
+        font-size: 1.1rem;
+      }
+
+      .footer {
+        margin-top: 6rem;
+        padding: 2.4rem 0 3.6rem;
+        border-top: 1px solid rgba(125, 241, 255, 0.12);
+        display: grid;
+        gap: 1.2rem;
+        justify-items: center;
+        color: var(--text-soft);
+        font-size: 0.85rem;
+      }
+
+      .footer .socials {
+        display: flex;
+        gap: 1.4rem;
+      }
+
+      .footer .socials a {
+        padding: 0.4rem 0.8rem;
+        border-radius: 999px;
+        border: 1px solid rgba(125, 241, 255, 0.3);
+        text-transform: uppercase;
+        font-family: "Rajdhani", sans-serif;
+        letter-spacing: 0.14em;
+      }
+
+      .floating-controls {
+        position: fixed;
+        right: clamp(1rem, 3vw, 2.4rem);
+        bottom: clamp(1rem, 3vw, 2.4rem);
+        display: grid;
+        gap: 0.8rem;
+        z-index: 20;
+      }
+
+      .floating-controls button {
+        border: none;
+        border-radius: 50%;
+        width: 56px;
+        height: 56px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(160deg, rgba(125, 241, 255, 0.18), rgba(18, 30, 55, 0.85));
+        color: var(--text-primary);
+        font-family: "Rajdhani", sans-serif;
+        letter-spacing: 0.14em;
+        cursor: pointer;
+        border: 1px solid rgba(125, 241, 255, 0.32);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .floating-controls button:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--glow);
+      }
+
+      .status-indicator {
+        position: fixed;
+        top: 1.4rem;
+        right: 1.6rem;
+        padding: 0.5rem 1rem;
+        border-radius: 999px;
+        border: 1px solid rgba(41, 240, 181, 0.6);
+        background: rgba(10, 30, 40, 0.8);
+        color: var(--accent-4);
+        font-family: "Rajdhani", sans-serif;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        box-shadow: 0 0 22px rgba(41, 240, 181, 0.25);
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+      }
+
+      .status-indicator::before {
+        content: "";
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--accent-4);
+        box-shadow: 0 0 16px rgba(41, 240, 181, 0.85);
+        animation: blink 2s ease-in-out infinite;
+      }
+
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 0.5;
+        }
+        40% {
+          opacity: 1;
+        }
+      }
+
+      .tooltip {
+        position: absolute;
+        inset: auto auto 2.4rem 0;
+        padding: 0.7rem 1rem;
+        background: rgba(8, 16, 28, 0.86);
+        border-radius: 14px;
+        border: 1px solid rgba(125, 241, 255, 0.35);
+        font-size: 0.85rem;
+        box-shadow: 0 24px 48px rgba(5, 10, 30, 0.6);
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(8px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+      }
+
+      .floating-controls button:hover + .tooltip,
+      .floating-controls button:focus + .tooltip {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      @media (max-width: 720px) {
+        nav {
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .nav-links {
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+
+        .floating-controls {
+          bottom: 1.4rem;
+          right: 1.4rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="status-indicator">Systems Nominal</div>
+    <div class="floating-controls">
+      <button id="toggle-grid" aria-label="Toggle navigation grid">GRID</button>
+      <div class="tooltip" id="grid-tip">Click to toggle navigation overlays</div>
+      <button id="scroll-top" aria-label="Scroll to top">TOP</button>
+      <div class="tooltip" id="top-tip">Return to command deck</div>
+    </div>
+
+    <div class="page">
+      <nav>
+        <div class="logo">Hyperlane Control</div>
+        <div class="nav-links">
+          <a href="#overview">Overview</a>
+          <a href="#systems">Systems</a>
+          <a href="#timeline">Timeline</a>
+          <a href="#scanner">Scanner</a>
+        </div>
+      </nav>
+
+      <header id="overview">
+        <div class="intro">
+          <span class="tag">Mission Alpha / Sol-7</span>
+          <h1>Adaptive Navigation For Deep Space Caravans</h1>
+          <p>
+            Hyperlane Mission Control orchestrates faster-than-light travel with
+            adaptive routing, predictive hazard mitigation, and immersive fleet
+            telemetry. Engage the new Holowarp suite to visualize star charts in
+            real-time and lock your trajectory with quantum precision.
+          </p>
+          <div class="cta-row">
+            <button class="cta" id="launch-sequence">Initiate Launch</button>
+            <button class="cta secondary" id="open-brief">Read Mission Brief</button>
+          </div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <div class="orbital-map">
+            <svg viewBox="0 0 400 400" role="presentation">
+              <defs>
+                <linearGradient id="orbitGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="var(--accent)" />
+                  <stop offset="100%" stop-color="var(--accent-2)" />
+                </linearGradient>
+              </defs>
+              <circle cx="200" cy="200" r="70" fill="none" stroke="url(#orbitGradient)" stroke-opacity="0.6" stroke-width="1.2" stroke-dasharray="6 12"></circle>
+              <circle cx="200" cy="200" r="110" fill="none" stroke="url(#orbitGradient)" stroke-opacity="0.4" stroke-width="1" stroke-dasharray="4 10"></circle>
+              <circle cx="200" cy="200" r="150" fill="none" stroke="url(#orbitGradient)" stroke-opacity="0.25" stroke-width="0.8" stroke-dasharray="3 8"></circle>
+              <circle cx="200" cy="200" r="5" fill="var(--accent)"></circle>
+              <path d="M 200 50 Q 280 140 330 200 Q 280 260 200 350 Q 120 260 70 200 Q 120 140 200 50" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="0.8" stroke-dasharray="4 12"></path>
+              <circle cx="120" cy="110" r="4" fill="var(--accent-3)"></circle>
+              <circle cx="290" cy="140" r="4" fill="var(--accent-4)"></circle>
+              <circle cx="260" cy="280" r="4" fill="var(--accent-2)"></circle>
+            </svg>
+            <div class="orbit-dots">
+              <span style="top: 22%; left: 72%"></span>
+              <span style="top: 60%; left: 86%"></span>
+              <span style="top: 74%; left: 32%"></span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section>
+        <div class="section-heading">
+          <h2>Holowarp Deck</h2>
+          <p>
+            Dive into mission-grade analytics with fractal navigation overlays,
+            adaptive autopilot configurations, and crew augmentation systems
+            engineered for orbital caravans.
+          </p>
+        </div>
+        <div class="grid features">
+          <article class="feature-card" data-sigil="A1">
+            <h3>Quantum Routing</h3>
+            <p>
+              Predict cosmic turbulence hours ahead with quantum-tunneling path
+              mapping. Adjust trajectories in real time with the new micro-fold
+              corrections engine.
+            </p>
+          </article>
+          <article class="feature-card" data-sigil="B7">
+            <h3>Multi-fleet Sync</h3>
+            <p>
+              Synchronize flotillas across sectors with zero drift. Neural mesh
+              channels keep allied convoy vectors aligned within 0.0002 AU.
+            </p>
+          </article>
+          <article class="feature-card" data-sigil="C9">
+            <h3>Atmos Fielding</h3>
+            <p>
+              Deploy adaptive shielding bubbles as you breach orbit. Atmospherics
+              recalibrate based on hull telemetry, minimizing re-entry stress.
+            </p>
+          </article>
+          <article class="feature-card" data-sigil="D4">
+            <h3>Conscious HUD</h3>
+            <p>
+              Mixed reality dashboard streams crew biometrics and stellar hazard
+              overlays. Command decisions update instantly through the empathic
+              interface.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-heading">
+          <h2>Mission Metrics</h2>
+          <p>
+            Live intel feeds track your convoy efficiency. Hover any metric to
+            amplify its spectral signature.
+          </p>
+        </div>
+        <div class="metrics">
+          <div class="metric">
+            <span data-count="872">000</span>
+            <small>Successful Jumps</small>
+          </div>
+          <div class="metric">
+            <span data-count="12.4">0.0</span>
+            <small>Average Fold Duration (min)</small>
+          </div>
+          <div class="metric">
+            <span data-count="99.98">0</span>
+            <small>Stability Index (%)</small>
+          </div>
+          <div class="metric">
+            <span data-count="42">0</span>
+            <small>Active Convoys</small>
+          </div>
+        </div>
+      </section>
+
+      <section id="timeline">
+        <div class="section-heading">
+          <h2>Launch Timeline</h2>
+          <p>
+            Mission steps auto-sync with your fleet logs. Each milestone pushes
+            predictive updates to the nav core.
+          </p>
+        </div>
+        <div class="timeline">
+          <div class="milestone">
+            <h4>T-12h Preflight Mesh</h4>
+            <p>
+              Firmware updates ripple through the convoy. Crew implants receive
+              mission heuristics and environment calibrations.
+            </p>
+          </div>
+          <div class="milestone">
+            <h4>T-2h Quantum Lock</h4>
+            <p>
+              Prime the hyperlane anchor. Atmospheric thrums align with stellar
+              drift predictions for a clean break.
+            </p>
+          </div>
+          <div class="milestone">
+            <h4>T-0 Launch Fold</h4>
+            <p>
+              The convoy enters the fold corridor. Adaptive thrusters maintain
+              balance within the gravity shear.</p>
+          </div>
+          <div class="milestone">
+            <h4>T+3h Resonant Glide</h4>
+            <p>
+              Cross-sector data streams update hazards dynamically. Fleet
+              cohesion holds at 99.98% stability index.
+            </p>
+          </div>
+          <div class="milestone">
+            <h4>T+16h Surface Link</h4>
+            <p>
+              Re-entry protocols deploy. Ground relays open to receive supply
+              chains and colonist pods.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="systems">
+        <div class="section-heading">
+          <h2>Subsystem Matrix</h2>
+          <p>
+            Modular stacks adapt to convoy scale. Each array is preconfigured for
+            deep-space resiliency and warp surge mitigation.
+          </p>
+        </div>
+        <div class="systems-grid">
+          <article class="system">
+            <h3>Navigation Core</h3>
+            <ul>
+              <li>Heuristic starfield sampling</li>
+              <li>Bias-free drift correctors</li>
+              <li>Quantum anchor tethering</li>
+            </ul>
+          </article>
+          <article class="system">
+            <h3>Fleet Harmony</h3>
+            <ul>
+              <li>Adaptive convoy clustering</li>
+              <li>Empathic crew liaison</li>
+              <li>Stress signal mitigation</li>
+            </ul>
+          </article>
+          <article class="system">
+            <h3>Hull Dynamics</h3>
+            <ul>
+              <li>Atmospheric pulse fielding</li>
+              <li>Microfracture healing mesh</li>
+              <li>Radiation haze dampeners</li>
+            </ul>
+          </article>
+          <article class="system">
+            <h3>Telemetric Forge</h3>
+            <ul>
+              <li>Predictive hazard modeling</li>
+              <li>Cross-sector anomaly scan</li>
+              <li>Live convoy inscription</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section id="scanner">
+        <div class="section-heading">
+          <h2>Sector Scanner</h2>
+          <p>
+            Monitor inbound signals from deep space beacons. Toggle the grid to
+            overlay navigation references on the live feed.
+          </p>
+        </div>
+        <div class="scanner">
+          <div class="scan-bar">
+            <div class="scan-line"></div>
+            <canvas id="scannerCanvas" width="600" height="400" role="presentation"></canvas>
+          </div>
+          <div class="scan-data">
+            <span><strong id="signalStrength">--</strong>Signal Strength</span>
+            <span><strong id="gridState">Engaged</strong>Grid Overlay</span>
+            <span><strong id="anomalyCount">--</strong>Detected Anomalies</span>
+            <span><strong id="temperature">--</strong>Hull Temperature</span>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <div class="socials">
+          <a href="#">Command</a>
+          <a href="#">FleetNet</a>
+          <a href="#">Archive</a>
+        </div>
+        <div>© 2089 Hyperlane Consortium. Quantum routes cleared.</div>
+      </footer>
+    </div>
+
+    <dialog id="mission-dialog">
+      <article>
+        <header>
+          <h2>Mission Briefing</h2>
+        </header>
+        <p>
+          The Sol-7 convoy will traverse the Cygnus Corridor, encountering three
+          predicted quantum slipstreams. Tactical overlays project low risk for
+          gravitational riptides. Maintain stable formation and deploy resonant
+          shields upon exit.
+        </p>
+        <form method="dialog">
+          <button>Understood</button>
+        </form>
+      </article>
+    </dialog>
+
+    <div id="launch-toast" role="status" aria-live="polite" hidden>
+      Launch sequence armed. Await final confirmation.
+    </div>
+
+    <style>
+      dialog {
+        background: rgba(5, 10, 26, 0.92);
+        border: 1px solid rgba(125, 241, 255, 0.35);
+        border-radius: 18px;
+        color: var(--text-primary);
+        padding: 1.8rem;
+        max-width: min(420px, 92vw);
+        box-shadow: 0 28px 80px rgba(2, 4, 20, 0.7);
+        font-family: "Outfit", sans-serif;
+      }
+
+      dialog::backdrop {
+        background: rgba(2, 4, 12, 0.75);
+        backdrop-filter: blur(6px);
+      }
+
+      dialog article {
+        display: grid;
+        gap: 1.2rem;
+      }
+
+      dialog h2 {
+        margin: 0;
+        font-family: "Rajdhani", sans-serif;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        font-size: 1.2rem;
+      }
+
+      dialog button {
+        justify-self: end;
+        border: none;
+        border-radius: 999px;
+        padding: 0.5rem 1.4rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        background: linear-gradient(120deg, var(--accent), var(--accent-2));
+        color: #030818;
+        cursor: pointer;
+        font-family: "Rajdhani", sans-serif;
+      }
+
+      #launch-toast {
+        position: fixed;
+        left: 50%;
+        bottom: 5rem;
+        transform: translateX(-50%) translateY(20px);
+        padding: 1rem 1.8rem;
+        border-radius: 999px;
+        border: 1px solid rgba(125, 241, 255, 0.35);
+        background: rgba(6, 12, 30, 0.9);
+        box-shadow: 0 24px 60px rgba(2, 4, 20, 0.8);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        opacity: 0;
+        transition: opacity 0.45s ease, transform 0.45s ease;
+      }
+
+      #launch-toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      canvas {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        inset: 0;
+      }
+    </style>
+
+    <script>
+      const metrics = document.querySelectorAll('.metric span');
+      let metricsAnimated = false;
+
+      const options = {
+        threshold: 0.35
+      };
+
+      const animateMetrics = (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !metricsAnimated) {
+            metricsAnimated = true;
+            metrics.forEach((metric) => {
+              const target = Number(metric.dataset.count);
+              const isDecimal = !Number.isInteger(target);
+              let start = 0;
+              const increment = target / 120;
+              const interval = setInterval(() => {
+                start += increment;
+                if (start >= target) {
+                  start = target;
+                  clearInterval(interval);
+                }
+                metric.textContent = isDecimal ? start.toFixed(2) : Math.round(start);
+              }, 20);
+            });
+          }
+        });
+      };
+
+      const observer = new IntersectionObserver(animateMetrics, options);
+      const metricsSection = document.querySelector('.metrics');
+      observer.observe(metricsSection);
+
+      const launchBtn = document.getElementById('launch-sequence');
+      const toast = document.getElementById('launch-toast');
+      launchBtn.addEventListener('click', () => {
+        toast.hidden = false;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+        setTimeout(() => (toast.hidden = true), 3400);
+      });
+
+      const missionDialog = document.getElementById('mission-dialog');
+      const openBrief = document.getElementById('open-brief');
+      openBrief.addEventListener('click', () => {
+        if (typeof missionDialog.showModal === 'function') {
+          missionDialog.showModal();
+        }
+      });
+
+      const toggleGrid = document.getElementById('toggle-grid');
+      const gridState = document.getElementById('gridState');
+      toggleGrid.addEventListener('click', () => {
+        document.body.classList.toggle('grid-active');
+        const active = document.body.classList.contains('grid-active');
+        gridState.textContent = active ? 'Engaged' : 'Offline';
+        document.body.style.setProperty('background', active ? 'radial-gradient(circle at 30% 10%, rgba(120, 210, 255, 0.12), transparent 62%), radial-gradient(circle at 70% 30%, rgba(255, 100, 255, 0.08), transparent 55%), #02010a' : 'var(--bg-base)');
+      });
+
+      const scrollTopButton = document.getElementById('scroll-top');
+      scrollTopButton.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      const canvas = document.getElementById('scannerCanvas');
+      const ctx = canvas.getContext('2d');
+      const anomalies = [];
+
+      function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.scale(dpr, dpr);
+      }
+
+      function drawGrid() {
+        const { width, height } = canvas.getBoundingClientRect();
+        ctx.clearRect(0, 0, width, height);
+        ctx.strokeStyle = 'rgba(125, 241, 255, 0.08)';
+        ctx.lineWidth = 1;
+        const spacing = 40;
+        for (let x = 0; x <= width; x += spacing) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, height);
+          ctx.stroke();
+        }
+        for (let y = 0; y <= height; y += spacing) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(width, y);
+          ctx.stroke();
+        }
+      }
+
+      function drawAnomalies() {
+        const { width, height } = canvas.getBoundingClientRect();
+        anomalies.forEach((anomaly) => {
+          ctx.beginPath();
+          const gradient = ctx.createRadialGradient(
+            anomaly.x,
+            anomaly.y,
+            0,
+            anomaly.x,
+            anomaly.y,
+            24
+          );
+          gradient.addColorStop(0, 'rgba(255, 95, 247, 0.7)');
+          gradient.addColorStop(1, 'rgba(255, 95, 247, 0)');
+          ctx.fillStyle = gradient;
+          ctx.arc(anomaly.x, anomaly.y, 24, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.strokeStyle = 'rgba(255, 95, 247, 0.8)';
+          ctx.lineWidth = 1.2;
+          ctx.arc(anomaly.x, anomaly.y, 16 + Math.sin(Date.now() / 600) * 4, 0, Math.PI * 2);
+          ctx.stroke();
+        });
+      }
+
+      function updateScanner() {
+        drawGrid();
+        drawAnomalies();
+        requestAnimationFrame(updateScanner);
+      }
+
+      function generateAnomalies(count = 3) {
+        const { width, height } = canvas.getBoundingClientRect();
+        anomalies.length = 0;
+        for (let i = 0; i < count; i++) {
+          anomalies.push({
+            x: Math.random() * width,
+            y: Math.random() * height
+          });
+        }
+        document.getElementById('anomalyCount').textContent = count;
+      }
+
+      function randomizeTelemetry() {
+        const signal = Math.floor(Math.random() * 20 + 80);
+        const temp = (Math.random() * 25 + 45).toFixed(1);
+        document.getElementById('signalStrength').textContent = signal + '%';
+        document.getElementById('temperature').textContent = temp + '°C';
+      }
+
+      window.addEventListener('resize', () => {
+        resizeCanvas();
+        drawGrid();
+      });
+
+      resizeCanvas();
+      generateAnomalies(4);
+      randomizeTelemetry();
+      updateScanner();
+      setInterval(() => {
+        generateAnomalies(Math.floor(Math.random() * 4) + 2);
+        randomizeTelemetry();
+      }, 6000);
+    </script>
+  </body>
+</html>
