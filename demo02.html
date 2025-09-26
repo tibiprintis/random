@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alien Expanse Simulation — Performance Edition</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-size: 16px;
+      --panel-bg: rgba(15, 18, 35, 0.92);
+      --panel-border: rgba(120, 180, 255, 0.32);
+      --accent: #79f7ff;
+      --accent-strong: #9dffa7;
+      --text: #f0f6ff;
+      --muted: rgba(240, 246, 255, 0.65);
+      --shadow: 0 18px 50px rgba(10, 14, 30, 0.65);
+      --bg-gradient: radial-gradient(circle at 20% 25%, rgba(132, 170, 255, 0.18), transparent 60%),
+        radial-gradient(circle at 80% 70%, rgba(90, 250, 210, 0.12), transparent 50%),
+        #030511;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg-gradient);
+      font-family: "Segoe UI", Roboto, sans-serif;
+      color: var(--text);
+      display: flex;
+      align-items: stretch;
+      overflow: hidden;
+    }
+
+    .layout {
+      display: flex;
+      width: 100%;
+      height: 100vh;
+    }
+
+    .control-panel {
+      width: clamp(280px, 30%, 420px);
+      padding: 2.4rem 2rem 3rem;
+      background: var(--panel-bg);
+      border-right: 1px solid var(--panel-border);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      position: relative;
+      z-index: 10;
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+
+    .control-panel::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .control-panel::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, rgba(120, 180, 255, 0.6), rgba(120, 255, 185, 0.6));
+      border-radius: 999px;
+    }
+
+    .panel-header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .panel-header h1 {
+      margin: 0;
+      font-size: 1.85rem;
+      letter-spacing: 0.1em;
+      font-weight: 600;
+    }
+
+    .panel-header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 1.8rem;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+      padding: 1.4rem 1.3rem;
+      background: linear-gradient(140deg, rgba(32, 42, 70, 0.82), rgba(12, 18, 36, 0.92));
+      border-radius: 1.4rem;
+      border: 1px solid rgba(120, 180, 255, 0.16);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .control-group::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top left, rgba(150, 255, 200, 0.08), transparent 55%);
+      pointer-events: none;
+    }
+
+    .control-group h2 {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .slider-row,
+    .select-row,
+    .toggle-row,
+    .color-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .slider-row label,
+    .select-row label,
+    .color-row label,
+    .toggle-row span {
+      flex: 0 0 8.5rem;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+    }
+
+    .slider-row output {
+      width: 3.2rem;
+      text-align: right;
+      font-feature-settings: "tnum";
+      color: var(--accent);
+    }
+
+    input[type="range"] {
+      appearance: none;
+      flex: 1 1 auto;
+      height: 8px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(120, 180, 255, 0.6), rgba(120, 255, 185, 0.7));
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: inset 0 0 12px rgba(10, 16, 30, 0.7);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #78ffba, #4a7eff);
+      border: 2px solid rgba(12, 18, 32, 0.8);
+      box-shadow: 0 4px 14px rgba(120, 200, 255, 0.55);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input[type="range"]:active::-webkit-slider-thumb {
+      transform: scale(1.2);
+      box-shadow: 0 6px 20px rgba(120, 255, 185, 0.65);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #78ffba, #4a7eff);
+      border: none;
+      cursor: pointer;
+    }
+
+    select,
+    button,
+    input[type="color"] {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 0.9rem;
+      padding: 0.5rem 0.8rem;
+      background: rgba(7, 12, 26, 0.8);
+      color: var(--text);
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      font-family: inherit;
+      transition: border 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    select:focus,
+    button:focus,
+    input[type="color"]:focus {
+      outline: none;
+      border-color: rgba(120, 200, 255, 0.6);
+      box-shadow: 0 0 0 3px rgba(120, 200, 255, 0.15);
+    }
+
+    button {
+      cursor: pointer;
+      background: linear-gradient(145deg, rgba(120, 180, 255, 0.6), rgba(120, 255, 185, 0.55));
+      color: #06101f;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      font-weight: 600;
+      border: none;
+    }
+
+    button.muted {
+      background: linear-gradient(145deg, rgba(120, 120, 120, 0.4), rgba(70, 70, 70, 0.5));
+      color: rgba(240, 246, 255, 0.8);
+    }
+
+    .preview {
+      flex: 1 1 auto;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .hud {
+      position: absolute;
+      top: 1.4rem;
+      right: 1.4rem;
+      padding: 1rem 1.2rem;
+      border-radius: 1rem;
+      background: rgba(6, 12, 24, 0.45);
+      border: 1px solid rgba(120, 180, 255, 0.16);
+      backdrop-filter: blur(12px);
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      display: grid;
+      gap: 0.35rem;
+      pointer-events: none;
+    }
+
+    .hud strong {
+      color: var(--accent-strong);
+      font-weight: 500;
+    }
+
+    @media (max-width: 1024px) {
+      body {
+        flex-direction: column;
+      }
+
+      .layout {
+        flex-direction: column;
+      }
+
+      .control-panel {
+        width: 100%;
+        max-height: 60vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="control-panel">
+      <header class="panel-header">
+        <h1>Alien Expanse // Performance Lab</h1>
+        <p>
+          Tune the cosmic particle field for fidelity or speed. Templates provide curated looks that balance
+          visuals against GPU cost.
+        </p>
+      </header>
+      <div class="controls">
+        <section class="control-group">
+          <h2>Templates</h2>
+          <div class="select-row">
+            <label for="template">Preset</label>
+            <select id="template">
+              <option value="nebula-fidelity">Nebula Bloom — High Fidelity</option>
+              <option value="ion-stream-balanced">Ion Stream — Balanced</option>
+              <option value="photon-sparks-performance">Photon Sparks — Performance</option>
+              <option value="aurora-drift-cinematic">Aurora Drift — Cinematic</option>
+            </select>
+          </div>
+          <p style="margin:0;color:var(--muted);font-size:0.75rem;line-height:1.4;">
+            Presets change particle count, texture richness, and motion settings. Modify controls afterward to fine tune.
+          </p>
+        </section>
+
+        <section class="control-group">
+          <h2>Performance</h2>
+          <div class="slider-row">
+            <label for="particleCount">Particle Count</label>
+            <input type="range" id="particleCount" min="200" max="2200" step="50" value="1200" />
+            <output id="particleCountValue">1200</output>
+          </div>
+          <div class="slider-row">
+            <label for="trailLength">Trail Persistence</label>
+            <input type="range" id="trailLength" min="0.2" max="0.95" step="0.05" value="0.65" />
+            <output id="trailLengthValue">0.65</output>
+          </div>
+          <div class="slider-row">
+            <label for="resolutionScale">Resolution Scale</label>
+            <input type="range" id="resolutionScale" min="0.4" max="1" step="0.05" value="0.9" />
+            <output id="resolutionScaleValue">0.90×</output>
+          </div>
+          <div class="slider-row">
+            <label for="motionSpeed">Field Velocity</label>
+            <input type="range" id="motionSpeed" min="0.2" max="2.2" step="0.1" value="1.1" />
+            <output id="motionSpeedValue">1.10</output>
+          </div>
+          <div class="toggle-row" style="justify-content: space-between;">
+            <span>Dynamic Frame Budget</span>
+            <button type="button" id="adaptiveButton">Enabled</button>
+          </div>
+        </section>
+
+        <section class="control-group">
+          <h2>Color &amp; Texture</h2>
+          <div class="color-row">
+            <label for="colorPrimary">Primary Glow</label>
+            <input type="color" id="colorPrimary" value="#6ef3ff" />
+          </div>
+          <div class="color-row">
+            <label for="colorSecondary">Secondary Glow</label>
+            <input type="color" id="colorSecondary" value="#84ffbf" />
+          </div>
+          <div class="slider-row">
+            <label for="textureScale">Texture Scale</label>
+            <input type="range" id="textureScale" min="0.001" max="0.01" step="0.0005" value="0.0035" />
+            <output id="textureScaleValue">0.0035</output>
+          </div>
+          <div class="slider-row">
+            <label for="textureIntensity">Texture Contrast</label>
+            <input type="range" id="textureIntensity" min="0.05" max="0.6" step="0.05" value="0.3" />
+            <output id="textureIntensityValue">0.30</output>
+          </div>
+          <div class="slider-row">
+            <label for="bloom">Bloom Strength</label>
+            <input type="range" id="bloom" min="0" max="1" step="0.05" value="0.55" />
+            <output id="bloomValue">0.55</output>
+          </div>
+        </section>
+
+        <section class="control-group">
+          <h2>Audio</h2>
+          <p style="margin:0;color:var(--muted);font-size:0.75rem;line-height:1.4;">
+            Procedurally generated synth sweeps respond to intensity changes. Use the mute toggle to silence them.
+          </p>
+          <div class="toggle-row" style="justify-content: flex-end;">
+            <button type="button" id="muteButton">Mute</button>
+          </div>
+        </section>
+      </div>
+    </aside>
+    <main class="preview">
+      <canvas id="expanse" width="1280" height="720"></canvas>
+      <div class="hud">
+        <div>FPS: <strong id="fps">0</strong></div>
+        <div>Particles: <strong id="hudParticles">0</strong></div>
+        <div>Render Scale: <strong id="hudResolution">1.00×</strong></div>
+        <div>Template: <strong id="hudTemplate">Nebula Bloom</strong></div>
+      </div>
+    </main>
+  </div>
+  <script>
+    const canvas = document.getElementById("expanse");
+    const ctx = canvas.getContext("2d", { alpha: false });
+    const dpr = window.devicePixelRatio || 1;
+
+    const state = {
+      width: 0,
+      height: 0,
+      frame: 0,
+      lastTime: performance.now(),
+      fps: 0,
+      particles: [],
+      adaptive: true,
+      noisePattern: null,
+      lastParticleCount: 0,
+      lastResolutionScale: 1,
+      lastTextureScale: 0.0035,
+      sound: {
+        context: null,
+        enabled: true,
+        lastTrigger: 0,
+        userActivated: false,
+      },
+    };
+
+    const controls = {
+      particleCount: document.getElementById("particleCount"),
+      particleCountValue: document.getElementById("particleCountValue"),
+      trailLength: document.getElementById("trailLength"),
+      trailLengthValue: document.getElementById("trailLengthValue"),
+      resolutionScale: document.getElementById("resolutionScale"),
+      resolutionScaleValue: document.getElementById("resolutionScaleValue"),
+      motionSpeed: document.getElementById("motionSpeed"),
+      motionSpeedValue: document.getElementById("motionSpeedValue"),
+      textureScale: document.getElementById("textureScale"),
+      textureScaleValue: document.getElementById("textureScaleValue"),
+      textureIntensity: document.getElementById("textureIntensity"),
+      textureIntensityValue: document.getElementById("textureIntensityValue"),
+      bloom: document.getElementById("bloom"),
+      bloomValue: document.getElementById("bloomValue"),
+      colorPrimary: document.getElementById("colorPrimary"),
+      colorSecondary: document.getElementById("colorSecondary"),
+      template: document.getElementById("template"),
+      adaptiveButton: document.getElementById("adaptiveButton"),
+      muteButton: document.getElementById("muteButton"),
+    };
+
+    const hud = {
+      fps: document.getElementById("fps"),
+      particles: document.getElementById("hudParticles"),
+      resolution: document.getElementById("hudResolution"),
+      template: document.getElementById("hudTemplate"),
+    };
+
+    const templates = {
+      "nebula-fidelity": {
+        name: "Nebula Bloom",
+        particleCount: 1800,
+        trailLength: 0.78,
+        resolutionScale: 0.95,
+        motionSpeed: 1.2,
+        textureScale: 0.003,
+        textureIntensity: 0.45,
+        bloom: 0.72,
+        colorPrimary: "#74f3ff",
+        colorSecondary: "#b6ffb0",
+      },
+      "ion-stream-balanced": {
+        name: "Ion Stream",
+        particleCount: 1300,
+        trailLength: 0.68,
+        resolutionScale: 0.85,
+        motionSpeed: 1.0,
+        textureScale: 0.0035,
+        textureIntensity: 0.3,
+        bloom: 0.55,
+        colorPrimary: "#8ddcff",
+        colorSecondary: "#7dffa8",
+      },
+      "photon-sparks-performance": {
+        name: "Photon Sparks",
+        particleCount: 700,
+        trailLength: 0.48,
+        resolutionScale: 0.7,
+        motionSpeed: 1.5,
+        textureScale: 0.0045,
+        textureIntensity: 0.22,
+        bloom: 0.4,
+        colorPrimary: "#ffe37d",
+        colorSecondary: "#ff8f5c",
+      },
+      "aurora-drift-cinematic": {
+        name: "Aurora Drift",
+        particleCount: 1600,
+        trailLength: 0.82,
+        resolutionScale: 0.9,
+        motionSpeed: 0.8,
+        textureScale: 0.0025,
+        textureIntensity: 0.5,
+        bloom: 0.8,
+        colorPrimary: "#b3a1ff",
+        colorSecondary: "#7df2ff",
+      },
+    };
+
+    const settings = {
+      particleCount: parseInt(controls.particleCount.value, 10),
+      trailLength: parseFloat(controls.trailLength.value),
+      resolutionScale: parseFloat(controls.resolutionScale.value),
+      motionSpeed: parseFloat(controls.motionSpeed.value),
+      textureScale: parseFloat(controls.textureScale.value),
+      textureIntensity: parseFloat(controls.textureIntensity.value),
+      bloom: parseFloat(controls.bloom.value),
+      colorPrimary: controls.colorPrimary.value,
+      colorSecondary: controls.colorSecondary.value,
+    };
+
+    state.lastResolutionScale = settings.resolutionScale;
+    state.lastTextureScale = settings.textureScale;
+
+    function resizeCanvas() {
+      const panel = document.querySelector(".control-panel");
+      const vertical = window.matchMedia("(max-width: 1024px)").matches;
+      let width = window.innerWidth;
+      let height = window.innerHeight;
+      if (vertical) {
+        height = Math.max(200, window.innerHeight - panel.offsetHeight);
+      } else {
+        width = Math.max(200, window.innerWidth - panel.offsetWidth);
+      }
+      const scale = settings.resolutionScale * dpr;
+      state.width = Math.max(240, width);
+      state.height = Math.max(260, height);
+      canvas.width = state.width * scale;
+      canvas.height = state.height * scale;
+      canvas.style.width = `${state.width}px`;
+      canvas.style.height = `${state.height}px`;
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
+      state.noisePattern = createNoisePattern(settings.textureScale);
+      state.lastResolutionScale = settings.resolutionScale;
+      state.lastTextureScale = settings.textureScale;
+    }
+
+    function createNoisePattern(scale) {
+      const size = 256;
+      const noiseCanvas = document.createElement("canvas");
+      noiseCanvas.width = noiseCanvas.height = size;
+      const nctx = noiseCanvas.getContext("2d");
+      const imageData = nctx.createImageData(size, size);
+      for (let i = 0; i < imageData.data.length; i += 4) {
+        const softness = Math.max(1.4, Math.min(4.4, 2 + scale * 180));
+        const v = Math.pow(Math.random(), softness) * 255;
+        imageData.data[i] = v;
+        imageData.data[i + 1] = v * 0.95;
+        imageData.data[i + 2] = v * 0.8;
+        imageData.data[i + 3] = 255;
+      }
+      nctx.putImageData(imageData, 0, 0);
+      const pattern = ctx.createPattern(noiseCanvas, "repeat");
+      if (pattern && typeof pattern.setTransform === "function") {
+        const patternScale = Math.max(0.6, Math.min(3.5, 0.02 / Math.max(scale, 0.0001)));
+        const Matrix = window.DOMMatrix || window.WebKitCSSMatrix;
+        if (Matrix) {
+          const matrix = new Matrix();
+          matrix.a = patternScale;
+          matrix.d = patternScale;
+          pattern.setTransform(matrix);
+        }
+      }
+      return pattern;
+    }
+
+    function interpolateColor(c1, c2, t) {
+      const parse = (hex) => hex.match(/\w\w/g).map((v) => parseInt(v, 16));
+      const [r1, g1, b1] = parse(c1);
+      const [r2, g2, b2] = parse(c2);
+      const r = Math.round(r1 + (r2 - r1) * t);
+      const g = Math.round(g1 + (g2 - g1) * t);
+      const b = Math.round(b1 + (b2 - b1) * t);
+      return [r, g, b];
+    }
+
+    function spawnParticles() {
+      const count = settings.particleCount;
+      state.particles.length = 0;
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = Math.random() * Math.sqrt(state.width * state.width + state.height * state.height) * 0.35;
+        state.particles.push({
+          x: state.width / 2 + Math.cos(angle) * radius,
+          y: state.height / 2 + Math.sin(angle) * radius,
+          vx: (Math.random() - 0.5) * settings.motionSpeed,
+          vy: (Math.random() - 0.5) * settings.motionSpeed,
+          life: Math.random(),
+          hueShift: Math.random(),
+        });
+      }
+      hud.particles.textContent = count;
+      state.lastParticleCount = count;
+    }
+
+    function updateParticles(delta) {
+      const speedScale = settings.motionSpeed * (delta / 16.6667);
+      const noiseIntensity = settings.textureIntensity * 120;
+      for (const p of state.particles) {
+        const nx = Math.sin((p.x + state.frame * 0.8) * settings.textureScale);
+        const ny = Math.cos((p.y - state.frame * 0.6) * settings.textureScale);
+        p.vx += nx * 0.02 * noiseIntensity * 0.01;
+        p.vy += ny * 0.02 * noiseIntensity * 0.01;
+        p.x += p.vx * speedScale;
+        p.y += p.vy * speedScale;
+        p.life += delta * 0.00012;
+        if (p.life > 1) {
+          p.life = 0;
+          p.x = state.width / 2;
+          p.y = state.height / 2;
+          p.vx = (Math.random() - 0.5) * settings.motionSpeed;
+          p.vy = (Math.random() - 0.5) * settings.motionSpeed;
+          triggerSound(120 + Math.random() * 360);
+        }
+        const margin = 80;
+        if (p.x < -margin || p.x > state.width + margin || p.y < -margin || p.y > state.height + margin) {
+          p.x = Math.random() * state.width;
+          p.y = Math.random() * state.height;
+          p.vx = (Math.random() - 0.5) * settings.motionSpeed;
+          p.vy = (Math.random() - 0.5) * settings.motionSpeed;
+        }
+      }
+    }
+
+    function render(delta) {
+      const fade = 1 - settings.trailLength;
+      ctx.globalCompositeOperation = "source-over";
+      ctx.fillStyle = `rgba(3, 6, 14, ${fade})`;
+      ctx.fillRect(0, 0, state.width, state.height);
+
+      ctx.globalCompositeOperation = "lighter";
+      const gradient = ctx.createRadialGradient(
+        state.width / 2,
+        state.height / 2,
+        0,
+        state.width / 2,
+        state.height / 2,
+        Math.max(state.width, state.height) * 0.8
+      );
+      gradient.addColorStop(0, `${settings.colorPrimary}40`);
+      gradient.addColorStop(1, `${settings.colorSecondary}05`);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, state.width, state.height);
+
+      const len = state.particles.length;
+      const bloomIntensity = settings.bloom;
+      for (let i = 0; i < len; i++) {
+        const p = state.particles[i];
+        const t = (Math.sin(p.life * Math.PI * 2 + p.hueShift) + 1) / 2;
+        const [r, g, b] = interpolateColor(settings.colorPrimary, settings.colorSecondary, t);
+        const alpha = 0.4 + 0.6 * (1 - fade);
+        const size = 2 + t * 3 + bloomIntensity * 4;
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      if (state.noisePattern) {
+        ctx.globalAlpha = settings.textureIntensity;
+        ctx.globalCompositeOperation = "soft-light";
+        ctx.fillStyle = state.noisePattern;
+        ctx.save();
+        ctx.translate((state.frame * 0.5) % 256, (state.frame * -0.35) % 256);
+        ctx.fillRect(-256, -256, state.width + 512, state.height + 512);
+        ctx.restore();
+      }
+
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "lighter";
+      const starCount = Math.max(10, Math.round(state.width * state.height / 80000));
+      ctx.fillStyle = `${settings.colorSecondary}20`;
+      for (let i = 0; i < starCount; i++) {
+        const x = (i * 73 + state.frame * 1.3) % state.width;
+        const y = ((i * 187) % state.height + state.frame * 0.5) % state.height;
+        ctx.fillRect(x, y, 1, 1);
+      }
+    }
+
+    function updateHUD() {
+      hud.fps.textContent = Math.round(state.fps);
+      hud.particles.textContent = settings.particleCount;
+      hud.resolution.textContent = `${settings.resolutionScale.toFixed(2)}×`;
+      const tpl = templates[controls.template.value];
+      if (tpl) {
+        hud.template.textContent = tpl.name;
+      }
+    }
+
+    function loop(now) {
+      const delta = now - state.lastTime;
+      state.lastTime = now;
+      state.frame += 1;
+
+      const fps = (state.fps = 1000 / Math.max(delta, 1));
+      if (state.adaptive) {
+        if (fps < 45 && settings.resolutionScale > 0.55) {
+          settings.resolutionScale = Math.max(0.45, settings.resolutionScale - 0.05);
+          controls.resolutionScale.value = settings.resolutionScale.toFixed(2);
+          controls.resolutionScaleValue.textContent = `${settings.resolutionScale.toFixed(2)}×`;
+          resizeCanvas();
+          state.lastResolutionScale = settings.resolutionScale;
+        } else if (fps > 70 && settings.resolutionScale < 0.95) {
+          settings.resolutionScale = Math.min(1, settings.resolutionScale + 0.05);
+          controls.resolutionScale.value = settings.resolutionScale.toFixed(2);
+          controls.resolutionScaleValue.textContent = `${settings.resolutionScale.toFixed(2)}×`;
+          resizeCanvas();
+          state.lastResolutionScale = settings.resolutionScale;
+        }
+      }
+
+      updateParticles(delta);
+      render(delta);
+      updateHUD();
+
+      requestAnimationFrame(loop);
+    }
+
+    function handleRange(range, output, formatter = (v) => v.toString()) {
+      const update = (event) => {
+        const value = parseFloat(range.value);
+        output.textContent = formatter(value);
+        applySettings();
+        if (event && event.isTrusted && state.sound.userActivated) {
+          triggerSound(220 + value * 10);
+        }
+      };
+      range.addEventListener("input", update);
+      update();
+    }
+
+    function handleColor(input, key) {
+      const update = (event) => {
+        settings[key] = input.value;
+        if (event && event.isTrusted && state.sound.userActivated) {
+          triggerSound(320 + Math.random() * 120);
+        }
+      };
+      input.addEventListener("input", update);
+      update();
+    }
+
+    function applySettings() {
+      settings.particleCount = parseInt(controls.particleCount.value, 10);
+      settings.trailLength = parseFloat(controls.trailLength.value);
+      settings.resolutionScale = parseFloat(controls.resolutionScale.value);
+      settings.motionSpeed = parseFloat(controls.motionSpeed.value);
+      settings.textureScale = parseFloat(controls.textureScale.value);
+      settings.textureIntensity = parseFloat(controls.textureIntensity.value);
+      settings.bloom = parseFloat(controls.bloom.value);
+      const needsResize = Math.abs(state.lastResolutionScale - settings.resolutionScale) > 0.0001;
+      const textureChanged = Math.abs(state.lastTextureScale - settings.textureScale) > 0.0001;
+      if (needsResize) {
+        resizeCanvas();
+      } else if (textureChanged) {
+        state.noisePattern = createNoisePattern(settings.textureScale);
+      }
+      if (state.lastParticleCount !== settings.particleCount) {
+        spawnParticles();
+      }
+      state.lastResolutionScale = settings.resolutionScale;
+      state.lastTextureScale = settings.textureScale;
+    }
+
+    function applyTemplate(key) {
+      const tpl = templates[key];
+      if (!tpl) return;
+      controls.particleCount.value = tpl.particleCount;
+      controls.trailLength.value = tpl.trailLength;
+      controls.resolutionScale.value = tpl.resolutionScale;
+      controls.motionSpeed.value = tpl.motionSpeed;
+      controls.textureScale.value = tpl.textureScale;
+      controls.textureIntensity.value = tpl.textureIntensity;
+      controls.bloom.value = tpl.bloom;
+      controls.colorPrimary.value = tpl.colorPrimary;
+      controls.colorSecondary.value = tpl.colorSecondary;
+
+      controls.particleCount.dispatchEvent(new Event("input"));
+      controls.trailLength.dispatchEvent(new Event("input"));
+      controls.resolutionScale.dispatchEvent(new Event("input"));
+      controls.motionSpeed.dispatchEvent(new Event("input"));
+      controls.textureScale.dispatchEvent(new Event("input"));
+      controls.textureIntensity.dispatchEvent(new Event("input"));
+      controls.bloom.dispatchEvent(new Event("input"));
+      controls.colorPrimary.dispatchEvent(new Event("input"));
+      controls.colorSecondary.dispatchEvent(new Event("input"));
+
+      hud.template.textContent = tpl.name;
+      triggerSound(480 + Math.random() * 120);
+    }
+
+    function primeAudio() {
+      if (!state.sound.context) {
+        state.sound.context = new (window.AudioContext || window.webkitAudioContext)();
+      } else if (state.sound.context.state === "suspended") {
+        state.sound.context.resume();
+      }
+      state.sound.userActivated = true;
+    }
+
+    function triggerSound(frequency) {
+      if (!state.sound.enabled || !state.sound.userActivated) return;
+      const now = performance.now();
+      if (now - state.sound.lastTrigger < 120) return;
+      state.sound.lastTrigger = now;
+      const ctxAudio = state.sound.context;
+      if (ctxAudio.state === "suspended") ctxAudio.resume();
+      const osc = ctxAudio.createOscillator();
+      const gain = ctxAudio.createGain();
+      const noise = ctxAudio.createBufferSource();
+      const buffer = ctxAudio.createBuffer(1, ctxAudio.sampleRate * 0.2, ctxAudio.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (data.length / 3));
+      }
+      noise.buffer = buffer;
+      noise.loop = false;
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(frequency, ctxAudio.currentTime);
+      gain.gain.setValueAtTime(0.0001, ctxAudio.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.04, ctxAudio.currentTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.00001, ctxAudio.currentTime + 0.25);
+      osc.connect(gain);
+      noise.connect(gain);
+      gain.connect(ctxAudio.destination);
+      osc.start();
+      noise.start();
+      osc.stop(ctxAudio.currentTime + 0.3);
+      noise.stop(ctxAudio.currentTime + 0.3);
+    }
+
+    controls.template.addEventListener("change", (event) => {
+      applyTemplate(event.target.value);
+    });
+
+    controls.adaptiveButton.addEventListener("click", () => {
+      state.adaptive = !state.adaptive;
+      controls.adaptiveButton.textContent = state.adaptive ? "Enabled" : "Disabled";
+      if (!state.adaptive) {
+        controls.adaptiveButton.classList.add("muted");
+      } else {
+        controls.adaptiveButton.classList.remove("muted");
+      }
+      if (state.sound.userActivated) {
+        triggerSound(state.adaptive ? 660 : 260);
+      }
+    });
+
+    controls.muteButton.addEventListener("click", () => {
+      state.sound.enabled = !state.sound.enabled;
+      controls.muteButton.textContent = state.sound.enabled ? "Mute" : "Unmute";
+      controls.muteButton.classList.toggle("muted", !state.sound.enabled);
+      if (state.sound.userActivated) {
+        triggerSound(state.sound.enabled ? 520 : 180);
+      }
+    });
+
+    handleRange(controls.particleCount, controls.particleCountValue, (v) => Math.round(v));
+    handleRange(controls.trailLength, controls.trailLengthValue, (v) => v.toFixed(2));
+    handleRange(controls.resolutionScale, controls.resolutionScaleValue, (v) => `${v.toFixed(2)}×`);
+    handleRange(controls.motionSpeed, controls.motionSpeedValue, (v) => v.toFixed(2));
+    handleRange(controls.textureScale, controls.textureScaleValue, (v) => v.toFixed(4));
+    handleRange(controls.textureIntensity, controls.textureIntensityValue, (v) => v.toFixed(2));
+    handleRange(controls.bloom, controls.bloomValue, (v) => v.toFixed(2));
+
+    handleColor(controls.colorPrimary, "colorPrimary");
+    handleColor(controls.colorSecondary, "colorSecondary");
+
+    window.addEventListener("resize", resizeCanvas);
+    window.addEventListener("pointerdown", primeAudio);
+    window.addEventListener("keydown", primeAudio);
+
+    applyTemplate(controls.template.value);
+    resizeCanvas();
+    spawnParticles();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
