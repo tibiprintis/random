@@ -4,3 +4,4 @@ data/
 emag/uploads/*
 !emag/uploads/.gitkeep
 emag/*.db
+demo01.png

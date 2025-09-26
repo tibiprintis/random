@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alien Expanse Simulation</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-size: 16px;
+      --panel-bg: rgba(20, 26, 44, 0.9);
+      --panel-border: rgba(93, 180, 255, 0.4);
+      --accent: #5db4ff;
+      --accent-soft: rgba(93, 180, 255, 0.3);
+      --accent-strong: #a0ff9b;
+      --text: #f5faff;
+      --muted: rgba(255, 255, 255, 0.65);
+      --dial-track: rgba(255, 255, 255, 0.15);
+      --dial-thumb: linear-gradient(145deg, #73ffaf, #4481ff);
+      --shadow-strong: 0 18px 50px rgba(19, 28, 63, 0.55);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 20% 20%, #0f1425, #05060d 60%);
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      color: var(--text);
+      display: flex;
+      align-items: stretch;
+      overflow: hidden;
+    }
+
+    .layout {
+      display: flex;
+      width: 100%;
+    }
+
+    .control-panel {
+      width: 25%;
+      max-width: 420px;
+      min-width: 290px;
+      padding: 2.5rem 2rem;
+      backdrop-filter: blur(18px);
+      background: var(--panel-bg);
+      border-right: 1px solid var(--panel-border);
+      box-shadow: var(--shadow-strong);
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .panel-header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .panel-header h1 {
+      font-size: 1.8rem;
+      margin: 0;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+    }
+
+    .panel-header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 1.75rem;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 1.25rem 1.2rem;
+      background: linear-gradient(150deg, rgba(38, 51, 85, 0.7), rgba(15, 21, 38, 0.92));
+      border-radius: 1.4rem;
+      border: 1px solid rgba(93, 180, 255, 0.15);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .control-group::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top left, rgba(160, 255, 155, 0.08), transparent 60%);
+      pointer-events: none;
+    }
+
+    .control-group h2 {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .slider-row label {
+      flex: 0 0 7.5rem;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+
+    .slider-row output {
+      width: 3.2rem;
+      text-align: right;
+      font-feature-settings: "tnum";
+      color: var(--accent);
+    }
+
+    input[type="range"] {
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(93, 180, 255, 0.65), rgba(160, 255, 155, 0.8));
+      outline: none;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: inset 0 0 12px rgba(10, 17, 42, 0.7);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--dial-thumb);
+      border: 2px solid rgba(15, 21, 38, 0.65);
+      box-shadow: 0 4px 12px rgba(93, 180, 255, 0.55);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input[type="range"]:active::-webkit-slider-thumb {
+      transform: scale(1.2);
+      box-shadow: 0 6px 18px rgba(160, 255, 155, 0.6);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      border: none;
+      border-radius: 50%;
+      background: var(--dial-thumb);
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(93, 180, 255, 0.55);
+      transition: transform 0.2s ease;
+    }
+
+    .dial {
+      position: relative;
+      width: 100%;
+      padding: 1.4rem 0 0.6rem;
+    }
+
+    .dial label {
+      display: block;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .dial-track {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      margin: 0 auto;
+      border-radius: 50%;
+      background: conic-gradient(from 180deg, rgba(93, 180, 255, 0.1), rgba(160, 255, 155, 0.35), rgba(93, 180, 255, 0.1));
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: inset 0 0 22px rgba(15, 21, 38, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dial-indicator {
+      position: absolute;
+      width: 12px;
+      height: 50%;
+      top: 50%;
+      left: 50%;
+      transform-origin: 50% 100%;
+      transform: translate(-50%, -100%) rotate(0deg);
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(160, 255, 155, 0.9), rgba(93, 180, 255, 0.8));
+      box-shadow: 0 4px 18px rgba(93, 180, 255, 0.45);
+    }
+
+    .dial-value {
+      position: relative;
+      margin-top: 1.4rem;
+      font-size: 1.8rem;
+      font-weight: 500;
+      text-align: center;
+      letter-spacing: 0.14em;
+      color: var(--accent-strong);
+      text-shadow: 0 0 22px rgba(93, 180, 255, 0.8);
+    }
+
+    .display {
+      margin-top: auto;
+      padding: 1.4rem 1.2rem;
+      border-radius: 1.2rem;
+      border: 1px solid rgba(93, 180, 255, 0.18);
+      background: linear-gradient(150deg, rgba(12, 18, 30, 0.8), rgba(32, 46, 68, 0.5));
+      display: grid;
+      gap: 0.6rem;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+    }
+
+    .display span {
+      color: var(--muted);
+    }
+
+    .display .telemetry {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.8rem 1.2rem;
+      margin-top: 0.4rem;
+    }
+
+    .display .telemetry div {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+    }
+
+    .display .telemetry span {
+      font-size: 1.05rem;
+      letter-spacing: 0.12em;
+      color: var(--accent-strong);
+      text-shadow: 0 0 14px rgba(93, 180, 255, 0.45);
+    }
+
+    .preview {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(circle at 60% 40%, rgba(93, 180, 255, 0.15), transparent 55%),
+                  radial-gradient(circle at 20% 80%, rgba(160, 255, 155, 0.2), transparent 65%),
+                  #04050f;
+    }
+
+    .preview.preview--fallback {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      background: linear-gradient(140deg, rgba(8, 14, 30, 0.9), rgba(28, 38, 60, 0.7));
+    }
+
+    .preview.preview--fallback::after {
+      content: attr(data-message);
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    .preview.preview--fallback canvas,
+    .preview.preview--fallback .hud-overlay {
+      display: none;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .hud-overlay {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      padding: 0.9rem 1.2rem;
+      border-radius: 1rem;
+      background: rgba(6, 10, 25, 0.35);
+      border: 1px solid rgba(93, 180, 255, 0.18);
+      backdrop-filter: blur(10px);
+      font-size: 0.8rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      pointer-events: none;
+    }
+
+    .hud-overlay span {
+      color: var(--accent);
+      text-shadow: 0 0 12px rgba(93, 180, 255, 0.65);
+    }
+
+    .hud-overlay div {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    @media (max-width: 1100px) {
+      body {
+        flex-direction: column;
+      }
+
+      .layout {
+        flex-direction: column;
+      }
+
+      .control-panel {
+        width: 100%;
+        max-width: none;
+        border-right: none;
+        border-bottom: 1px solid var(--panel-border);
+      }
+
+      .preview {
+        min-height: 60vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="control-panel" aria-label="Simulation control panel">
+      <div class="panel-header">
+        <h1>AL-9 Expanse</h1>
+        <p>Manipulate the atmospheric flows, terrain pulses, and cosmic radiation to influence the alien landscape synthesis in real time.</p>
+      </div>
+
+      <section class="controls" aria-live="polite">
+        <div class="control-group">
+          <h2>Environmental Sculpting</h2>
+          <div class="slider-row">
+            <label for="height">Relief Amplitude</label>
+            <input id="height" type="range" min="0.2" max="2.0" step="0.01" value="1.2" data-decimals="2" />
+            <output id="heightValue">1.20</output>
+          </div>
+          <div class="slider-row">
+            <label for="warp">Tectonic Warp</label>
+            <input id="warp" type="range" min="0.1" max="2.5" step="0.01" value="0.9" data-decimals="2" />
+            <output id="warpValue">0.90</output>
+          </div>
+          <div class="slider-row">
+            <label for="detail">Crystalline Detail</label>
+            <input id="detail" type="range" min="0.5" max="3.5" step="0.01" value="2.6" data-decimals="2" />
+            <output id="detailValue">2.60</output>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <h2>Atmospheric Dynamics</h2>
+          <div class="slider-row">
+            <label for="color">Spectral Bloom</label>
+            <input id="color" type="range" min="0.2" max="3.0" step="0.01" value="1.4" data-decimals="2" />
+            <output id="colorValue">1.40</output>
+          </div>
+          <div class="slider-row">
+            <label for="speed">Wind Shear</label>
+            <input id="speed" type="range" min="0.1" max="3.2" step="0.01" value="1.5" data-decimals="2" />
+            <output id="speedValue">1.50</output>
+          </div>
+          <div class="slider-row">
+            <label for="stars">Ionized Particulates</label>
+            <input id="stars" type="range" min="0.05" max="1.0" step="0.01" value="0.45" data-decimals="2" />
+            <output id="starsValue">0.45</output>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <h2>Celestial Phenomena</h2>
+          <div class="slider-row">
+            <label for="nebula">Nebula Bloom</label>
+            <input id="nebula" type="range" min="0.0" max="2.0" step="0.01" value="1.1" data-decimals="2" />
+            <output id="nebulaValue">1.10</output>
+          </div>
+          <div class="slider-row">
+            <label for="storm">Storm Charge</label>
+            <input id="storm" type="range" min="0.0" max="1.6" step="0.01" value="0.7" data-decimals="2" />
+            <output id="stormValue">0.70</output>
+          </div>
+          <div class="slider-row">
+            <label for="elevation">Orbit Elevation</label>
+            <input id="elevation" type="range" min="0.0" max="1.0" step="0.01" value="0.35" data-decimals="2" />
+            <output id="elevationValue">0.35</output>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <h2>Bioluminescent Ecology</h2>
+          <div class="slider-row">
+            <label for="bio">Flora Radiance</label>
+            <input id="bio" type="range" min="0.0" max="2.0" step="0.01" value="0.8" data-decimals="2" />
+            <output id="bioValue">0.80</output>
+          </div>
+          <div class="slider-row">
+            <label for="thermal">Thermal Plumes</label>
+            <input id="thermal" type="range" min="0.0" max="2.5" step="0.01" value="0.6" data-decimals="2" />
+            <output id="thermalValue">0.60</output>
+          </div>
+          <div class="slider-row">
+            <label for="gravity">Gravity Shear</label>
+            <input id="gravity" type="range" min="0.0" max="1.0" step="0.01" value="0.45" data-decimals="2" />
+            <output id="gravityValue">0.45</output>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <h2>Magnetosphere Dial</h2>
+          <div class="dial">
+            <label for="dial">Aurora Flux</label>
+            <div class="dial-track">
+              <div class="dial-indicator" id="dialIndicator"></div>
+              <input id="dial" type="range" min="0" max="360" value="220" aria-label="Aurora Flux dial" data-decimals="0" data-unit="°" data-aria-unit="degrees" style="position:absolute; inset:0; opacity:0;" />
+            </div>
+            <div class="dial-value" id="dialValue">220°</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="display">
+        <span>SIMULATION STATUS</span>
+        <strong id="statusReadout">Synchronizing...</strong>
+        <div class="telemetry">
+          <div>FRAME RATE <span id="fpsReadout">--</span></div>
+          <div>ORBITAL ANGLE <span id="angleReadout">0°</span></div>
+          <div>CRYSTAL INDEX <span id="detailReadout">0.00</span></div>
+          <div>ATMOS PRESS <span id="pressureReadout">0.00</span></div>
+          <div>NEBULA DENS <span id="nebulaReadout">0.00</span></div>
+          <div>STORM LOAD <span id="stormReadout">0.00</span></div>
+          <div>ORBIT ALT <span id="elevationReadout">0.00 km</span></div>
+          <div>FLORA FLUX <span id="bioReadout">0.00</span></div>
+          <div>THERMAL FLOW <span id="thermalReadout">0.00</span></div>
+          <div>GRAV LENS <span id="gravityReadout">0.00</span></div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="preview" aria-label="Alien landscape preview">
+      <canvas id="glCanvas" role="img" aria-label="3D simulation of an alien landscape"></canvas>
+      <div class="hud-overlay">
+        <div>ORBITAL ANGLE <span id="angleHud">0°</span></div>
+        <div>CRYSTAL INDEX <span id="detailHud">0.00</span></div>
+        <div>ATMOS PRESS <span id="pressureHud">0.00</span></div>
+        <div>NEBULA LUMIN <span id="nebulaHud">0.00</span></div>
+        <div>STORM CHARGE <span id="stormHud">0.00</span></div>
+        <div>ALTITUDE <span id="elevationHud">0.00 km</span></div>
+        <div>FLORA FLUX <span id="bioHud">0.00</span></div>
+        <div>THERMAL FLOW <span id="thermalHud">0.00</span></div>
+        <div>GRAV LENS <span id="gravityHud">0.00</span></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      const canvas = document.getElementById('glCanvas');
+      const gl = canvas.getContext('webgl', {
+        antialias: true,
+        preserveDrawingBuffer: true,
+      });
+
+      if (!gl) {
+        const status = document.getElementById('statusReadout');
+        if (status) {
+          status.textContent = 'WebGL unavailable in this environment';
+        }
+        const preview = document.querySelector('.preview');
+        if (preview) {
+          preview.classList.add('preview--fallback');
+          preview.setAttribute('data-message', 'WebGL unavailable in this environment');
+        }
+        return;
+      }
+
+      gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+    const vertexSource = `
+      attribute vec2 position;
+      void main() {
+        gl_Position = vec4(position, 0.0, 1.0);
+      }
+    `;
+
+    const fragmentSource = `
+      precision highp float;
+      uniform vec2 uResolution;
+      uniform float uTime;
+      uniform float uHeight;
+      uniform float uWarp;
+      uniform float uDetail;
+      uniform float uColor;
+      uniform float uSpeed;
+      uniform float uStars;
+      uniform float uDial;
+      uniform float uNebula;
+      uniform float uStorm;
+      uniform float uElevation;
+      uniform float uBio;
+      uniform float uThermal;
+      uniform float uGravity;
+
+      #define MAX_STEPS 140
+      #define SURF_DIST 0.0015
+      #define MAX_DIST 120.0
+
+      float hash(vec2 p) {
+        p = fract(p * vec2(123.34, 456.21));
+        p += dot(p, p + 45.32);
+        return fract(p.x * p.y);
+      }
+
+      vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+      vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+      vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
+      vec4 taylorInvSqrt(vec4 r){ return 1.79284291400159 - 0.85373472095314 * r; }
+
+      float snoise(vec3 v) {
+        const vec2  C = vec2(1.0/6.0, 1.0/3.0);
+        const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+
+        vec3 i  = floor(v + dot(v, C.yyy));
+        vec3 x0 =   v - i + dot(i, C.xxx);
+
+        vec3 g = step(x0.yzx, x0.xyz);
+        vec3 l = 1.0 - g;
+        vec3 i1 = min( g.xyz, l.zxy );
+        vec3 i2 = max( g.xyz, l.zxy );
+
+        vec3 x1 = x0 - i1 + C.xxx;
+        vec3 x2 = x0 - i2 + C.yyy;
+        vec3 x3 = x0 - D.yyy;
+
+        i = mod289(i);
+        vec4 p = permute( permute( permute(
+                   i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+                 + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))
+                 + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+
+        float n_ = 0.142857142857;
+        vec3  ns = n_ * D.wyz - D.xzx;
+
+        vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+
+        vec4 x_ = floor(j * ns.z);
+        vec4 y_ = floor(j - 7.0 * x_ );
+
+        vec4 x = x_ *ns.x + ns.yyyy;
+        vec4 y = y_ *ns.x + ns.yyyy;
+        vec4 h = 1.0 - abs(x) - abs(y);
+
+        vec4 b0 = vec4( x.xy, y.xy );
+        vec4 b1 = vec4( x.zw, y.zw );
+
+        vec4 s0 = floor(b0)*2.0 + 1.0;
+        vec4 s1 = floor(b1)*2.0 + 1.0;
+        vec4 sh = -step(h, vec4(0.0));
+
+        vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
+        vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+
+        vec3 p0 = vec3(a0.xy,h.x);
+        vec3 p1 = vec3(a0.zw,h.y);
+        vec3 p2 = vec3(a1.xy,h.z);
+        vec3 p3 = vec3(a1.zw,h.w);
+
+        vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
+        p0 *= norm.x;
+        p1 *= norm.y;
+        p2 *= norm.z;
+        p3 *= norm.w;
+
+        vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+        m = m * m;
+        return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3) ) );
+      }
+
+      float fbm(vec3 p) {
+        float amplitude = 0.55;
+        float frequency = 1.0;
+        float sum = 0.0;
+        for (int i = 0; i < 6; i++) {
+          sum += snoise(p * frequency) * amplitude;
+          frequency *= 2.02;
+          amplitude *= 0.52;
+        }
+        return sum;
+      }
+
+      float terrainHeight(vec2 p) {
+        float timeShift = uTime * 0.25 * uSpeed;
+        vec2 warped = p;
+        float warp = fbm(vec3(p * 0.25, timeShift)) * uWarp;
+        warped += vec2(warp, fbm(vec3(p.yx * 0.18, timeShift * 0.4)) * 0.6 * uWarp);
+        float height = fbm(vec3(warped * 0.45, timeShift * 0.15));
+        height += fbm(vec3(warped * 0.9, timeShift * 0.8)) * 0.5 * uDetail;
+        height += sin(p.x * 0.12 + uTime * 0.15) * 0.25 * uHeight;
+        float ridges = abs(sin(p.y * 0.18 + uTime * 0.08) + cos(p.x * 0.12 - uTime * 0.06));
+        height += pow(ridges, 2.5) * 0.08 * uStorm;
+        float fissure = sin(p.x * 0.08 + uTime * 0.12) * sin(p.y * 0.1 - uTime * 0.18);
+        height -= max(0.0, fissure) * 0.16 * uStorm;
+        float thermalCurrent = sin(p.x * 0.06 + uTime * 0.7) * cos(p.y * 0.08 - uTime * 0.5);
+        height += thermalCurrent * 0.2 * uThermal;
+        height += fbm(vec3(warped * 1.2, timeShift * 0.6)) * 0.18 * uThermal;
+        float floraTerrace = sin(p.x * 0.3 + uTime * 0.2) * sin(p.y * 0.28 + uTime * 0.16);
+        height += floraTerrace * 0.05 * uBio;
+        return height * uHeight;
+      }
+
+      float map(vec3 p) {
+        float surface = p.y - terrainHeight(p.xz);
+        float crystal = snoise(vec3(p.xz * 1.8, p.y * 0.5 + uTime * 0.4));
+        float spires = max(0.0, crystal - 0.45) * 0.9;
+        float canyon = sin(p.x * 0.04 + uTime * 0.2) * sin(p.z * 0.05 - uTime * 0.13);
+        surface -= max(0.0, canyon) * 0.28 * uStorm;
+        float thermalVent = sin(p.y * 0.9 + uTime * 1.5) * cos(p.x * 0.4 - uTime * 0.8);
+        surface -= max(0.0, thermalVent) * 0.12 * uThermal;
+        float floraVeins = snoise(vec3(p.xz * 2.6, uTime * 0.7 + p.y * 1.8));
+        surface += floraVeins * 0.08 * uBio;
+        float safeDetail = max(uDetail, 0.05);
+        return surface - spires * 0.6 / safeDetail;
+      }
+
+      vec3 getNormal(vec3 p) {
+        float eps = 0.0015;
+        vec2 h = vec2(eps, 0.0);
+        float d = map(p);
+        vec3 n = vec3(
+          map(p + h.xyy) - d,
+          map(p + h.yxy) - d,
+          map(p + h.yyx) - d
+        );
+        return normalize(n);
+      }
+
+      float softShadow(vec3 ro, vec3 rd, float mint, float maxt, float k) {
+        float res = 1.0;
+        float t = mint;
+        for (int i = 0; i < 48; i++) {
+          float h = map(ro + rd * t);
+          if (h < 0.0001) return 0.0;
+          res = min(res, k * h / t);
+          t += clamp(h, 0.05, 0.3);
+          if (t > maxt) break;
+        }
+        return clamp(res, 0.0, 1.0);
+      }
+
+      float ambientOcclusion(vec3 p, vec3 n) {
+        float occ = 0.0;
+        float sca = 1.0;
+        for (int i = 0; i < 5; i++) {
+          float hr = 0.02 + 0.12 * float(i);
+          float d = map(p + n * hr);
+          occ += (hr - d) * sca;
+          sca *= 0.65;
+        }
+        return clamp(1.0 - occ, 0.2, 1.0);
+      }
+
+      vec3 palette(float t) {
+        vec3 a = vec3(0.05, 0.18, 0.32);
+        vec3 b = vec3(0.12, 0.32, 0.55);
+        vec3 c = vec3(0.62, 0.9, 0.55);
+        vec3 d = vec3(0.65, 0.35, 0.8);
+        return a + b * cos(6.28318*(c*t + d));
+      }
+
+      vec3 shade(vec3 p, vec3 n, vec3 rd, vec3 lightPos) {
+        vec3 lightDir = normalize(lightPos - p);
+        float shadow = softShadow(p + n * 0.02, lightDir, 0.1, 10.0, 8.5);
+        float diff = max(dot(n, lightDir), 0.0) * shadow;
+        float spec = pow(max(dot(reflect(-lightDir, n), -rd), 0.0), mix(12.0, 45.0, uDetail * 0.25)) * shadow;
+        float rim = pow(1.0 - max(dot(n, -rd), 0.0), 3.5);
+        float ao = ambientOcclusion(p, n);
+        vec3 base = palette(terrainHeight(p.xz) * 0.35 * uColor) * ao;
+        vec3 glow = vec3(0.3, 0.6, 1.1) * smoothstep(0.35, 0.9, rim) * uColor * 0.7;
+        vec3 crystal = vec3(0.4, 1.1, 0.9) * pow(max(0.0, snoise(vec3(p.xz * 2.4, p.y * 2.0 + uTime * 2.0))), 4.0) * uDetail;
+        vec3 stormIons = vec3(0.8, 0.95, 1.4) * pow(max(0.0, snoise(vec3(p * 3.5 + uTime * 4.0))), 6.0) * uStorm * 0.8;
+        vec3 floraGlow = vec3(0.2, 0.9, 0.6) * pow(max(0.0, snoise(vec3(p.xz * 3.4 + uTime * 0.6, p.y * 2.6))), 5.5) * uBio;
+        vec3 floraPulse = vec3(0.7, 1.2, 0.5) * pow(max(0.0, sin(uTime * 1.4 + p.y * 3.0)), 6.0) * uBio * 0.6;
+        vec3 thermalGlow = vec3(1.2, 0.6, 0.3) * pow(max(0.0, fbm(vec3(p * 3.2 + uTime * 1.5))), 4.0) * uThermal * 0.45;
+        return base * (diff * 1.8 + 0.15) + spec * vec3(1.2, 0.9, 0.7) + glow + crystal + stormIons + floraGlow + floraPulse + thermalGlow;
+      }
+
+      float raymarch(vec3 ro, vec3 rd, out vec3 pos, out float steps) {
+        float dist = 0.0;
+        for (int i = 0; i < MAX_STEPS; i++) {
+          vec3 p = ro + rd * dist;
+          float d = map(p);
+          if (d < SURF_DIST) {
+            pos = p;
+            steps = float(i);
+            return dist;
+          }
+          if (dist > MAX_DIST) break;
+          dist += d * 0.8;
+        }
+        steps = float(MAX_STEPS);
+        pos = ro + rd * dist;
+        return -1.0;
+      }
+
+      float cloudLayer(vec3 rd) {
+        float clouds = fbm(vec3(rd.xz * 2.0, uTime * 0.04 + rd.y * 0.6));
+        clouds = pow(clouds * 0.5 + 0.5, 3.0);
+        clouds += sin(rd.x * 9.0 + uTime * 0.9) * 0.05 * uThermal;
+        clouds += pow(max(0.0, snoise(vec3(rd.xy * 3.2, uTime * 0.2))), 4.0) * 0.15 * uBio;
+        return clouds;
+      }
+
+      vec3 nebulaGlow(vec3 rd) {
+        vec3 coord = vec3(rd.xy * 2.2, rd.z * 1.2);
+        float bloom = pow(max(0.0, fbm(coord * 1.4 + uTime * 0.05)), 4.0);
+        float filaments = pow(max(0.0, snoise(coord * 3.5 + uTime * 0.3)), 6.0);
+        vec3 base = mix(vec3(0.25, 0.3, 0.6), vec3(0.7, 0.25, 0.85), bloom);
+        vec3 highlights = vec3(0.9, 0.6, 1.2) * filaments;
+        vec3 bioStreaks = vec3(0.3, 1.0, 0.7) * pow(max(0.0, snoise(coord * 2.2 + uTime * 0.6)), 5.0) * uBio * 0.6;
+        return (base * bloom + highlights * 0.6 + bioStreaks) * uNebula;
+      }
+
+      vec3 getSky(vec3 rd) {
+        float horizon = pow(max(0.0, 1.0 - abs(rd.y)), 3.0);
+        float aurora = pow(max(0.0, sin(rd.x * 6.0 + uTime * 0.3 + radians(uDial))), 4.0);
+        vec3 auroraColor = vec3(0.3, 0.9, 1.2) * aurora * uColor;
+        vec3 sky = mix(vec3(0.02, 0.04, 0.08), vec3(0.08, 0.15, 0.28), horizon);
+        float bands = sin((rd.x + rd.y) * 12.0 + uTime * 0.6) * 0.5 + 0.5;
+        vec3 bandColor = vec3(0.2, 0.6, 0.8) * pow(bands, 4.0) * uColor;
+        float clouds = cloudLayer(rd);
+        vec3 cloudColor = mix(vec3(0.08, 0.12, 0.22), vec3(0.4, 0.6, 0.9), clouds) * (0.2 + uNebula * 0.25 + uThermal * 0.1);
+        vec3 nebula = nebulaGlow(rd);
+        float gravityLens = pow(max(0.0, 1.0 - length(rd.xy)), 2.5) * uGravity;
+        vec3 lensColor = vec3(0.5, 0.3, 0.9) * gravityLens;
+        return sky + auroraColor + bandColor + cloudColor + nebula + lensColor;
+      }
+
+      float getStars(vec3 rd) {
+        float starField = pow(max(0.0, snoise(rd * 60.0 + uTime * 0.1)), 12.0);
+        starField += pow(max(0.0, snoise(rd * 24.0 + 40.0)), 18.0);
+        return starField * uStars;
+      }
+
+      void main() {
+        vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution.xy) / uResolution.y;
+
+        float camRadius = mix(5.2, 7.8, 1.0 - uElevation * 0.6);
+        float camHeight = mix(1.7, 5.2, uElevation) + sin(uTime * 0.3) * 0.35 * uSpeed;
+        float angle = uTime * 0.25 + radians(uDial) * 0.0015;
+        vec3 ro = vec3(sin(angle) * camRadius, camHeight, cos(angle) * camRadius);
+        vec3 target = vec3(0.0, 0.7 + sin(uTime * 0.2) * 0.2, 0.0);
+        vec3 forward = normalize(target - ro);
+        vec3 right = normalize(cross(vec3(0.0, 1.0, 0.0), forward));
+        vec3 up = cross(forward, right);
+        vec2 warpedUV = uv;
+        float lensWarp = dot(uv, uv) * uGravity * 0.35;
+        warpedUV += uv * lensWarp * 0.4;
+        vec3 rd = normalize(forward + warpedUV.x * right * (1.4 + lensWarp) + warpedUV.y * up * (1.2 - lensWarp * 0.5));
+
+        vec3 pos;
+        float steps;
+        float dist = raymarch(ro, rd, pos, steps);
+        vec3 color = vec3(0.0);
+
+        vec3 lightPos = vec3(3.5 * sin(uTime * 0.4 + radians(uDial) * 0.35), 4.5 + uElevation * 1.5, 3.5 * cos(uTime * 0.4 + radians(uDial) * 0.35));
+
+        if (dist > 0.0) {
+          vec3 normal = getNormal(pos);
+          color = shade(pos, normal, rd, lightPos);
+          float fog = exp(-dist * 0.12);
+          vec3 sky = getSky(rd);
+          vec3 volumetric = getSky(normalize(vec3(rd.x, max(rd.y, 0.0) + 0.2 * uStorm, rd.z)));
+          color = mix(sky, color, fog);
+          color = mix(color, volumetric, (1.0 - fog) * 0.18 * uNebula);
+          float emissive = pow(max(0.0, snoise(vec3(pos.xz * 6.0, uTime * uSpeed))), 8.0);
+          color += vec3(0.8, 0.2, 1.0) * emissive * 0.6 * uDetail;
+          float lightning = pow(max(0.0, sin(uTime * 6.5 + fbm(vec3(pos.xz * 3.0, uTime * 1.6)))), 12.0) * uStorm;
+          color += vec3(1.4, 1.6, 2.2) * lightning;
+          float biolume = pow(max(0.0, snoise(vec3(pos.xz * 5.0 + uTime * 0.8, pos.y * 1.3 + uTime * 1.5))), 6.5) * uBio;
+          color += vec3(0.25, 0.9, 0.8) * biolume;
+          float heatVeil = pow(max(0.0, fbm(vec3(pos.xz * 1.5, pos.y * 0.5 + uTime * 2.0))), 3.0) * uThermal;
+          color += vec3(1.1, 0.55, 0.25) * heatVeil * 0.35;
+          color = mix(color, sky, pow(max(0.0, lensWarp), 1.5) * 0.1);
+        } else {
+          color = getSky(rd);
+        }
+
+        float starGlow = getStars(rd);
+        color += vec3(1.2, 1.1, 0.9) * starGlow;
+        color += nebulaGlow(rd) * 0.35;
+
+        float vignette = smoothstep(1.2 - uGravity * 0.15, 0.2 + uGravity * 0.08, length(warpedUV));
+        color *= vignette;
+
+        gl_FragColor = vec4(pow(color, vec3(0.9)), 1.0);
+      }
+    `;
+
+    function createShader(type, source) {
+      const shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.error('Shader compile failed:', gl.getShaderInfoLog(shader));
+        throw new Error('Shader compilation failed');
+      }
+      return shader;
+    }
+
+    const vertexShader = createShader(gl.VERTEX_SHADER, vertexSource);
+    const fragmentShader = createShader(gl.FRAGMENT_SHADER, fragmentSource);
+
+    const program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      console.error('Program failed to link:', gl.getProgramInfoLog(program));
+      throw new Error('Shader program failed to link');
+    }
+
+    gl.useProgram(program);
+    gl.disable(gl.DEPTH_TEST);
+    gl.disable(gl.CULL_FACE);
+    gl.disable(gl.BLEND);
+
+    const quad = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+      -1, -1,
+       1, -1,
+      -1,  1,
+      -1,  1,
+       1, -1,
+       1,  1
+    ]), gl.STATIC_DRAW);
+
+    const positionLoc = gl.getAttribLocation(program, 'position');
+    gl.enableVertexAttribArray(positionLoc);
+    gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
+
+    const uniforms = {
+      resolution: gl.getUniformLocation(program, 'uResolution'),
+      time: gl.getUniformLocation(program, 'uTime'),
+      height: gl.getUniformLocation(program, 'uHeight'),
+      warp: gl.getUniformLocation(program, 'uWarp'),
+      detail: gl.getUniformLocation(program, 'uDetail'),
+      color: gl.getUniformLocation(program, 'uColor'),
+      speed: gl.getUniformLocation(program, 'uSpeed'),
+      stars: gl.getUniformLocation(program, 'uStars'),
+      dial: gl.getUniformLocation(program, 'uDial'),
+      nebula: gl.getUniformLocation(program, 'uNebula'),
+      storm: gl.getUniformLocation(program, 'uStorm'),
+      elevation: gl.getUniformLocation(program, 'uElevation'),
+      bio: gl.getUniformLocation(program, 'uBio'),
+      thermal: gl.getUniformLocation(program, 'uThermal'),
+      gravity: gl.getUniformLocation(program, 'uGravity')
+    };
+
+    const state = {
+      time: 0,
+      height: 1.2,
+      warp: 0.9,
+      detail: 2.6,
+      color: 1.4,
+      speed: 1.5,
+      stars: 0.45,
+      dial: 220,
+      nebula: 1.1,
+      storm: 0.7,
+      elevation: 0.35,
+      bio: 0.8,
+      thermal: 0.6,
+      gravity: 0.45,
+      lastFrameTime: 0,
+      fps: 0
+    };
+
+    const inputs = {
+      height: document.getElementById('height'),
+      warp: document.getElementById('warp'),
+      detail: document.getElementById('detail'),
+      color: document.getElementById('color'),
+      speed: document.getElementById('speed'),
+      stars: document.getElementById('stars'),
+      dial: document.getElementById('dial'),
+      nebula: document.getElementById('nebula'),
+      storm: document.getElementById('storm'),
+      elevation: document.getElementById('elevation'),
+      bio: document.getElementById('bio'),
+      thermal: document.getElementById('thermal'),
+      gravity: document.getElementById('gravity')
+    };
+
+    const statusMessages = {
+      height: 'Relief amplitude tuned',
+      warp: 'Warp harmonics recalibrated',
+      detail: 'Crystalline detail resolved',
+      color: 'Spectral bloom balanced',
+      speed: 'Wind shear redirected',
+      stars: 'Particulate density modulated',
+      dial: 'Aurora flux phase shifted',
+      nebula: 'Nebula bloom intensified',
+      storm: 'Storm charge equalized',
+      elevation: 'Orbital altitude realigned',
+      bio: 'Bioluminescent fields energized',
+      thermal: 'Mantle plumes stabilized',
+      gravity: 'Gravity shear harmonized'
+    };
+
+    const outputs = {
+      height: document.getElementById('heightValue'),
+      warp: document.getElementById('warpValue'),
+      detail: document.getElementById('detailValue'),
+      color: document.getElementById('colorValue'),
+      speed: document.getElementById('speedValue'),
+      stars: document.getElementById('starsValue'),
+      nebula: document.getElementById('nebulaValue'),
+      storm: document.getElementById('stormValue'),
+      elevation: document.getElementById('elevationValue'),
+      bio: document.getElementById('bioValue'),
+      thermal: document.getElementById('thermalValue'),
+      gravity: document.getElementById('gravityValue'),
+      dialIndicator: document.getElementById('dialIndicator'),
+      dialValue: document.getElementById('dialValue'),
+      status: document.getElementById('statusReadout'),
+      fps: document.getElementById('fpsReadout'),
+      angle: document.getElementById('angleReadout'),
+      detailTelemetry: document.getElementById('detailReadout'),
+      pressureTelemetry: document.getElementById('pressureReadout'),
+      nebulaTelemetry: document.getElementById('nebulaReadout'),
+      stormTelemetry: document.getElementById('stormReadout'),
+      elevationTelemetry: document.getElementById('elevationReadout'),
+      bioTelemetry: document.getElementById('bioReadout'),
+      thermalTelemetry: document.getElementById('thermalReadout'),
+      gravityTelemetry: document.getElementById('gravityReadout'),
+      angleHud: document.getElementById('angleHud'),
+      detailHudOverlay: document.getElementById('detailHud'),
+      pressureHud: document.getElementById('pressureHud'),
+      nebulaHud: document.getElementById('nebulaHud'),
+      stormHud: document.getElementById('stormHud'),
+      elevationHud: document.getElementById('elevationHud'),
+      bioHud: document.getElementById('bioHud'),
+      thermalHud: document.getElementById('thermalHud'),
+      gravityHud: document.getElementById('gravityHud')
+    };
+
+    const timeFormatter = new Intl.DateTimeFormat([], {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+
+    let needsResize = true;
+
+    function updateDialVisual(angle) {
+      outputs.dialIndicator.style.transform = `translate(-50%, -100%) rotate(${angle - 180}deg)`;
+      outputs.dialValue.textContent = `${angle.toFixed(0)}°`;
+      inputs.dial.setAttribute('aria-valuetext', `${angle.toFixed(0)} degrees`);
+    }
+
+    Object.entries(inputs).forEach(([key, input]) => {
+      const handleInput = () => {
+        state[key] = parseFloat(input.value);
+        const decimals = Number(input.dataset.decimals ?? 2);
+        const formattedValue = Number(input.value).toFixed(decimals);
+        if (outputs[key]) {
+          outputs[key].textContent = formattedValue;
+        }
+        const suffix = input.dataset.unit || '';
+        const ariaUnit = input.dataset.ariaUnit || (suffix === '°' ? 'degrees' : suffix.trim());
+        const statusValue = suffix ? `${formattedValue}${suffix}` : formattedValue;
+        const ariaValue = ariaUnit ? `${formattedValue} ${ariaUnit}`.trim() : formattedValue;
+        input.setAttribute('aria-valuetext', ariaValue);
+        if (key === 'dial') {
+          updateDialVisual(state.dial);
+        }
+        const message = statusMessages[key] || 'Flux stabilized';
+        outputs.status.textContent = `${message} → ${statusValue} · ${timeFormatter.format(new Date())}`;
+      };
+      input.addEventListener('input', handleInput);
+      handleInput();
+    });
+
+    function resizeCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      const displayWidth = Math.max(1, Math.floor(width * dpr));
+      const displayHeight = Math.max(1, Math.floor(height * dpr));
+      if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
+        canvas.width = displayWidth;
+        canvas.height = displayHeight;
+        gl.viewport(0, 0, displayWidth, displayHeight);
+      }
+      gl.uniform2f(uniforms.resolution, canvas.width, canvas.height);
+    }
+
+    const markNeedsResize = () => {
+      needsResize = true;
+    };
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const resizeObserver = new ResizeObserver(() => {
+        markNeedsResize();
+      });
+      resizeObserver.observe(canvas);
+    }
+
+    window.addEventListener('resize', markNeedsResize);
+    window.addEventListener('orientationchange', markNeedsResize);
+    markNeedsResize();
+
+    function render(now) {
+      now *= 0.001;
+      if (needsResize) {
+        resizeCanvas();
+        needsResize = false;
+      }
+
+      state.time = now;
+
+      gl.uniform1f(uniforms.time, state.time);
+      gl.uniform1f(uniforms.height, state.height);
+      gl.uniform1f(uniforms.warp, state.warp);
+      gl.uniform1f(uniforms.detail, state.detail);
+      gl.uniform1f(uniforms.color, state.color);
+      gl.uniform1f(uniforms.speed, state.speed);
+      gl.uniform1f(uniforms.stars, state.stars);
+      gl.uniform1f(uniforms.dial, state.dial);
+      gl.uniform1f(uniforms.nebula, state.nebula);
+      gl.uniform1f(uniforms.storm, state.storm);
+      gl.uniform1f(uniforms.elevation, state.elevation);
+      gl.uniform1f(uniforms.bio, state.bio);
+      gl.uniform1f(uniforms.thermal, state.thermal);
+      gl.uniform1f(uniforms.gravity, state.gravity);
+
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+      if (state.lastFrameTime === 0) {
+        state.lastFrameTime = now;
+      }
+      const delta = now - state.lastFrameTime;
+      state.lastFrameTime = now;
+      const instantaneousFps = 1 / Math.max(delta, 0.0001);
+      state.fps = state.fps === 0 ? instantaneousFps : state.fps * 0.85 + instantaneousFps * 0.15;
+
+      const fpsValue = state.fps.toFixed(1);
+      outputs.fps.textContent = fpsValue;
+
+      const angleValue = (state.time * 14.0 + state.dial * 0.18) % 360;
+      const formattedAngle = `${((angleValue + 360) % 360).toFixed(0)}°`;
+      outputs.angle.textContent = formattedAngle;
+      outputs.angleHud.textContent = formattedAngle;
+
+      const detailValue = state.detail.toFixed(2);
+      outputs.detailTelemetry.textContent = detailValue;
+      outputs.detailHudOverlay.textContent = detailValue;
+
+      const pressureValue = (state.speed * state.warp * (0.65 + state.storm * 0.12)).toFixed(2);
+      outputs.pressureTelemetry.textContent = pressureValue;
+      outputs.pressureHud.textContent = pressureValue;
+
+      const nebulaDensity = (state.nebula * (0.82 + 0.18 * Math.sin(state.time * 0.6)) + state.stars * 0.2).toFixed(2);
+      outputs.nebulaTelemetry.textContent = nebulaDensity;
+      outputs.nebulaHud.textContent = nebulaDensity;
+
+      const stormLoad = (state.storm * (0.7 + 0.3 * Math.abs(Math.sin(state.time * 2.0 + state.dial * 0.05)))).toFixed(2);
+      outputs.stormTelemetry.textContent = stormLoad;
+      outputs.stormHud.textContent = stormLoad;
+
+      const baseAltitude = 1.7 + (5.2 - 1.7) * state.elevation;
+      const orbitalAltitude = (baseAltitude + Math.sin(state.time * 0.3) * 0.35 * state.speed).toFixed(2);
+      const altitudeText = `${orbitalAltitude} km`;
+      outputs.elevationTelemetry.textContent = altitudeText;
+      outputs.elevationHud.textContent = altitudeText;
+
+      const bioFlux = (state.bio * (0.72 + 0.28 * Math.sin(state.time * (0.9 + state.speed * 0.1))) + state.detail * 0.12).toFixed(2);
+      outputs.bioTelemetry.textContent = bioFlux;
+      outputs.bioHud.textContent = bioFlux;
+
+      const thermalFlow = (state.thermal * (0.6 + 0.4 * Math.cos(state.time * (1.1 + state.warp * 0.2))) + state.speed * 0.15).toFixed(2);
+      outputs.thermalTelemetry.textContent = thermalFlow;
+      outputs.thermalHud.textContent = thermalFlow;
+
+      const gravityShear = (state.gravity * (0.85 + 0.35 * Math.sin(state.time * 0.45 + state.dial * 0.02))).toFixed(2);
+      outputs.gravityTelemetry.textContent = gravityShear;
+      outputs.gravityHud.textContent = gravityShear;
+
+      requestAnimationFrame(render);
+    }
+
+      requestAnimationFrame(render);
+    })();
+  </script>
+</body>
+</html>
