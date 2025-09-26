@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alien Expanse Simulation · Performance Edition</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-size: 16px;
+      --panel-bg: rgba(11, 17, 32, 0.92);
+      --panel-border: rgba(97, 181, 255, 0.45);
+      --accent: #5db4ff;
+      --accent-strong: #a0ff9b;
+      --text: #f5faff;
+      --muted: rgba(255, 255, 255, 0.7);
+      --shadow-strong: 0 18px 50px rgba(9, 12, 23, 0.6);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 22% 24%, #0b1020, #04050b 58%);
+      font-family: "Segoe UI", Roboto, sans-serif;
+      color: var(--text);
+      display: flex;
+      align-items: stretch;
+      overflow: hidden;
+    }
+
+    .layout {
+      display: flex;
+      width: 100%;
+      position: relative;
+    }
+
+    .control-panel {
+      width: 27%;
+      max-width: 440px;
+      min-width: 290px;
+      padding: 2.25rem 2rem 2rem;
+      backdrop-filter: blur(20px);
+      background: var(--panel-bg);
+      border-right: 1px solid var(--panel-border);
+      box-shadow: var(--shadow-strong);
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      position: relative;
+      z-index: 10;
+      overflow-y: auto;
+      max-height: 100vh;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(93, 180, 255, 0.5) rgba(12, 18, 30, 0.45);
+    }
+
+    .control-panel::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .control-panel::-webkit-scrollbar-track {
+      background: rgba(12, 18, 30, 0.45);
+      border-radius: 999px;
+    }
+
+    .control-panel::-webkit-scrollbar-thumb {
+      background: linear-gradient(160deg, rgba(93, 180, 255, 0.8), rgba(160, 255, 155, 0.7));
+      border-radius: 999px;
+    }
+
+    .panel-header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      position: sticky;
+      top: 0;
+      padding-bottom: 1rem;
+      background: linear-gradient(180deg, rgba(11, 17, 32, 1) 65%, rgba(11, 17, 32, 0));
+      z-index: 20;
+      backdrop-filter: blur(3px);
+    }
+
+    .panel-header h1 {
+      font-size: 1.9rem;
+      margin: 0;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .panel-header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.45;
+    }
+
+    .template-row {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-top: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .template-row label {
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    select {
+      background: rgba(8, 14, 28, 0.85);
+      border: 1px solid rgba(93, 180, 255, 0.3);
+      border-radius: 12px;
+      color: var(--text);
+      padding: 0.55rem 0.9rem;
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+      appearance: none;
+      min-width: 210px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+
+    .mute-button {
+      margin-left: auto;
+      background: linear-gradient(160deg, rgba(93, 180, 255, 0.8), rgba(160, 255, 155, 0.65));
+      border: none;
+      color: #041321;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.55rem 1rem;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 12px 28px rgba(56, 130, 200, 0.35);
+    }
+
+    .mute-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 36px rgba(93, 180, 255, 0.45);
+    }
+
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 1.75rem;
+      padding-bottom: 2rem;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 1.25rem 1.2rem;
+      background: linear-gradient(150deg, rgba(32, 48, 84, 0.7), rgba(10, 16, 32, 0.94));
+      border-radius: 1.4rem;
+      border: 1px solid rgba(93, 180, 255, 0.18);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .control-group::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top left, rgba(160, 255, 155, 0.08), transparent 60%);
+      pointer-events: none;
+    }
+
+    .control-group h2 {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .slider-row,
+    .color-row,
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .slider-row label,
+    .color-row label,
+    .toggle-row label {
+      flex: 0 0 8rem;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.11em;
+      color: var(--muted);
+    }
+
+    .slider-row output {
+      width: 3.3rem;
+      text-align: right;
+      font-feature-settings: "tnum";
+      color: var(--accent);
+    }
+
+    input[type="range"] {
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(93, 180, 255, 0.7), rgba(160, 255, 155, 0.8));
+      outline: none;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: inset 0 0 12px rgba(10, 17, 42, 0.7);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(150deg, #73ffaf, #4481ff);
+      border: 2px solid rgba(15, 21, 38, 0.65);
+      box-shadow: 0 4px 12px rgba(93, 180, 255, 0.55);
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input[type="range"]:active::-webkit-slider-thumb {
+      transform: scale(1.2);
+      box-shadow: 0 6px 18px rgba(160, 255, 155, 0.6);
+    }
+
+    input[type="color"] {
+      width: 60px;
+      height: 34px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(12, 18, 30, 0.8);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+    }
+
+    .toggle-row input[type="checkbox"] {
+      width: 44px;
+      height: 22px;
+      appearance: none;
+      background: rgba(93, 180, 255, 0.3);
+      border-radius: 999px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .toggle-row input[type="checkbox"]::after {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      top: 2px;
+      left: 2px;
+      border-radius: 50%;
+      background: #0c1424;
+      box-shadow: 0 4px 12px rgba(6, 12, 26, 0.6);
+      transition: transform 0.2s ease;
+    }
+
+    .toggle-row input[type="checkbox"]:checked {
+      background: rgba(160, 255, 155, 0.55);
+    }
+
+    .toggle-row input[type="checkbox"]:checked::after {
+      transform: translateX(22px);
+    }
+
+    .display {
+      margin-top: auto;
+      padding: 1.4rem 1.2rem;
+      border-radius: 1.2rem;
+      border: 1px solid rgba(93, 180, 255, 0.2);
+      background: linear-gradient(160deg, rgba(8, 12, 24, 0.88), rgba(28, 42, 62, 0.65));
+      display: grid;
+      gap: 0.75rem;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+    }
+
+    .display span {
+      color: var(--muted);
+    }
+
+    .display .telemetry {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.8rem 1.2rem;
+      margin-top: 0.4rem;
+    }
+
+    .display .telemetry div {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      font-size: 0.66rem;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+    }
+
+    .display .telemetry span {
+      font-size: 1.05rem;
+      letter-spacing: 0.12em;
+      color: var(--accent-strong);
+      text-shadow: 0 0 14px rgba(93, 180, 255, 0.45);
+    }
+
+    .preview {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(circle at 65% 45%, rgba(93, 180, 255, 0.18), transparent 58%),
+                  radial-gradient(circle at 15% 80%, rgba(160, 255, 155, 0.22), transparent 60%),
+                  #04050f;
+    }
+
+    .preview.preview--fallback {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      background: linear-gradient(140deg, rgba(8, 14, 30, 0.9), rgba(28, 38, 60, 0.7));
+    }
+
+    .preview.preview--fallback::after {
+      content: attr(data-message);
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    .preview.preview--fallback canvas,
+    .preview.preview--fallback .hud-overlay {
+      display: none;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .hud-overlay {
+      position: absolute;
+      top: 1.4rem;
+      right: 1.4rem;
+      padding: 0.9rem 1.2rem;
+      border-radius: 1rem;
+      background: rgba(6, 10, 25, 0.38);
+      border: 1px solid rgba(93, 180, 255, 0.18);
+      backdrop-filter: blur(12px);
+      font-size: 0.8rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      pointer-events: none;
+    }
+
+    .hud-overlay span {
+      color: var(--accent);
+      text-shadow: 0 0 12px rgba(93, 180, 255, 0.65);
+    }
+
+    .hud-overlay div {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    @media (max-width: 1100px) {
+      body {
+        flex-direction: column;
+        overflow: auto;
+      }
+
+      .layout {
+        flex-direction: column;
+      }
+
+      .control-panel {
+        width: 100%;
+        max-width: none;
+        border-right: none;
+        border-bottom: 1px solid var(--panel-border);
+        max-height: unset;
+      }
+
+      .preview {
+        min-height: 60vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="control-panel" aria-label="Simulation control panel">
+      <div class="panel-header">
+        <h1>AL-9 Performance Lab</h1>
+        <p>Fine-tune the alien landscape synthesizer with advanced visual templates, color palettes, and efficiency controls.</p>
+        <div class="template-row">
+          <label for="templateSelect">Visual Template</label>
+          <select id="templateSelect" aria-label="Choose a visual template">
+            <option value="aurora">Aurora Drift · Performance</option>
+            <option value="nebula">Nebula Bloom · Balanced</option>
+            <option value="crystal">Crystal Forge · High Fidelity</option>
+            <option value="storm">Ion Storm · Cinematic</option>
+          </select>
+          <button type="button" class="mute-button" id="muteToggle">🔇 Sound Off</button>
+        </div>
+      </div>
+
+      <section class="controls" aria-live="polite">
+        <div class="control-group">
+          <h2>Environmental Sculpting</h2>
+          <div class="slider-row">
+            <label for="height">Relief Amplitude</label>
+            <input id="height" type="range" min="0.2" max="2.2" step="0.01" value="1.1" data-decimals="2" />
+            <output id="heightValue">1.10</output>
+          </div>
+          <div class="slider-row">
+            <label for="warp">Tectonic Warp</label>
+            <input id="warp" type="range" min="0.1" max="2.8" step="0.01" value="1.0" data-decimals="2" />
+            <output id="warpValue">1.00</output>
+          </div>
+          <div class="slider-row">
+            <label for="detail">Crystalline Detail</label>
+            <input id="detail" type="range" min="0.4" max="3.6" step="0.01" value="2.4" data-decimals="2" />
+            <output id="detailValue">2.40</output>
+          </div>
+          <div class="slider-row">
+            <label for="textureScale">Texture Scale</label>
+            <input id="textureScale" type="range" min="0.5" max="4.0" step="0.01" value="1.8" data-decimals="2" />
+            <output id="textureScaleValue">1.80</output>
+          </div>
+          <div class="slider-row">
+            <label for="textureWarp">Texture Warp</label>
+            <input id="textureWarp" type="range" min="0.0" max="2.5" step="0.01" value="0.9" data-decimals="2" />
+            <output id="textureWarpValue">0.90</output>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <h2>Atmospheric Dynamics</h2>
+          <div class="slider-row">
+            <label for="colorIntensity">Spectral Bloom</label>
+            <input id="colorIntensity" type="range" min="0.2" max="3.2" step="0.01" value="1.35" data-decimals="2" />
+            <output id="colorIntensityValue">1.35</output>
+          </div>
+          <div class="slider-row">
+            <label for="speed">Wind Shear</label>
+            <input id="speed" type="range" min="0.05" max="3.4" step="0.01" value="1.4" data-decimals="2" />
+            <output id="speedValue">1.40</output>
+          </div>
+          <div class="slider-row">
+            <label for="nebula">Nebula Bloom</label>
+            <input id="nebula" type="range" min="0.0" max="2.4" step="0.01" value="1.0" data-decimals="2" />
+            <output id="nebulaValue">1.00</output>
+          </div>
+          <div class="slider-row">
+            <label for="storm">Storm Charge</label>
+            <input id="storm" type="range" min="0.0" max="1.8" step="0.01" value="0.6" data-decimals="2" />
+            <output id="stormValue">0.60</output>
+          </div>
+          <div class="slider-row">
+            <label for="stars">Ion Particulates</label>
+            <input id="stars" type="range" min="0.02" max="1.2" step="0.01" value="0.4" data-decimals="2" />
+            <output id="starsValue">0.40</output>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <h2>Orbit & Ecology</h2>
+          <div class="slider-row">
+            <label for="elevation">Orbit Elevation</label>
+            <input id="elevation" type="range" min="0.0" max="1.0" step="0.01" value="0.35" data-decimals="2" />
+            <output id="elevationValue">0.35</output>
+          </div>
+          <div class="slider-row">
+            <label for="bio">Flora Radiance</label>
+            <input id="bio" type="range" min="0.0" max="2.2" step="0.01" value="0.7" data-decimals="2" />
+            <output id="bioValue">0.70</output>
+          </div>
+          <div class="slider-row">
+            <label for="thermal">Thermal Plumes</label>
+            <input id="thermal" type="range" min="0.0" max="2.6" step="0.01" value="0.55" data-decimals="2" />
+            <output id="thermalValue">0.55</output>
+          </div>
+          <div class="slider-row">
+            <label for="gravity">Gravity Shear</label>
+            <input id="gravity" type="range" min="0.0" max="1.0" step="0.01" value="0.45" data-decimals="2" />
+            <output id="gravityValue">0.45</output>
+          </div>
+          <div class="slider-row">
+            <label for="dial">Aurora Flux</label>
+            <input id="dial" type="range" min="0" max="360" step="1" value="210" data-decimals="0" data-unit="°" />
+            <output id="dialValue">210°</output>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <h2>Color & Texture Palette</h2>
+          <div class="color-row">
+            <label for="paletteA">Base Tone</label>
+            <input id="paletteA" type="color" value="#12354b" />
+          </div>
+          <div class="color-row">
+            <label for="paletteB">Accent Tone</label>
+            <input id="paletteB" type="color" value="#7cfad2" />
+          </div>
+          <div class="slider-row">
+            <label for="textureDetail">Texture Detail</label>
+            <input id="textureDetail" type="range" min="0.2" max="2.5" step="0.01" value="1.2" data-decimals="2" />
+            <output id="textureDetailValue">1.20</output>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <h2>Performance Controls</h2>
+          <div class="slider-row">
+            <label for="resolutionScale">Render Scale</label>
+            <input id="resolutionScale" type="range" min="0.5" max="1.4" step="0.01" value="1.0" data-decimals="2" />
+            <output id="resolutionScaleValue">1.00</output>
+          </div>
+          <div class="slider-row">
+            <label for="maxSteps">March Steps</label>
+            <input id="maxSteps" type="range" min="60" max="200" step="1" value="140" data-decimals="0" />
+            <output id="maxStepsValue">140</output>
+          </div>
+          <div class="slider-row">
+            <label for="shadowSteps">Shadow Steps</label>
+            <input id="shadowSteps" type="range" min="12" max="120" step="1" value="60" data-decimals="0" />
+            <output id="shadowStepsValue">60</output>
+          </div>
+          <div class="toggle-row">
+            <label for="pauseToggle">Pause Animation</label>
+            <input id="pauseToggle" type="checkbox" aria-label="Toggle animation" />
+          </div>
+        </div>
+      </section>
+
+      <div class="display">
+        <span>SIMULATION STATUS</span>
+        <strong id="statusReadout">Ready · Awaiting input</strong>
+        <div class="telemetry">
+          <div>FRAME RATE <span id="fpsReadout">--</span></div>
+          <div>ORBITAL ANGLE <span id="angleReadout">0°</span></div>
+          <div>CRYSTAL INDEX <span id="detailReadout">0.00</span></div>
+          <div>ATMOS PRESS <span id="pressureReadout">0.00</span></div>
+          <div>NEBULA DENS <span id="nebulaReadout">0.00</span></div>
+          <div>STORM LOAD <span id="stormReadout">0.00</span></div>
+          <div>ORBIT ALT <span id="elevationReadout">0.00 km</span></div>
+          <div>FLORA FLUX <span id="bioReadout">0.00</span></div>
+          <div>THERMAL FLOW <span id="thermalReadout">0.00</span></div>
+          <div>GRAV LENS <span id="gravityReadout">0.00</span></div>
+          <div>RENDER SCALE <span id="renderScaleReadout">1.00×</span></div>
+          <div>STEP BUDGET <span id="stepBudgetReadout">140 / 60</span></div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="preview" aria-label="Alien landscape preview">
+      <canvas id="glCanvas" role="img" aria-label="3D simulation of an alien landscape"></canvas>
+      <div class="hud-overlay">
+        <div>ORBITAL ANGLE <span id="angleHud">0°</span></div>
+        <div>CRYSTAL INDEX <span id="detailHud">0.00</span></div>
+        <div>ATMOS PRESS <span id="pressureHud">0.00</span></div>
+        <div>NEBULA LUMIN <span id="nebulaHud">0.00</span></div>
+        <div>STORM CHARGE <span id="stormHud">0.00</span></div>
+        <div>ALTITUDE <span id="elevationHud">0.00 km</span></div>
+        <div>FLORA FLUX <span id="bioHud">0.00</span></div>
+        <div>THERMAL FLOW <span id="thermalHud">0.00</span></div>
+        <div>GRAV LENS <span id="gravityHud">0.00</span></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      const canvas = document.getElementById('glCanvas');
+      const gl = canvas.getContext('webgl', {
+        antialias: true,
+        preserveDrawingBuffer: false,
+        powerPreference: 'high-performance',
+      });
+
+      if (!gl) {
+        document.getElementById('statusReadout').textContent = 'WebGL unavailable in this environment';
+        const preview = document.querySelector('.preview');
+        preview.classList.add('preview--fallback');
+        preview.setAttribute('data-message', 'WebGL unavailable in this environment');
+        return;
+      }
+
+      gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+      const vertexSource = `
+        attribute vec2 position;
+        void main() {
+          gl_Position = vec4(position, 0.0, 1.0);
+        }
+      `;
+
+      const fragmentSource = `
+        precision highp float;
+        uniform vec2 uResolution;
+        uniform float uTime;
+        uniform float uHeight;
+        uniform float uWarp;
+        uniform float uDetail;
+        uniform float uColor;
+        uniform float uSpeed;
+        uniform float uStars;
+        uniform float uDial;
+        uniform float uNebula;
+        uniform float uStorm;
+        uniform float uElevation;
+        uniform float uBio;
+        uniform float uThermal;
+        uniform float uGravity;
+        uniform float uTextureScale;
+        uniform float uTextureWarp;
+        uniform float uTextureDetail;
+        uniform float uMaxSteps;
+        uniform float uShadowSteps;
+        uniform vec3 uPaletteA;
+        uniform vec3 uPaletteB;
+
+        const int MAX_ITER = 220;
+
+        float hash(vec3 p) {
+          p = fract(p * 0.3183099 + vec3(0.1, 0.2, 0.3));
+          p *= 17.0;
+          return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+        }
+
+        float snoise(vec3 p) {
+          vec3 i = floor(p);
+          vec3 f = fract(p);
+          f = f * f * (3.0 - 2.0 * f);
+          float n = i.x + i.y * 57.0 + 113.0 * i.z;
+          float res = mix(mix(mix(hash(vec3(n + 0.0)), hash(vec3(n + 1.0)), f.x),
+                              mix(hash(vec3(n + 57.0)), hash(vec3(n + 58.0)), f.x), f.y),
+                          mix(mix(hash(vec3(n + 113.0)), hash(vec3(n + 114.0)), f.x),
+                              mix(hash(vec3(n + 170.0)), hash(vec3(n + 171.0)), f.x), f.y), f.z);
+          return res * 2.0 - 1.0;
+        }
+
+        mat2 rot(float a) {
+          float s = sin(a);
+          float c = cos(a);
+          return mat2(c, -s, s, c);
+        }
+
+        float fbm(vec3 p) {
+          float value = 0.0;
+          float amp = 0.5;
+          float freq = 1.0;
+          for (int i = 0; i < 6; i++) {
+            value += amp * snoise(p * freq);
+            p = vec3(rot(1.2) * p.xy, p.z) * (1.5 + uTextureWarp * 0.15);
+            amp *= 0.55 + uTextureDetail * 0.08;
+            freq *= 1.8 + uTextureDetail * 0.12;
+            if (i > 3 && amp < 0.005) break;
+          }
+          return value;
+        }
+
+        float terrainHeight(vec2 uv) {
+          uv *= uTextureScale;
+          float base = fbm(vec3(uv * 0.6, uTime * 0.15 * uSpeed));
+          float warp = snoise(vec3(uv * (1.3 + uWarp * 0.35), uTime * 0.1)) * uWarp;
+          float ridges = abs(fbm(vec3(uv * (2.4 + uDetail * 0.2), uTime * 0.3)));
+          return base * 0.6 + warp * 0.4 + ridges * uDetail * 0.18;
+        }
+
+        float map(vec3 p) {
+          float h = terrainHeight(p.xz);
+          float strata = snoise(vec3(p.xz * 2.2, p.y * 0.3)) * 0.3;
+          float flora = snoise(vec3(p * 2.6 + uTime * 0.4)) * uBio * 0.18;
+          return p.y - (h * uHeight + strata * 0.4 + flora);
+        }
+
+        vec3 getNormal(vec3 p) {
+          vec2 e = vec2(0.001, 0.0);
+          float hx = map(p + vec3(e.x, 0.0, 0.0)) - map(p - vec3(e.x, 0.0, 0.0));
+          float hy = map(p + vec3(0.0, e.x, 0.0)) - map(p - vec3(0.0, e.x, 0.0));
+          float hz = map(p + vec3(0.0, 0.0, e.x)) - map(p - vec3(0.0, 0.0, e.x));
+          return normalize(vec3(hx, hy, hz));
+        }
+
+        float softShadow(vec3 ro, vec3 rd, float k) {
+          float shade = 1.0;
+          float t = 0.02;
+          for (int i = 0; i < MAX_ITER; i++) {
+            if (float(i) > uShadowSteps) break;
+            float h = map(ro + rd * t);
+            if (h < 0.001) return 0.0;
+            shade = min(shade, k * h / t);
+            t += clamp(h, 0.02, 0.15);
+          }
+          return clamp(shade, 0.0, 1.0);
+        }
+
+        float ambientOcclusion(vec3 p, vec3 n) {
+          float occ = 0.0;
+          float sca = 1.0;
+          for (int i = 0; i < 5; i++) {
+            float hr = 0.02 + 0.12 * float(i);
+            float d = map(p + n * hr);
+            occ += (hr - d) * sca;
+            sca *= 0.65;
+          }
+          return clamp(1.0 - occ, 0.2, 1.0);
+        }
+
+        vec3 palette(float t) {
+          float curve = smoothstep(0.0, 1.0, t);
+          vec3 mixed = mix(uPaletteA, uPaletteB, clamp(curve + sin(t * 6.28318) * 0.12 * uColor, 0.0, 1.0));
+          vec3 sparkle = vec3(0.65, 0.8, 1.2) * pow(max(0.0, sin(t * 3.1415)), 4.0) * uColor * 0.2;
+          return clamp(mixed + sparkle, 0.0, 1.4);
+        }
+
+        vec3 shade(vec3 p, vec3 n, vec3 rd, vec3 lightPos) {
+          vec3 lightDir = normalize(lightPos - p);
+          float shadow = softShadow(p + n * 0.05, lightDir, 12.0);
+          float diff = max(dot(n, lightDir), 0.0) * shadow;
+          float spec = pow(max(dot(reflect(-lightDir, n), -rd), 0.0), mix(8.0, 40.0, uDetail * 0.25)) * shadow;
+          float rim = pow(1.0 - max(dot(n, -rd), 0.0), 3.5);
+          float ao = ambientOcclusion(p, n);
+          vec3 base = palette(terrainHeight(p.xz) * 0.35 + uColor * 0.08) * ao;
+          vec3 glow = mix(uPaletteA, uPaletteB, 0.75) * smoothstep(0.35, 0.9, rim) * uColor * 0.6;
+          vec3 crystal = vec3(0.4, 1.1, 0.9) * pow(max(0.0, snoise(vec3(p.xz * (2.4 + uTextureDetail * 0.6), p.y * 2.0 + uTime * 2.0))), 4.0) * uDetail;
+          vec3 stormIons = vec3(0.8, 0.95, 1.4) * pow(max(0.0, snoise(vec3(p * (3.0 + uStorm * 0.4) + uTime * 4.0))), 6.0) * uStorm * 0.8;
+          vec3 floraGlow = vec3(0.2, 0.9, 0.6) * pow(max(0.0, snoise(vec3(p.xz * 3.4 + uTime * 0.6, p.y * 2.6))), 5.5) * uBio;
+          vec3 thermalGlow = vec3(1.2, 0.6, 0.3) * pow(max(0.0, fbm(vec3(p * 3.2 + uTime * 1.5))), 4.0) * uThermal * 0.45;
+          return base * (diff * 1.8 + 0.18) + spec * vec3(1.2, 0.9, 0.7) + glow + crystal + stormIons + floraGlow + thermalGlow;
+        }
+
+        float raymarch(vec3 ro, vec3 rd, out vec3 pos, out float steps) {
+          float dist = 0.0;
+          for (int i = 0; i < MAX_ITER; i++) {
+            if (float(i) > uMaxSteps) break;
+            vec3 p = ro + rd * dist;
+            float d = map(p);
+            if (d < 0.001) {
+              pos = p;
+              steps = float(i);
+              return dist;
+            }
+            if (dist > 80.0) break;
+            dist += d * 0.8;
+          }
+          steps = uMaxSteps;
+          pos = ro + rd * dist;
+          return -1.0;
+        }
+
+        float cloudLayer(vec3 rd) {
+          float clouds = fbm(vec3(rd.xz * 2.0, uTime * 0.04 + rd.y * 0.6));
+          clouds = pow(clouds * 0.5 + 0.5, 3.0);
+          clouds += sin(rd.x * 9.0 + uTime * 0.9) * 0.05 * uThermal;
+          clouds += pow(max(0.0, snoise(vec3(rd.xy * 3.2, uTime * 0.2))), 4.0) * 0.15 * uBio;
+          return clouds;
+        }
+
+        vec3 nebulaGlow(vec3 rd) {
+          vec3 coord = vec3(rd.xy * 2.2, rd.z * 1.2);
+          float bloom = pow(max(0.0, fbm(coord * 1.4 + uTime * 0.05)), 4.0);
+          float filaments = pow(max(0.0, snoise(coord * 3.5 + uTime * 0.3)), 6.0);
+          vec3 base = mix(uPaletteA, uPaletteB, clamp(bloom + 0.35, 0.0, 1.0));
+          vec3 highlights = vec3(0.9, 0.6, 1.2) * filaments;
+          vec3 bioStreaks = vec3(0.3, 1.0, 0.7) * pow(max(0.0, snoise(coord * 2.2 + uTime * 0.6)), 5.0) * uBio * 0.6;
+          return (base * bloom + highlights * 0.6 + bioStreaks) * uNebula;
+        }
+
+        vec3 getSky(vec3 rd) {
+          float horizon = pow(max(0.0, 1.0 - abs(rd.y)), 3.0);
+          float aurora = pow(max(0.0, sin(rd.x * 6.0 + uTime * 0.3 + radians(uDial))), 4.0);
+          vec3 auroraColor = mix(uPaletteA, uPaletteB, 0.8) * aurora * uColor;
+          vec3 sky = mix(vec3(0.02, 0.04, 0.08), vec3(0.08, 0.15, 0.28), horizon);
+          float bands = sin((rd.x + rd.y) * 12.0 + uTime * 0.6) * 0.5 + 0.5;
+          vec3 bandColor = mix(uPaletteA, vec3(0.2, 0.6, 0.8), pow(bands, 4.0)) * uColor * 0.4;
+          float clouds = cloudLayer(rd);
+          vec3 cloudColor = mix(vec3(0.08, 0.12, 0.22), vec3(0.4, 0.6, 0.9), clouds) * (0.2 + uNebula * 0.25 + uThermal * 0.1);
+          vec3 nebula = nebulaGlow(rd);
+          float gravityLens = pow(max(0.0, 1.0 - length(rd.xy)), 2.5) * uGravity;
+          vec3 lensColor = mix(uPaletteA, uPaletteB, 0.65) * gravityLens;
+          return sky + auroraColor + bandColor + cloudColor + nebula + lensColor;
+        }
+
+        float getStars(vec3 rd) {
+          float starField = pow(max(0.0, snoise(rd * 60.0 + uTime * 0.1)), 12.0);
+          starField += pow(max(0.0, snoise(rd * 24.0 + 40.0)), 18.0);
+          return starField * uStars;
+        }
+
+        void main() {
+          vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution.xy) / uResolution.y;
+
+          float camRadius = mix(5.0, 8.2, 1.0 - uElevation * 0.6);
+          float camHeight = mix(1.7, 5.4, uElevation) + sin(uTime * 0.3) * 0.35 * uSpeed;
+          float angle = uTime * 0.22 + radians(uDial) * 0.0015;
+          vec3 ro = vec3(sin(angle) * camRadius, camHeight, cos(angle) * camRadius);
+          vec3 target = vec3(0.0, 0.7 + sin(uTime * 0.2) * 0.2, 0.0);
+          vec3 forward = normalize(target - ro);
+          vec3 right = normalize(cross(vec3(0.0, 1.0, 0.0), forward));
+          vec3 up = cross(forward, right);
+          vec2 warpedUV = uv;
+          float lensWarp = dot(uv, uv) * uGravity * 0.35;
+          warpedUV += uv * lensWarp * 0.4;
+          vec3 rd = normalize(forward + warpedUV.x * right * (1.4 + lensWarp) + warpedUV.y * up * (1.2 - lensWarp * 0.5));
+
+          vec3 pos;
+          float steps;
+          float dist = raymarch(ro, rd, pos, steps);
+          vec3 color = vec3(0.0);
+
+          vec3 lightPos = vec3(3.5 * sin(uTime * 0.4 + radians(uDial) * 0.35), 4.5 + uElevation * 1.5, 3.5 * cos(uTime * 0.4 + radians(uDial) * 0.35));
+
+          if (dist > 0.0) {
+            vec3 normal = getNormal(pos);
+            color = shade(pos, normal, rd, lightPos);
+            float fog = exp(-dist * 0.12);
+            vec3 sky = getSky(rd);
+            vec3 volumetric = getSky(normalize(vec3(rd.x, max(rd.y, 0.0) + 0.2 * uStorm, rd.z)));
+            color = mix(sky, color, fog);
+            color = mix(color, volumetric, (1.0 - fog) * 0.18 * uNebula);
+            float emissive = pow(max(0.0, snoise(vec3(pos.xz * 6.0, uTime * uSpeed))), 8.0);
+            color += mix(uPaletteA, vec3(0.8, 0.2, 1.0), 0.6) * emissive * 0.6 * uDetail;
+            float lightning = pow(max(0.0, sin(uTime * 6.5 + fbm(vec3(pos.xz * 3.0, uTime * 1.6)))), 12.0) * uStorm;
+            color += vec3(1.4, 1.6, 2.2) * lightning;
+            float biolume = pow(max(0.0, snoise(vec3(pos.xz * 5.0 + uTime * 0.8, pos.y * 1.3 + uTime * 1.5))), 6.5) * uBio;
+            color += vec3(0.25, 0.9, 0.8) * biolume;
+            float heatVeil = pow(max(0.0, fbm(vec3(pos.xz * 1.5, pos.y * 0.5 + uTime * 2.0))), 3.0) * uThermal;
+            color += vec3(1.1, 0.55, 0.25) * heatVeil * 0.35;
+            color = mix(color, sky, pow(max(0.0, lensWarp), 1.5) * 0.1);
+          } else {
+            color = getSky(rd);
+          }
+
+          float starGlow = getStars(rd);
+          color += vec3(1.2, 1.1, 0.9) * starGlow;
+          color += nebulaGlow(rd) * 0.35;
+
+          float vignette = smoothstep(1.2 - uGravity * 0.15, 0.2 + uGravity * 0.08, length(warpedUV));
+          color *= vignette;
+
+          gl_FragColor = vec4(pow(color, vec3(0.92)), 1.0);
+        }
+      `;
+
+      function createShader(type, source) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+          console.error('Shader compile failed:', gl.getShaderInfoLog(shader));
+          throw new Error('Shader compilation failed');
+        }
+        return shader;
+      }
+
+      const vertexShader = createShader(gl.VERTEX_SHADER, vertexSource);
+      const fragmentShader = createShader(gl.FRAGMENT_SHADER, fragmentSource);
+
+      const program = gl.createProgram();
+      gl.attachShader(program, vertexShader);
+      gl.attachShader(program, fragmentShader);
+      gl.linkProgram(program);
+
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        console.error('Program failed to link:', gl.getProgramInfoLog(program));
+        throw new Error('Shader program failed to link');
+      }
+
+      gl.useProgram(program);
+      gl.disable(gl.DEPTH_TEST);
+      gl.disable(gl.CULL_FACE);
+      gl.disable(gl.BLEND);
+
+      const quad = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array([
+          -1, -1,
+           1, -1,
+          -1,  1,
+          -1,  1,
+           1, -1,
+           1,  1,
+        ]),
+        gl.STATIC_DRAW,
+      );
+
+      const positionLoc = gl.getAttribLocation(program, 'position');
+      gl.enableVertexAttribArray(positionLoc);
+      gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 0, 0);
+
+      const uniforms = {
+        resolution: gl.getUniformLocation(program, 'uResolution'),
+        time: gl.getUniformLocation(program, 'uTime'),
+        height: gl.getUniformLocation(program, 'uHeight'),
+        warp: gl.getUniformLocation(program, 'uWarp'),
+        detail: gl.getUniformLocation(program, 'uDetail'),
+        color: gl.getUniformLocation(program, 'uColor'),
+        speed: gl.getUniformLocation(program, 'uSpeed'),
+        stars: gl.getUniformLocation(program, 'uStars'),
+        dial: gl.getUniformLocation(program, 'uDial'),
+        nebula: gl.getUniformLocation(program, 'uNebula'),
+        storm: gl.getUniformLocation(program, 'uStorm'),
+        elevation: gl.getUniformLocation(program, 'uElevation'),
+        bio: gl.getUniformLocation(program, 'uBio'),
+        thermal: gl.getUniformLocation(program, 'uThermal'),
+        gravity: gl.getUniformLocation(program, 'uGravity'),
+        textureScale: gl.getUniformLocation(program, 'uTextureScale'),
+        textureWarp: gl.getUniformLocation(program, 'uTextureWarp'),
+        textureDetail: gl.getUniformLocation(program, 'uTextureDetail'),
+        maxSteps: gl.getUniformLocation(program, 'uMaxSteps'),
+        shadowSteps: gl.getUniformLocation(program, 'uShadowSteps'),
+        paletteA: gl.getUniformLocation(program, 'uPaletteA'),
+        paletteB: gl.getUniformLocation(program, 'uPaletteB'),
+      };
+
+      const state = {
+        time: 0,
+        height: 1.1,
+        warp: 1.0,
+        detail: 2.4,
+        color: 1.35,
+        speed: 1.4,
+        stars: 0.4,
+        dial: 210,
+        nebula: 1.0,
+        storm: 0.6,
+        elevation: 0.35,
+        bio: 0.7,
+        thermal: 0.55,
+        gravity: 0.45,
+        textureScale: 1.8,
+        textureWarp: 0.9,
+        textureDetail: 1.2,
+        resolutionScale: 1.0,
+        maxSteps: 140,
+        shadowSteps: 60,
+        paletteA: '#12354b',
+        paletteB: '#7cfad2',
+        paused: false,
+        fps: 0,
+      };
+
+      const inputs = {
+        height: document.getElementById('height'),
+        warp: document.getElementById('warp'),
+        detail: document.getElementById('detail'),
+        colorIntensity: document.getElementById('colorIntensity'),
+        speed: document.getElementById('speed'),
+        stars: document.getElementById('stars'),
+        dial: document.getElementById('dial'),
+        nebula: document.getElementById('nebula'),
+        storm: document.getElementById('storm'),
+        elevation: document.getElementById('elevation'),
+        bio: document.getElementById('bio'),
+        thermal: document.getElementById('thermal'),
+        gravity: document.getElementById('gravity'),
+        textureScale: document.getElementById('textureScale'),
+        textureWarp: document.getElementById('textureWarp'),
+        textureDetail: document.getElementById('textureDetail'),
+        resolutionScale: document.getElementById('resolutionScale'),
+        maxSteps: document.getElementById('maxSteps'),
+        shadowSteps: document.getElementById('shadowSteps'),
+        pauseToggle: document.getElementById('pauseToggle'),
+        paletteA: document.getElementById('paletteA'),
+        paletteB: document.getElementById('paletteB'),
+      };
+
+      const outputs = {
+        status: document.getElementById('statusReadout'),
+        fps: document.getElementById('fpsReadout'),
+        angle: document.getElementById('angleReadout'),
+        angleHud: document.getElementById('angleHud'),
+        detailTelemetry: document.getElementById('detailReadout'),
+        detailHud: document.getElementById('detailHud'),
+        pressure: document.getElementById('pressureReadout'),
+        pressureHud: document.getElementById('pressureHud'),
+        nebula: document.getElementById('nebulaReadout'),
+        nebulaHud: document.getElementById('nebulaHud'),
+        storm: document.getElementById('stormReadout'),
+        stormHud: document.getElementById('stormHud'),
+        elevation: document.getElementById('elevationReadout'),
+        elevationHud: document.getElementById('elevationHud'),
+        bio: document.getElementById('bioReadout'),
+        bioHud: document.getElementById('bioHud'),
+        thermal: document.getElementById('thermalReadout'),
+        thermalHud: document.getElementById('thermalHud'),
+        gravity: document.getElementById('gravityReadout'),
+        gravityHud: document.getElementById('gravityHud'),
+        renderScale: document.getElementById('renderScaleReadout'),
+        stepBudget: document.getElementById('stepBudgetReadout'),
+      };
+
+      const statusMessages = {
+        height: 'Topography recalibrated',
+        warp: 'Fault lines adjusted',
+        detail: 'Crystalline matrix tuned',
+        color: 'Spectral bloom shifting',
+        speed: 'Atmospheric shear adjusted',
+        stars: 'Particle density calibrated',
+        dial: 'Aurora flux realigned',
+        nebula: 'Nebula luminance balanced',
+        storm: 'Storm capacitors charged',
+        elevation: 'Orbital elevation set',
+        bio: 'Bioluminescent bloom regulated',
+        thermal: 'Thermal plumes redirected',
+        gravity: 'Gravity lens stabilized',
+        textureScale: 'Terrain scale remapped',
+        textureWarp: 'Texture warp recalculated',
+        textureDetail: 'Surface detail refined',
+        resolutionScale: 'Render scaling adjusted',
+        maxSteps: 'Raymarch budget updated',
+        shadowSteps: 'Shadow budget recalibrated',
+        paletteA: 'Base tone recalibrated',
+        paletteB: 'Accent tone recalibrated',
+      };
+
+      const timeFormatter = new Intl.DateTimeFormat([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      });
+
+      function updateStatus(key, formattedValue) {
+        const message = statusMessages[key] || 'Flux stabilized';
+        outputs.status.textContent = `${message} → ${formattedValue} · ${timeFormatter.format(new Date())}`;
+      }
+
+      function updateStepReadout() {
+        outputs.stepBudget.textContent = `${Math.round(state.maxSteps)} / ${Math.round(state.shadowSteps)}`;
+      }
+
+      function updateRenderScaleReadout() {
+        outputs.renderScale.textContent = `${state.resolutionScale.toFixed(2)}×`;
+      }
+
+      function hexToVec(hex) {
+        const value = parseInt(hex.replace('#', ''), 16);
+        return [
+          ((value >> 16) & 255) / 255,
+          ((value >> 8) & 255) / 255,
+          (value & 255) / 255,
+        ];
+      }
+
+      let paletteVecA = hexToVec(state.paletteA);
+      let paletteVecB = hexToVec(state.paletteB);
+
+      function refreshPaletteVectors() {
+        paletteVecA = hexToVec(state.paletteA);
+        paletteVecB = hexToVec(state.paletteB);
+      }
+
+      const sliderBindings = [
+        { inputId: 'height', outputId: 'heightValue', stateKey: 'height' },
+        { inputId: 'warp', outputId: 'warpValue', stateKey: 'warp' },
+        { inputId: 'detail', outputId: 'detailValue', stateKey: 'detail' },
+        { inputId: 'textureScale', outputId: 'textureScaleValue', stateKey: 'textureScale' },
+        { inputId: 'textureWarp', outputId: 'textureWarpValue', stateKey: 'textureWarp' },
+        { inputId: 'textureDetail', outputId: 'textureDetailValue', stateKey: 'textureDetail' },
+        { inputId: 'colorIntensity', outputId: 'colorIntensityValue', stateKey: 'color' },
+        { inputId: 'speed', outputId: 'speedValue', stateKey: 'speed' },
+        { inputId: 'nebula', outputId: 'nebulaValue', stateKey: 'nebula' },
+        { inputId: 'storm', outputId: 'stormValue', stateKey: 'storm' },
+        { inputId: 'stars', outputId: 'starsValue', stateKey: 'stars' },
+        { inputId: 'elevation', outputId: 'elevationValue', stateKey: 'elevation' },
+        { inputId: 'bio', outputId: 'bioValue', stateKey: 'bio' },
+        { inputId: 'thermal', outputId: 'thermalValue', stateKey: 'thermal' },
+        { inputId: 'gravity', outputId: 'gravityValue', stateKey: 'gravity' },
+        {
+          inputId: 'dial',
+          outputId: 'dialValue',
+          stateKey: 'dial',
+          decimals: 0,
+          format: (value) => `${value.toFixed(0)}°`,
+        },
+        {
+          inputId: 'resolutionScale',
+          outputId: 'resolutionScaleValue',
+          stateKey: 'resolutionScale',
+        },
+        {
+          inputId: 'maxSteps',
+          outputId: 'maxStepsValue',
+          stateKey: 'maxSteps',
+          decimals: 0,
+        },
+        {
+          inputId: 'shadowSteps',
+          outputId: 'shadowStepsValue',
+          stateKey: 'shadowSteps',
+          decimals: 0,
+        },
+      ];
+
+      function handleSliderInput(binding, skipStatus = false) {
+        const input = inputs[binding.inputId];
+        if (!input) return;
+        const decimals = binding.decimals ?? parseInt(input.dataset.decimals || '2', 10);
+        const value = parseFloat(input.value);
+        state[binding.stateKey] = value;
+        const outputEl = binding.outputId ? document.getElementById(binding.outputId) : null;
+        const formatted = binding.format ? binding.format(value) : value.toFixed(decimals);
+        if (outputEl) {
+          outputEl.textContent = formatted;
+        }
+        if (!skipStatus) {
+          updateStatus(binding.stateKey, formatted);
+        }
+        if (binding.stateKey === 'resolutionScale') {
+          updateRenderScaleReadout();
+          needsResize = true;
+        }
+        if (binding.stateKey === 'maxSteps' || binding.stateKey === 'shadowSteps') {
+          updateStepReadout();
+        }
+      }
+
+      sliderBindings.forEach((binding) => {
+        const input = inputs[binding.inputId];
+        if (!input) return;
+        input.addEventListener('input', () => handleSliderInput(binding, true));
+        input.addEventListener('change', () => {
+          handleSliderInput(binding, false);
+          playSfx(220 + Math.random() * 220);
+        });
+        handleSliderInput(binding, true);
+      });
+
+      updateRenderScaleReadout();
+      updateStepReadout();
+
+      function setPalette(key, value, skipStatus = false) {
+        state[key] = value;
+        inputs[key].value = value;
+        refreshPaletteVectors();
+        if (!skipStatus) {
+          updateStatus(key, value.toUpperCase());
+          playSfx(key === 'paletteA' ? 520 : 640);
+        }
+      }
+
+      inputs.paletteA.addEventListener('change', () => setPalette('paletteA', inputs.paletteA.value));
+      inputs.paletteB.addEventListener('change', () => setPalette('paletteB', inputs.paletteB.value));
+
+      const templateSelect = document.getElementById('templateSelect');
+      const templates = {
+        aurora: {
+          label: 'Aurora Drift · Performance',
+          values: {
+            height: 0.9,
+            warp: 0.85,
+            detail: 1.8,
+            textureScale: 1.3,
+            textureWarp: 0.5,
+            textureDetail: 0.9,
+            color: 1.2,
+            speed: 1.05,
+            nebula: 0.85,
+            storm: 0.35,
+            stars: 0.32,
+            elevation: 0.28,
+            bio: 0.55,
+            thermal: 0.45,
+            gravity: 0.35,
+            dial: 180,
+            resolutionScale: 0.75,
+            maxSteps: 110,
+            shadowSteps: 40,
+            paletteA: '#122a4a',
+            paletteB: '#75f2ff',
+          },
+        },
+        nebula: {
+          label: 'Nebula Bloom · Balanced',
+          values: {
+            height: 1.1,
+            warp: 1.0,
+            detail: 2.4,
+            textureScale: 1.8,
+            textureWarp: 0.9,
+            textureDetail: 1.2,
+            color: 1.35,
+            speed: 1.4,
+            nebula: 1.05,
+            storm: 0.6,
+            stars: 0.45,
+            elevation: 0.35,
+            bio: 0.7,
+            thermal: 0.55,
+            gravity: 0.45,
+            dial: 210,
+            resolutionScale: 1.0,
+            maxSteps: 140,
+            shadowSteps: 60,
+            paletteA: '#12354b',
+            paletteB: '#7cfad2',
+          },
+        },
+        crystal: {
+          label: 'Crystal Forge · High Fidelity',
+          values: {
+            height: 1.35,
+            warp: 1.4,
+            detail: 3.1,
+            textureScale: 2.4,
+            textureWarp: 1.2,
+            textureDetail: 1.6,
+            color: 1.8,
+            speed: 1.75,
+            nebula: 1.2,
+            storm: 0.85,
+            stars: 0.6,
+            elevation: 0.42,
+            bio: 0.95,
+            thermal: 0.78,
+            gravity: 0.55,
+            dial: 260,
+            resolutionScale: 1.2,
+            maxSteps: 180,
+            shadowSteps: 90,
+            paletteA: '#1b1f4d',
+            paletteB: '#b1e8ff',
+          },
+        },
+        storm: {
+          label: 'Ion Storm · Cinematic',
+          values: {
+            height: 1.05,
+            warp: 1.5,
+            detail: 2.8,
+            textureScale: 1.6,
+            textureWarp: 1.8,
+            textureDetail: 1.4,
+            color: 1.6,
+            speed: 2.2,
+            nebula: 1.5,
+            storm: 1.15,
+            stars: 0.75,
+            elevation: 0.48,
+            bio: 0.9,
+            thermal: 0.9,
+            gravity: 0.6,
+            dial: 320,
+            resolutionScale: 1.1,
+            maxSteps: 160,
+            shadowSteps: 80,
+            paletteA: '#251641',
+            paletteB: '#ff9c8d',
+          },
+        },
+      };
+
+      function applyTemplate(key, announce = true) {
+        const template = templates[key];
+        if (!template) return;
+        sliderBindings.forEach((binding) => {
+          if (Object.prototype.hasOwnProperty.call(template.values, binding.stateKey)) {
+            const value = template.values[binding.stateKey];
+            const input = inputs[binding.inputId];
+            if (input) {
+              input.value = value;
+            }
+            state[binding.stateKey] = value;
+            handleSliderInput(binding, true);
+          }
+        });
+        ['paletteA', 'paletteB'].forEach((paletteKey) => {
+          if (Object.prototype.hasOwnProperty.call(template.values, paletteKey)) {
+            setPalette(paletteKey, template.values[paletteKey], true);
+          }
+        });
+        state.paused = false;
+        inputs.pauseToggle.checked = false;
+        updateRenderScaleReadout();
+        updateStepReadout();
+        refreshPaletteVectors();
+        if (announce) {
+          outputs.status.textContent = `Template engaged: ${template.label} · ${timeFormatter.format(new Date())}`;
+          playSfx(420);
+        }
+        needsResize = true;
+      }
+
+      templateSelect.addEventListener('change', () => applyTemplate(templateSelect.value));
+      templateSelect.value = 'nebula';
+      applyTemplate('nebula', false);
+
+      inputs.pauseToggle.addEventListener('change', () => {
+        state.paused = inputs.pauseToggle.checked;
+        if (state.paused) {
+          outputs.status.textContent = `Temporal freeze engaged · ${timeFormatter.format(new Date())}`;
+          playSfx(160);
+        } else {
+          outputs.status.textContent = `Simulation resumed · ${timeFormatter.format(new Date())}`;
+          playSfx(300);
+          lastTimestamp = 0;
+        }
+      });
+
+      let audioContext;
+      let ambientSource;
+      let ambientGain;
+      let sfxGain;
+      let isMuted = true;
+      const muteButton = document.getElementById('muteToggle');
+
+      function ensureAudio() {
+        if (audioContext) return true;
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return false;
+        audioContext = new AudioContext();
+        ambientGain = audioContext.createGain();
+        ambientGain.gain.value = 0;
+        sfxGain = audioContext.createGain();
+        sfxGain.gain.value = 0;
+        ambientGain.connect(audioContext.destination);
+        sfxGain.connect(audioContext.destination);
+
+        const buffer = audioContext.createBuffer(1, audioContext.sampleRate * 6, audioContext.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < data.length; i++) {
+          const t = i / data.length;
+          data[i] = (Math.random() * 2 - 1) * (Math.pow(1 - t, 1.4) * 0.5 + 0.5);
+        }
+
+        ambientSource = audioContext.createBufferSource();
+        ambientSource.buffer = buffer;
+        ambientSource.loop = true;
+
+        const filter = audioContext.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 320;
+        filter.Q.value = 0.8;
+
+        const lfo = audioContext.createOscillator();
+        const lfoGain = audioContext.createGain();
+        lfo.frequency.value = 0.15;
+        lfoGain.gain.value = 90;
+        lfo.connect(lfoGain);
+        lfoGain.connect(filter.frequency);
+
+        ambientSource.connect(filter);
+        filter.connect(ambientGain);
+        ambientSource.start();
+        lfo.start();
+        return true;
+      }
+
+      function setMuted(nextMuted) {
+        if (!ensureAudio()) return;
+        if (audioContext.state === 'suspended') {
+          audioContext.resume();
+        }
+        isMuted = nextMuted;
+        const now = audioContext.currentTime;
+        const ambientLevel = nextMuted ? 0 : 0.3;
+        const sfxLevel = nextMuted ? 0 : 0.4;
+        ambientGain.gain.setTargetAtTime(ambientLevel, now, 0.1);
+        sfxGain.gain.setTargetAtTime(sfxLevel, now, 0.05);
+        muteButton.textContent = nextMuted ? '🔇 Sound Off' : '🔊 Sound On';
+        outputs.status.textContent = `${nextMuted ? 'Audio channel muted' : 'Audio channel engaged'} · ${timeFormatter.format(new Date())}`;
+      }
+
+      function playSfx(baseFreq) {
+        if (!audioContext || isMuted) return;
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.value = baseFreq;
+        gain.gain.value = 0;
+        osc.connect(gain);
+        gain.connect(sfxGain);
+        const now = audioContext.currentTime;
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.25, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+        osc.start(now);
+        osc.stop(now + 0.32);
+      }
+
+      muteButton.addEventListener('click', () => {
+        if (!audioContext || isMuted) {
+          setMuted(false);
+        } else {
+          setMuted(!isMuted);
+        }
+      });
+
+      let needsResize = true;
+      let lastTimestamp = 0;
+
+      function resizeCanvas() {
+        const dpr = window.devicePixelRatio || 1;
+        const width = Math.max(1, Math.floor(canvas.clientWidth * dpr * state.resolutionScale));
+        const height = Math.max(1, Math.floor(canvas.clientHeight * dpr * state.resolutionScale));
+        if (canvas.width !== width || canvas.height !== height) {
+          canvas.width = width;
+          canvas.height = height;
+          gl.viewport(0, 0, width, height);
+        }
+        gl.uniform2f(uniforms.resolution, canvas.width, canvas.height);
+      }
+
+      const markNeedsResize = () => {
+        needsResize = true;
+      };
+
+      if (typeof ResizeObserver !== 'undefined') {
+        const resizeObserver = new ResizeObserver(() => {
+          markNeedsResize();
+        });
+        resizeObserver.observe(canvas);
+      }
+
+      window.addEventListener('resize', markNeedsResize);
+      window.addEventListener('orientationchange', markNeedsResize);
+
+      function render(nowMs) {
+        const now = nowMs * 0.001;
+        if (!lastTimestamp) {
+          lastTimestamp = now;
+        }
+        const delta = now - lastTimestamp;
+        lastTimestamp = now;
+
+        if (!state.paused) {
+          state.time += delta;
+          const instantaneousFps = 1 / Math.max(delta, 0.0001);
+          state.fps = state.fps === 0 ? instantaneousFps : state.fps * 0.9 + instantaneousFps * 0.1;
+        } else {
+          state.fps = state.fps * 0.9;
+        }
+
+        if (needsResize) {
+          resizeCanvas();
+          needsResize = false;
+        }
+
+        gl.uniform1f(uniforms.time, state.time);
+        gl.uniform1f(uniforms.height, state.height);
+        gl.uniform1f(uniforms.warp, state.warp);
+        gl.uniform1f(uniforms.detail, state.detail);
+        gl.uniform1f(uniforms.color, state.color);
+        gl.uniform1f(uniforms.speed, state.speed);
+        gl.uniform1f(uniforms.stars, state.stars);
+        gl.uniform1f(uniforms.dial, state.dial);
+        gl.uniform1f(uniforms.nebula, state.nebula);
+        gl.uniform1f(uniforms.storm, state.storm);
+        gl.uniform1f(uniforms.elevation, state.elevation);
+        gl.uniform1f(uniforms.bio, state.bio);
+        gl.uniform1f(uniforms.thermal, state.thermal);
+        gl.uniform1f(uniforms.gravity, state.gravity);
+        gl.uniform1f(uniforms.textureScale, state.textureScale);
+        gl.uniform1f(uniforms.textureWarp, state.textureWarp);
+        gl.uniform1f(uniforms.textureDetail, state.textureDetail);
+        gl.uniform1f(uniforms.maxSteps, state.maxSteps);
+        gl.uniform1f(uniforms.shadowSteps, state.shadowSteps);
+        gl.uniform3f(uniforms.paletteA, paletteVecA[0], paletteVecA[1], paletteVecA[2]);
+        gl.uniform3f(uniforms.paletteB, paletteVecB[0], paletteVecB[1], paletteVecB[2]);
+
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+        const fpsValue = state.fps < 0.1 ? '0.0' : state.fps.toFixed(1);
+        outputs.fps.textContent = fpsValue;
+
+        const angleValue = (state.time * 14.0 + state.dial * 0.18) % 360;
+        const formattedAngle = `${((angleValue + 360) % 360).toFixed(0)}°`;
+        outputs.angle.textContent = formattedAngle;
+        outputs.angleHud.textContent = formattedAngle;
+
+        const detailValue = state.detail.toFixed(2);
+        outputs.detailTelemetry.textContent = detailValue;
+        outputs.detailHud.textContent = detailValue;
+
+        const pressureValue = (state.speed * state.warp * (0.65 + state.storm * 0.12)).toFixed(2);
+        outputs.pressure.textContent = pressureValue;
+        outputs.pressureHud.textContent = pressureValue;
+
+        const nebulaDensity = (state.nebula * (0.82 + 0.18 * Math.sin(state.time * 0.6)) + state.stars * 0.2).toFixed(2);
+        outputs.nebula.textContent = nebulaDensity;
+        outputs.nebulaHud.textContent = nebulaDensity;
+
+        const stormLoad = (state.storm * (0.7 + 0.3 * Math.abs(Math.sin(state.time * 2.0 + state.dial * 0.05)))).toFixed(2);
+        outputs.storm.textContent = stormLoad;
+        outputs.stormHud.textContent = stormLoad;
+
+        const baseAltitude = 1.7 + (5.2 - 1.7) * state.elevation;
+        const orbitalAltitude = (baseAltitude + Math.sin(state.time * 0.3) * 0.35 * state.speed).toFixed(2);
+        const altitudeText = `${orbitalAltitude} km`;
+        outputs.elevation.textContent = altitudeText;
+        outputs.elevationHud.textContent = altitudeText;
+
+        const bioFlux = (state.bio * (0.72 + 0.28 * Math.sin(state.time * (0.9 + state.speed * 0.1))) + state.detail * 0.12).toFixed(2);
+        outputs.bio.textContent = bioFlux;
+        outputs.bioHud.textContent = bioFlux;
+
+        const thermalFlow = (state.thermal * (0.6 + 0.4 * Math.cos(state.time * (1.1 + state.warp * 0.2))) + state.speed * 0.15).toFixed(2);
+        outputs.thermal.textContent = thermalFlow;
+        outputs.thermalHud.textContent = thermalFlow;
+
+        const gravityShear = (state.gravity * (0.85 + 0.35 * Math.sin(state.time * 0.45 + state.dial * 0.02))).toFixed(2);
+        outputs.gravity.textContent = gravityShear;
+        outputs.gravityHud.textContent = gravityShear;
+
+        requestAnimationFrame(render);
+      }
+
+      markNeedsResize();
+      requestAnimationFrame(render);
+    })();
+  </script>
+</body>
+</html>
