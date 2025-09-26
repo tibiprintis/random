@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demo 04 - 3D Alien Shooter</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --hud-bg: rgba(9, 16, 32, 0.72);
+      --accent: #54f2ff;
+      --danger: #ff6b6b;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: radial-gradient(circle at center, #061427 0%, #01040a 60%, #000 100%);
+      color: #dff9fb;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    #ui-panel {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      padding: 1rem 1.5rem;
+      width: min(320px, 90vw);
+      background: var(--hud-bg);
+      border: 1px solid rgba(84, 242, 255, 0.3);
+      border-radius: 12px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 50px rgba(0, 0, 0, 0.45);
+    }
+
+    #ui-panel h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.1rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    #stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.25rem 0.75rem;
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+    }
+
+    #controls {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+    }
+
+    #controls label {
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    #instructions {
+      margin-top: 0.75rem;
+      font-size: 0.75rem;
+      line-height: 1.5;
+      color: rgba(223, 249, 251, 0.85);
+    }
+
+    #overlay-message {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      background: rgba(0, 0, 0, 0.75);
+      color: #fff;
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    #overlay-message.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    #overlay-message small {
+      margin-top: 1.25rem;
+      font-size: clamp(0.75rem, 2vw, 1.1rem);
+      letter-spacing: 0.2em;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div id="ui-panel">
+    <h1>Alien Shooter RND</h1>
+    <div id="stats">
+      <span>Score:</span><span id="score">0</span>
+      <span>Wave:</span><span id="wave">1</span>
+      <span>Hull:</span><span id="hull">100%</span>
+      <span>Detail:</span><span id="detail-readout">3</span>
+    </div>
+    <div id="controls">
+      <label for="poly-range">Polygon Detail</label>
+      <input type="range" id="poly-range" min="0" max="5" step="1" value="3" />
+    </div>
+    <div id="instructions">
+      <strong>Controls</strong><br />
+      Move: Arrow Keys / WASD<br />
+      Fire: Space or Left Click<br />
+      Audio starts on first input.
+    </div>
+  </div>
+  <div id="overlay-message">
+    <div id="overlay-text"></div>
+    <small>Press Space to Restart</small>
+  </div>
+
+  <script type="module">
+    import * as THREE from "https://unpkg.com/three@0.160.0/build/three.module.js";
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x030b1a, 0.06);
+
+    const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(0, 2.2, 6.5);
+
+    const hemiLight = new THREE.HemisphereLight(0x4fd5ff, 0x01111c, 0.6);
+    scene.add(hemiLight);
+
+    const keyLight = new THREE.SpotLight(0x78fffb, 1.2, 35, Math.PI / 5, 0.45, 1.2);
+    keyLight.position.set(6, 10, 8);
+    keyLight.target.position.set(0, 0, -10);
+    keyLight.castShadow = true;
+    scene.add(keyLight);
+    scene.add(keyLight.target);
+
+    const fillLight = new THREE.PointLight(0xff4488, 0.45, 35);
+    fillLight.position.set(-6, 4, 2);
+    scene.add(fillLight);
+
+    const starGeometry = new THREE.BufferGeometry();
+    const starCount = 1200;
+    const starPositions = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount; i++) {
+      const i3 = i * 3;
+      starPositions[i3] = (Math.random() - 0.5) * 120;
+      starPositions[i3 + 1] = (Math.random() - 0.5) * 120;
+      starPositions[i3 + 2] = Math.random() * -150;
+    }
+    starGeometry.setAttribute("position", new THREE.BufferAttribute(starPositions, 3));
+    const starMaterial = new THREE.PointsMaterial({ color: 0x89c2ff, size: 0.6, sizeAttenuation: true, transparent: true, opacity: 0.7 });
+    const stars = new THREE.Points(starGeometry, starMaterial);
+    scene.add(stars);
+
+    const player = new THREE.Group();
+    scene.add(player);
+
+    let playerMesh;
+    let playerHull = 100;
+
+    const engineLight = new THREE.PointLight(0x5fffff, 1.6, 6);
+    engineLight.position.set(0, -0.6, 0.2);
+    player.add(engineLight);
+
+    const shieldGeometry = new THREE.RingGeometry(0.9, 1.3, 32);
+    const shieldMaterial = new THREE.MeshBasicMaterial({ color: 0x54f2ff, transparent: true, opacity: 0.2, side: THREE.DoubleSide });
+    const shield = new THREE.Mesh(shieldGeometry, shieldMaterial);
+    shield.rotation.x = Math.PI / 2;
+    shield.position.z = -0.5;
+    player.add(shield);
+
+    const bullets = [];
+    const aliens = [];
+    const explosions = [];
+
+    let lastShot = 0;
+    let score = 0;
+    let wave = 1;
+    let polygonDetail = 3;
+    const bounds = new THREE.Box3(new THREE.Vector3(-4, -2, -1), new THREE.Vector3(4, 3.5, 4));
+
+    const clock = new THREE.Clock();
+
+    const ui = {
+      score: document.getElementById("score"),
+      wave: document.getElementById("wave"),
+      hull: document.getElementById("hull"),
+      detail: document.getElementById("detail-readout"),
+      overlay: document.getElementById("overlay-message"),
+      overlayText: document.getElementById("overlay-text"),
+      polyRange: document.getElementById("poly-range"),
+    };
+
+    const keys = new Set();
+
+    function updatePolygonDetail(value) {
+      polygonDetail = value;
+      ui.detail.textContent = (polygonDetail + 1).toString();
+      updatePlayerMesh();
+      aliens.forEach((alien) => {
+        alien.userData.detail = polygonDetail;
+        const newGeo = createAlienGeometry(polygonDetail);
+        alien.geometry.dispose();
+        alien.geometry = newGeo;
+      });
+    }
+
+    function updatePlayerMesh() {
+      if (playerMesh) {
+        player.remove(playerMesh);
+        playerMesh.geometry.dispose();
+        playerMesh.material.dispose();
+      }
+      const segments = 4 + polygonDetail * 2;
+      const geometry = new THREE.ConeGeometry(0.7, 2.6, segments, 1, false);
+      const material = new THREE.MeshStandardMaterial({
+        color: 0x1fffe1,
+        emissive: 0x0f1b3d,
+        metalness: 0.4,
+        roughness: 0.35,
+        flatShading: polygonDetail < 2,
+      });
+      playerMesh = new THREE.Mesh(geometry, material);
+      playerMesh.castShadow = true;
+      playerMesh.receiveShadow = true;
+      playerMesh.position.z = -0.5;
+      playerMesh.rotation.x = Math.PI;
+      player.add(playerMesh);
+    }
+
+    function createAlienGeometry(detail) {
+      const subdivisions = Math.max(0, detail - 1);
+      const radius = 0.7 + detail * 0.06;
+      return new THREE.IcosahedronGeometry(radius, subdivisions);
+    }
+
+    function spawnAlienRow(count) {
+      const detail = polygonDetail;
+      for (let i = 0; i < count; i++) {
+        const alienGeo = createAlienGeometry(detail);
+        const alienMat = new THREE.MeshStandardMaterial({
+          color: new THREE.Color().setHSL(0.75 + Math.random() * 0.1, 0.8, 0.6),
+          emissive: new THREE.Color().setHSL(0.5 + Math.random() * 0.2, 0.9, 0.35),
+          metalness: 0.2,
+          roughness: 0.5,
+          flatShading: detail <= 1,
+        });
+        const alien = new THREE.Mesh(alienGeo, alienMat);
+        alien.castShadow = true;
+        alien.receiveShadow = true;
+        alien.position.set((i - (count - 1) / 2) * 2.2, Math.random() * 2 - 1, -25 - Math.random() * 10);
+        alien.userData = {
+          speed: 2 + Math.random() * 0.7 + wave * 0.25,
+          wiggle: Math.random() * Math.PI * 2,
+          hp: 2 + Math.floor(detail / 2),
+          detail: detail,
+        };
+        aliens.push(alien);
+        scene.add(alien);
+      }
+    }
+
+    function createBullet() {
+      const geometry = new THREE.SphereGeometry(0.12, 12, 12);
+      const material = new THREE.MeshBasicMaterial({ color: 0xfff59d });
+      const bullet = new THREE.Mesh(geometry, material);
+      bullet.position.copy(player.position).add(new THREE.Vector3(0, 0, -0.5));
+      bullet.userData = { velocity: new THREE.Vector3(0, 0, -25) };
+      bullets.push(bullet);
+      scene.add(bullet);
+    }
+
+    function createExplosion(position) {
+      const count = 24 + Math.floor(Math.random() * 16);
+      const positions = new Float32Array(count * 3);
+      const velocities = [];
+      for (let i = 0; i < count; i++) {
+        const i3 = i * 3;
+        const dir = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+        velocities.push(dir.multiplyScalar(4 + Math.random() * 2));
+        positions[i3] = position.x;
+        positions[i3 + 1] = position.y;
+        positions[i3 + 2] = position.z;
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      const mat = new THREE.PointsMaterial({
+        color: 0xffc482,
+        size: 0.25,
+        transparent: true,
+        opacity: 1,
+        blending: THREE.AdditiveBlending,
+      });
+      const points = new THREE.Points(geo, mat);
+      explosions.push({ mesh: points, velocities, life: 0 });
+      scene.add(points);
+    }
+
+    let audioCtx = null;
+    let masterGain = null;
+    let backgroundDrone = null;
+
+    function ensureAudioContext() {
+      if (audioCtx) return;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = 0.35;
+      masterGain.connect(audioCtx.destination);
+
+      backgroundDrone = audioCtx.createOscillator();
+      const droneGain = audioCtx.createGain();
+      droneGain.gain.value = 0.1;
+      backgroundDrone.type = "sawtooth";
+      backgroundDrone.frequency.value = 110;
+      backgroundDrone.connect(droneGain).connect(masterGain);
+      backgroundDrone.start();
+    }
+
+    function playTone({ frequency = 440, duration = 0.2, type = "sine", volume = 0.8 }) {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.value = frequency;
+      gain.gain.value = volume;
+      osc.connect(gain).connect(masterGain);
+      osc.start();
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+      osc.stop(audioCtx.currentTime + duration + 0.05);
+    }
+
+    function playShotSound() {
+      playTone({ frequency: 860, duration: 0.15, type: "triangle", volume: 0.5 });
+    }
+
+    function playExplosionSound() {
+      playTone({ frequency: 180, duration: 0.4, type: "sawtooth", volume: 0.7 });
+      playTone({ frequency: 90, duration: 0.4, type: "square", volume: 0.4 });
+    }
+
+    function updateHUD() {
+      ui.score.textContent = score.toString();
+      ui.wave.textContent = wave.toString();
+      ui.hull.textContent = `${Math.max(0, Math.round(playerHull))}%`;
+    }
+
+    function resetGame() {
+      score = 0;
+      wave = 1;
+      playerHull = 100;
+      player.position.set(0, 0, 3);
+      bullets.forEach((b) => {
+        scene.remove(b);
+        b.geometry.dispose();
+        b.material.dispose();
+      });
+      aliens.forEach((a) => {
+        scene.remove(a);
+        a.geometry.dispose();
+        a.material.dispose();
+      });
+      explosions.forEach((explosion) => {
+        scene.remove(explosion.mesh);
+        explosion.mesh.geometry.dispose();
+        explosion.mesh.material.dispose();
+      });
+      bullets.length = 0;
+      aliens.length = 0;
+      explosions.length = 0;
+      spawnAlienRow(5);
+      ui.overlay.classList.remove("visible");
+      updateHUD();
+    }
+
+    updatePlayerMesh();
+    spawnAlienRow(5);
+    updateHUD();
+
+    const inputVector = new THREE.Vector3();
+
+    function handleInput(delta) {
+      inputVector.set(0, 0, 0);
+      if (keys.has("ArrowUp") || keys.has("w")) inputVector.y += 1;
+      if (keys.has("ArrowDown") || keys.has("s")) inputVector.y -= 1;
+      if (keys.has("ArrowLeft") || keys.has("a")) inputVector.x -= 1;
+      if (keys.has("ArrowRight") || keys.has("d")) inputVector.x += 1;
+      inputVector.normalize();
+      const speed = 6;
+      player.position.x += inputVector.x * speed * delta;
+      player.position.y += inputVector.y * speed * delta;
+      player.position.clamp(bounds.min, bounds.max);
+      player.rotation.z = THREE.MathUtils.lerp(player.rotation.z, -inputVector.x * 0.4, 0.15);
+      player.rotation.x = THREE.MathUtils.lerp(player.rotation.x, inputVector.y * 0.2, 0.15);
+    }
+
+    function fireWeapon(time) {
+      if (time - lastShot < 0.25) return;
+      ensureAudioContext();
+      createBullet();
+      playShotSound();
+      lastShot = time;
+    }
+
+    window.addEventListener("keydown", (event) => {
+      keys.add(event.key);
+      if (!audioCtx) ensureAudioContext();
+      if (event.code === "Space" || event.key === " ") {
+        fireWeapon(performance.now() / 1000);
+      }
+      if (ui.overlay.classList.contains("visible") && event.code === "Space") {
+        resetGame();
+      }
+    });
+
+    window.addEventListener("keyup", (event) => {
+      keys.delete(event.key);
+    });
+
+    window.addEventListener("mousedown", (event) => {
+      if (!audioCtx) ensureAudioContext();
+      if (ui.overlay.classList.contains("visible")) {
+        resetGame();
+      } else {
+        fireWeapon(performance.now() / 1000);
+      }
+    });
+
+    ui.polyRange.addEventListener("input", (event) => {
+      const value = Number(event.target.value);
+      updatePolygonDetail(value);
+    });
+
+    function advanceWave() {
+      wave += 1;
+      spawnAlienRow(Math.min(7, 4 + Math.floor(wave / 2)));
+      updateHUD();
+    }
+
+    function endGame(message) {
+      ui.overlayText.textContent = message;
+      ui.overlay.classList.add("visible");
+    }
+
+    function updateExplosions(delta) {
+      explosions.forEach((explosion, index) => {
+        explosion.life += delta;
+        const positions = explosion.mesh.geometry.attributes.position;
+        for (let i = 0; i < explosion.velocities.length; i++) {
+          const velocity = explosion.velocities[i];
+          const i3 = i * 3;
+          positions.array[i3] += velocity.x * delta;
+          positions.array[i3 + 1] += velocity.y * delta;
+          positions.array[i3 + 2] += velocity.z * delta;
+          velocity.multiplyScalar(0.98);
+        }
+        explosion.mesh.material.opacity = THREE.MathUtils.lerp(1, 0, explosion.life / 1.2);
+        positions.needsUpdate = true;
+        if (explosion.life > 1.2) {
+          scene.remove(explosion.mesh);
+          explosion.mesh.geometry.dispose();
+          explosion.mesh.material.dispose();
+          explosions.splice(index, 1);
+        }
+      });
+    }
+
+    function updateBullets(delta) {
+      for (let i = bullets.length - 1; i >= 0; i--) {
+        const bullet = bullets[i];
+        bullet.position.addScaledVector(bullet.userData.velocity, delta);
+        if (bullet.position.z < -50) {
+          scene.remove(bullet);
+          bullet.geometry.dispose();
+          bullet.material.dispose();
+          bullets.splice(i, 1);
+        }
+      }
+    }
+
+    function updateAliens(delta) {
+      for (let i = aliens.length - 1; i >= 0; i--) {
+        const alien = aliens[i];
+        const data = alien.userData;
+        data.wiggle += delta * 2;
+        alien.position.z += data.speed * delta;
+        alien.position.x += Math.sin(data.wiggle) * delta * 1.2;
+        alien.position.y += Math.cos(data.wiggle * 0.5) * delta * 0.6;
+        alien.rotation.y += delta * 1.2;
+        alien.rotation.x += delta * 0.8;
+
+        if (alien.position.distanceTo(player.position) < 1.2) {
+          playExplosionSound();
+          createExplosion(alien.position.clone());
+          scene.remove(alien);
+          alien.geometry.dispose();
+          alien.material.dispose();
+          aliens.splice(i, 1);
+          playerHull -= 20;
+          updateHUD();
+          if (playerHull <= 0) {
+            endGame("Hull Breach");
+          }
+          continue;
+        }
+
+        if (alien.position.z > 6) {
+          scene.remove(alien);
+          alien.geometry.dispose();
+          alien.material.dispose();
+          aliens.splice(i, 1);
+          playerHull -= 10;
+          updateHUD();
+          if (playerHull <= 0) {
+            endGame("Hull Breach");
+          }
+          continue;
+        }
+
+        for (let j = bullets.length - 1; j >= 0; j--) {
+          const bullet = bullets[j];
+          if (bullet.position.distanceTo(alien.position) < 0.7) {
+            scene.remove(bullet);
+            bullet.geometry.dispose();
+            bullet.material.dispose();
+            bullets.splice(j, 1);
+            data.hp -= 1;
+            if (data.hp <= 0) {
+              playExplosionSound();
+              createExplosion(alien.position.clone());
+              scene.remove(alien);
+              alien.geometry.dispose();
+              alien.material.dispose();
+              aliens.splice(i, 1);
+              score += 150;
+              updateHUD();
+              if (aliens.length === 0) {
+                advanceWave();
+              }
+            } else {
+              playTone({ frequency: 400, duration: 0.12, type: "sawtooth", volume: 0.3 });
+            }
+            break;
+          }
+        }
+      }
+    }
+
+    function animate() {
+      const delta = clock.getDelta();
+      const time = clock.elapsedTime;
+
+      if (!ui.overlay.classList.contains("visible")) {
+        handleInput(delta);
+      }
+
+      updateBullets(delta);
+      updateAliens(delta);
+      updateExplosions(delta);
+
+      stars.rotation.z += delta * 0.02;
+      stars.position.z += delta * 8;
+      if (stars.position.z > 0) stars.position.z = -20;
+
+      engineLight.intensity = 1.4 + Math.sin(time * 30) * 0.2;
+      shield.material.opacity = 0.2 + Math.sin(time * 2) * 0.04;
+
+      camera.position.lerp(new THREE.Vector3(player.position.x * 0.4, 3.2, 7.5), 0.05);
+      camera.lookAt(player.position.x * 0.2, player.position.y * 0.2, player.position.z - 6);
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
