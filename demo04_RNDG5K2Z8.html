@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demo 04 - 3D Alien Shooter</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+      background: radial-gradient(circle at top, #0d1b2a, #000);
+      color: #fff;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    #ui {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      padding: 1rem 1.25rem;
+      background: rgba(4, 12, 24, 0.75);
+      border: 1px solid rgba(63, 177, 255, 0.5);
+      border-radius: 0.75rem;
+      backdrop-filter: blur(6px);
+      width: 260px;
+      box-shadow: 0 0 25px rgba(27, 196, 255, 0.25);
+    }
+
+    #ui h1 {
+      font-size: 1.1rem;
+      margin-bottom: 0.35rem;
+      letter-spacing: 0.1rem;
+      text-transform: uppercase;
+      color: #4fd1ff;
+    }
+
+    #ui p {
+      font-size: 0.85rem;
+      line-height: 1.35rem;
+      margin-bottom: 0.75rem;
+      color: rgba(203, 231, 255, 0.75);
+    }
+
+    #ui label {
+      display: block;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07rem;
+      margin-bottom: 0.35rem;
+      color: #89f7fe;
+    }
+
+    #ui input[type="range"] {
+      width: 100%;
+      accent-color: #4fd1ff;
+    }
+
+    #score {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+      color: #fff;
+    }
+
+    #reticle {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px;
+      height: 40px;
+      pointer-events: none;
+    }
+
+    #reticle::before,
+    #reticle::after {
+      content: "";
+      position: absolute;
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    #reticle::before {
+      width: 2px;
+      height: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    #reticle::after {
+      height: 2px;
+      width: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    #overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(3, 7, 17, 0.8);
+      backdrop-filter: blur(10px);
+      flex-direction: column;
+      gap: 1rem;
+      text-align: center;
+      transition: opacity 0.4s ease;
+      z-index: 10;
+    }
+
+    #overlay.hidden {
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    #overlay button {
+      border: none;
+      padding: 0.75rem 2.5rem;
+      border-radius: 999px;
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.15rem;
+      text-transform: uppercase;
+      cursor: pointer;
+      color: #03152d;
+      background: linear-gradient(135deg, #53f9ff, #37b6ff);
+      box-shadow: 0 12px 25px rgba(47, 205, 255, 0.35);
+    }
+
+    #overlay h2 {
+      letter-spacing: 0.3rem;
+      text-transform: uppercase;
+      font-weight: 300;
+      color: #c9f9ff;
+    }
+
+    #overlay p {
+      color: rgba(210, 244, 255, 0.8);
+      line-height: 1.5rem;
+      max-width: 30rem;
+    }
+
+    #status {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 0.6rem 1.5rem;
+      border-radius: 999px;
+      background: rgba(3, 10, 22, 0.7);
+      border: 1px solid rgba(94, 226, 255, 0.4);
+      font-size: 0.85rem;
+      letter-spacing: 0.15rem;
+      text-transform: uppercase;
+      color: #7be8ff;
+      box-shadow: 0 10px 30px rgba(42, 184, 255, 0.2);
+    }
+
+    a {
+      color: #7ee8ff;
+    }
+  </style>
+</head>
+<body>
+  <div id="overlay">
+    <h2>Galactic Sentinel</h2>
+    <p>Click to engage pointer lock, then use <strong>WASD</strong> to move, <strong>Space</strong> to thrust upward,
+      <strong>Shift</strong> to descend, and <strong>Click</strong> to fire photon bursts. Adjust the polygon count slider for
+      more detailed or more performant aliens.</p>
+    <button id="startButton">Engage</button>
+  </div>
+
+  <div id="ui">
+    <h1>Alien Incursion</h1>
+    <p>Eliminate the invaders before they reach our forcefield! Use the slider to tune how smooth their carapace is.</p>
+    <label for="detail">Alien Polygon Detail</label>
+    <input id="detail" type="range" min="4" max="48" step="2" value="16" />
+    <div id="score">
+      <span>Destroyed: <strong id="destroyed">0</strong></span>
+      <span>Wave: <strong id="wave">1</strong></span>
+    </div>
+  </div>
+
+  <div id="reticle"></div>
+  <div id="status">Awaiting engagement...</div>
+
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js';
+    import { PointerLockControls } from 'https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/controls/PointerLockControls.js';
+
+    const overlay = document.getElementById('overlay');
+    const startButton = document.getElementById('startButton');
+    const status = document.getElementById('status');
+    const destroyedEl = document.getElementById('destroyed');
+    const waveEl = document.getElementById('wave');
+    const detailSlider = document.getElementById('detail');
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x030917, 0.045);
+
+    const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(0, 2, 6);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new PointerLockControls(camera, document.body);
+    controls.getObject().position.set(0, 2, 6);
+
+    const ambientLight = new THREE.AmbientLight(0x4477ff, 0.4);
+    scene.add(ambientLight);
+
+    const hemiLight = new THREE.HemisphereLight(0x55aaff, 0x050505, 0.8);
+    scene.add(hemiLight);
+
+    const dirLight = new THREE.DirectionalLight(0x87f1ff, 0.7);
+    dirLight.position.set(-5, 8, 4);
+    scene.add(dirLight);
+
+    const floorGeo = new THREE.PlaneGeometry(200, 200, 60, 60);
+    const floorMat = new THREE.MeshStandardMaterial({
+      color: 0x06203a,
+      metalness: 0.3,
+      roughness: 0.8,
+      wireframe: false,
+      emissive: 0x041b33,
+      emissiveIntensity: 0.3
+    });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const skyGeo = new THREE.SphereGeometry(90, 32, 32);
+    const skyMat = new THREE.MeshBasicMaterial({
+      side: THREE.BackSide,
+      map: (() => {
+        const size = 1024;
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        const gradient = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+        gradient.addColorStop(0, '#072541');
+        gradient.addColorStop(1, '#010409');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, size, size);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        for (let i = 0; i < 2000; i++) {
+          const x = Math.random() * size;
+          const y = Math.random() * size;
+          const r = Math.random() * 1.5;
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        return new THREE.CanvasTexture(canvas);
+      })()
+    });
+    const sky = new THREE.Mesh(skyGeo, skyMat);
+    scene.add(sky);
+
+    const alienGroup = new THREE.Group();
+    scene.add(alienGroup);
+
+    const explosionPool = [];
+    const activeExplosions = [];
+
+    const keys = { forward: false, backward: false, left: false, right: false, up: false, down: false };
+
+    let destroyed = 0;
+    let wave = 1;
+    let lastSpawn = 0;
+    const spawnInterval = 6000;
+    const aliensPerWave = () => 4 + wave * 2;
+
+    const shootSound = createSound({ frequency: 420, type: 'sawtooth', duration: 0.08 });
+    const hitSound = createSound({ frequency: 120, type: 'square', duration: 0.2, decay: 1.5 });
+    const ambientDrone = createSound({ frequency: 48, type: 'sine', duration: 999, gain: 0.03, sustain: true });
+
+    let locked = false;
+    let velocity = new THREE.Vector3();
+    const direction = new THREE.Vector3();
+    const shootCooldown = 160;
+    let lastShot = 0;
+    const raycaster = new THREE.Raycaster();
+
+    const clock = new THREE.Clock();
+
+    startButton.addEventListener('click', () => {
+      controls.lock();
+    });
+
+    controls.addEventListener('lock', () => {
+      overlay.classList.add('hidden');
+      status.textContent = 'Hostiles detected: Weapons free!';
+      locked = true;
+      ambientDrone.start();
+    });
+
+    controls.addEventListener('unlock', () => {
+      overlay.classList.remove('hidden');
+      status.textContent = 'Awaiting engagement...';
+      locked = false;
+      ambientDrone.stop();
+    });
+
+    document.addEventListener('pointerdown', () => {
+      if (!locked) return;
+      const now = performance.now();
+      if (now - lastShot < shootCooldown) return;
+      lastShot = now;
+      shootSound.start();
+      firePhoton();
+    });
+
+    detailSlider.addEventListener('input', () => {
+      updateAlienDetail(parseInt(detailSlider.value, 10));
+    });
+
+    function updateAlienDetail(detail) {
+      alienGroup.children.forEach(alien => {
+        const { radius } = alien.userData;
+        alien.geometry.dispose();
+        alien.geometry = createAlienGeometry(radius, detail);
+      });
+    }
+
+    function firePhoton() {
+      raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+      const intersections = raycaster.intersectObjects(alienGroup.children, false);
+      if (intersections.length > 0) {
+        const hit = intersections[0];
+        triggerExplosion(hit.point, hit.object.material.color.getHex());
+        hitSound.start();
+        removeAlien(hit.object);
+        destroyed += 1;
+        destroyedEl.textContent = destroyed;
+        status.textContent = 'Target neutralized!';
+      } else {
+        status.textContent = 'No contact.';
+      }
+    }
+
+    function removeAlien(alien) {
+      alienGroup.remove(alien);
+      alien.geometry.dispose();
+      alien.material.dispose();
+      if (alienGroup.children.length === 0) {
+        wave += 1;
+        waveEl.textContent = wave;
+        status.textContent = `Wave ${wave} incoming!`;
+        spawnWave();
+      }
+    }
+
+    function spawnWave() {
+      const count = aliensPerWave();
+      const detail = parseInt(detailSlider.value, 10);
+      for (let i = 0; i < count; i++) {
+        const alien = createAlien(detail);
+        const angle = (i / count) * Math.PI * 2 + Math.random() * 0.5;
+        const radius = 12 + Math.random() * 8;
+        alien.position.set(Math.cos(angle) * radius, 1.5 + Math.random() * 3, Math.sin(angle) * radius);
+        alien.lookAt(0, 1.5, 0);
+        alienGroup.add(alien);
+      }
+    }
+
+    function createAlien(detail) {
+      const radius = 1 + Math.random() * 0.6;
+      const geometry = createAlienGeometry(radius, detail);
+      const material = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(`hsl(${Math.random() * 360}, 90%, 60%)`),
+        roughness: 0.35,
+        metalness: 0.6,
+        emissive: 0x112244,
+        emissiveIntensity: 0.6
+      });
+      const alien = new THREE.Mesh(geometry, material);
+      alien.castShadow = true;
+      alien.userData = { radius, wiggleSpeed: 0.5 + Math.random(), wiggleAmplitude: 0.25 + Math.random() * 0.4 };
+      return alien;
+    }
+
+    function createAlienGeometry(radius, detail) {
+      const geo = new THREE.IcosahedronGeometry(radius, 1);
+      const temp = new THREE.SphereGeometry(radius, detail, detail);
+      geo.copy(temp);
+      geo.computeVertexNormals();
+      return geo;
+    }
+
+    function triggerExplosion(position, color) {
+      const explosion = explosionPool.pop() || createExplosion();
+      explosion.reset(position, color);
+      activeExplosions.push(explosion);
+      scene.add(explosion.points);
+    }
+
+    function createExplosion() {
+      const particleCount = 120;
+      const geometry = new THREE.BufferGeometry();
+      const positions = new Float32Array(particleCount * 3);
+      const velocities = new Float32Array(particleCount * 3);
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 3));
+      const material = new THREE.PointsMaterial({ size: 0.12, transparent: true, opacity: 1, depthWrite: false });
+      const points = new THREE.Points(geometry, material);
+      points.frustumCulled = false;
+      return {
+        points,
+        life: 0,
+        reset(pos, color) {
+          this.life = 0;
+          points.material.color = new THREE.Color(color);
+          points.position.copy(pos);
+          const posAttr = points.geometry.getAttribute('position');
+          const velAttr = points.geometry.getAttribute('velocity');
+          for (let i = 0; i < particleCount; i++) {
+            const ix = i * 3;
+            const dir = new THREE.Vector3(
+              (Math.random() - 0.5) * 2,
+              (Math.random() - 0.2) * 2,
+              (Math.random() - 0.5) * 2
+            ).normalize().multiplyScalar(Math.random() * 3);
+            posAttr.array[ix] = dir.x * 0.05;
+            posAttr.array[ix + 1] = dir.y * 0.05;
+            posAttr.array[ix + 2] = dir.z * 0.05;
+            velAttr.array[ix] = dir.x;
+            velAttr.array[ix + 1] = dir.y + 1;
+            velAttr.array[ix + 2] = dir.z;
+          }
+          posAttr.needsUpdate = true;
+          velAttr.needsUpdate = true;
+        }
+      };
+    }
+
+    function updateExplosions(delta) {
+      for (let i = activeExplosions.length - 1; i >= 0; i--) {
+        const explosion = activeExplosions[i];
+        const points = explosion.points;
+        const posAttr = points.geometry.getAttribute('position');
+        const velAttr = points.geometry.getAttribute('velocity');
+        for (let j = 0; j < posAttr.count; j++) {
+          const ix = j * 3;
+          velAttr.array[ix + 1] -= 9.81 * delta * 0.25;
+          posAttr.array[ix] += velAttr.array[ix] * delta;
+          posAttr.array[ix + 1] += velAttr.array[ix + 1] * delta;
+          posAttr.array[ix + 2] += velAttr.array[ix + 2] * delta;
+        }
+        posAttr.needsUpdate = true;
+        explosion.life += delta;
+        points.material.opacity = THREE.MathUtils.lerp(1, 0, explosion.life / 1.2);
+        if (explosion.life > 1.2) {
+          scene.remove(points);
+          activeExplosions.splice(i, 1);
+          explosionPool.push(explosion);
+        }
+      }
+    }
+
+    document.addEventListener('keydown', (event) => {
+      switch (event.code) {
+        case 'KeyW':
+          keys.forward = true;
+          break;
+        case 'KeyS':
+          keys.backward = true;
+          break;
+        case 'KeyA':
+          keys.left = true;
+          break;
+        case 'KeyD':
+          keys.right = true;
+          break;
+        case 'Space':
+          keys.up = true;
+          break;
+        case 'ShiftLeft':
+        case 'ShiftRight':
+          keys.down = true;
+          break;
+      }
+    });
+
+    document.addEventListener('keyup', (event) => {
+      switch (event.code) {
+        case 'KeyW':
+          keys.forward = false;
+          break;
+        case 'KeyS':
+          keys.backward = false;
+          break;
+        case 'KeyA':
+          keys.left = false;
+          break;
+        case 'KeyD':
+          keys.right = false;
+          break;
+        case 'Space':
+          keys.up = false;
+          break;
+        case 'ShiftLeft':
+        case 'ShiftRight':
+          keys.down = false;
+          break;
+      }
+    });
+
+    function createSound({ frequency = 440, type = 'sine', duration = 0.2, gain = 0.1, decay = 1, sustain = false }) {
+      const context = new (window.AudioContext || window.webkitAudioContext)();
+      const gainNode = context.createGain();
+      gainNode.gain.value = 0;
+      gainNode.connect(context.destination);
+      let osc = null;
+      return {
+        start() {
+          if (context.state === 'suspended') {
+            context.resume();
+          }
+          osc = context.createOscillator();
+          osc.type = type;
+          osc.frequency.setValueAtTime(frequency, context.currentTime);
+          const now = context.currentTime;
+          gainNode.gain.cancelScheduledValues(now);
+          gainNode.gain.setValueAtTime(0, now);
+          gainNode.gain.linearRampToValueAtTime(gain, now + 0.01);
+          if (!sustain) {
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, now + duration * decay);
+            osc.stop(now + duration * decay);
+          }
+          osc.connect(gainNode);
+          osc.start(now);
+        },
+        stop() {
+          if (osc) {
+            const now = context.currentTime;
+            gainNode.gain.cancelScheduledValues(now);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
+            osc.stop(now + 0.5);
+            osc = null;
+          }
+        }
+      };
+    }
+
+    function movePlayer(delta) {
+      if (!locked) return;
+      const speed = 10;
+      velocity.x -= velocity.x * 5 * delta;
+      velocity.z -= velocity.z * 5 * delta;
+      velocity.y -= velocity.y * 5 * delta;
+
+      direction.z = Number(keys.forward) - Number(keys.backward);
+      direction.x = Number(keys.right) - Number(keys.left);
+      direction.y = Number(keys.up) - Number(keys.down);
+      direction.normalize();
+
+      if (keys.forward || keys.backward) velocity.z -= direction.z * speed * delta;
+      if (keys.left || keys.right) velocity.x -= direction.x * speed * delta;
+      if (keys.up || keys.down) velocity.y += direction.y * speed * delta;
+
+      controls.moveRight(-velocity.x * delta);
+      controls.moveForward(-velocity.z * delta);
+      controls.getObject().position.y += velocity.y * delta;
+      controls.getObject().position.y = THREE.MathUtils.clamp(controls.getObject().position.y, 1, 12);
+    }
+
+    function updateAliens(delta) {
+      alienGroup.children.forEach((alien, index) => {
+        const data = alien.userData;
+        alien.position.y += Math.sin(performance.now() * 0.001 * data.wiggleSpeed + index) * data.wiggleAmplitude * delta;
+        const dir = new THREE.Vector3();
+        dir.copy(controls.getObject().position).sub(alien.position).normalize();
+        alien.position.add(dir.multiplyScalar(0.5 * delta));
+        alien.lookAt(controls.getObject().position.x, controls.getObject().position.y, controls.getObject().position.z);
+
+        if (alien.position.distanceTo(controls.getObject().position) < 1.8) {
+          status.textContent = 'Shields taking fire!';
+        }
+      });
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const delta = clock.getDelta();
+      movePlayer(delta);
+      updateAliens(delta);
+      updateExplosions(delta);
+      renderer.render(scene, camera);
+
+      const now = performance.now();
+      if (now - lastSpawn > spawnInterval) {
+        lastSpawn = now;
+        wave += 1;
+        waveEl.textContent = wave;
+        status.textContent = `Wave ${wave} incoming!`;
+        spawnWave();
+      }
+    }
+
+    spawnWave();
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
