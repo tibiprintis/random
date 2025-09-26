@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alien Planet Immersion — demo03</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: "Segoe UI", Roboto, sans-serif;
+        --panel-bg: rgba(12, 18, 35, 0.9);
+        --panel-border: rgba(124, 204, 255, 0.24);
+        --accent: #8ef7ff;
+        --accent-strong: #8dffb3;
+        --text: #eff7ff;
+        --muted: rgba(239, 247, 255, 0.7);
+        --bg: radial-gradient(circle at 15% 20%, rgba(120, 180, 255, 0.16), transparent 60%),
+          radial-gradient(circle at 80% 75%, rgba(90, 255, 210, 0.12), transparent 55%),
+          #040813;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: minmax(260px, 340px) 1fr;
+        overflow: hidden;
+      }
+
+      .panel {
+        backdrop-filter: blur(18px);
+        background: var(--panel-bg);
+        border-right: 1px solid var(--panel-border);
+        padding: clamp(1.5rem, 2vw, 2.5rem);
+        display: flex;
+        flex-direction: column;
+        gap: 1.8rem;
+        position: relative;
+        z-index: 10;
+        box-shadow: 0 24px 65px rgba(10, 18, 35, 0.65);
+      }
+
+      .panel::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(140, 255, 220, 0.08), transparent);
+        pointer-events: none;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1.6rem, 2.2vw, 2.1rem);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      p.description {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
+        font-size: 0.95rem;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .stat-card {
+        padding: 1rem 1.2rem;
+        border-radius: 1.2rem;
+        border: 1px solid rgba(138, 210, 255, 0.2);
+        background: linear-gradient(135deg, rgba(32, 48, 78, 0.9), rgba(14, 24, 45, 0.85));
+        position: relative;
+        overflow: hidden;
+      }
+
+      .stat-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at top right, rgba(140, 255, 220, 0.2), transparent 55%);
+        opacity: 0.6;
+        pointer-events: none;
+      }
+
+      .stat-card span.label {
+        display: block;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.12em;
+        color: rgba(239, 247, 255, 0.6);
+        margin-bottom: 0.45rem;
+      }
+
+      .stat-card span.value {
+        font-size: 1.2rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+      }
+
+      .controls {
+        display: flex;
+        flex-direction: column;
+        gap: 1.4rem;
+      }
+
+      .control-group {
+        border-radius: 1.2rem;
+        padding: 1.3rem 1.2rem 1.4rem;
+        border: 1px solid rgba(120, 200, 255, 0.14);
+        background: linear-gradient(140deg, rgba(24, 38, 68, 0.85), rgba(12, 20, 38, 0.9));
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .control-group h2 {
+        margin: 0;
+        font-size: 0.9rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+
+      .control-row {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+      }
+
+      .control-row label {
+        flex: 0 0 8.5rem;
+        font-size: 0.75rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .control-row output {
+        color: var(--accent-strong);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .control-row select,
+      .control-group button {
+        flex: 1 1 auto;
+        appearance: none;
+        background: rgba(30, 52, 82, 0.9);
+        border: 1px solid rgba(140, 220, 255, 0.2);
+        color: var(--text);
+        padding: 0.65rem 0.9rem;
+        border-radius: 0.9rem;
+        font-size: 0.85rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        transition: border-color 0.2s ease, transform 0.2s ease;
+        cursor: pointer;
+      }
+
+      .control-row select:focus-visible,
+      .control-group button:focus-visible {
+        outline: none;
+        border-color: rgba(140, 255, 220, 0.6);
+        box-shadow: 0 0 0 1px rgba(140, 255, 220, 0.25);
+      }
+
+      .control-group button:hover {
+        transform: translateY(-1px);
+        border-color: rgba(140, 255, 220, 0.45);
+      }
+
+      .control-group button.accent {
+        background: linear-gradient(130deg, rgba(90, 210, 255, 0.45), rgba(100, 255, 215, 0.6));
+        color: #04111c;
+        font-weight: 600;
+        text-shadow: 0 0 12px rgba(110, 255, 230, 0.5);
+      }
+
+      .control-group button.ghost {
+        background: rgba(18, 28, 48, 0.72);
+        color: var(--muted);
+      }
+
+      .control-group button.ghost:hover {
+        color: var(--text);
+      }
+
+      .preset-actions {
+        display: flex;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+      }
+
+      .preset-description {
+        margin: 0;
+        color: rgba(224, 244, 255, 0.7);
+        font-size: 0.78rem;
+        line-height: 1.4;
+      }
+
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        flex: 1 1 auto;
+        height: 8px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(128, 220, 255, 0.7), rgba(120, 255, 195, 0.8));
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: inset 0 0 12px rgba(10, 14, 30, 0.7);
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--accent);
+        border: 2px solid rgba(255, 255, 255, 0.6);
+        box-shadow: 0 0 18px rgba(140, 255, 220, 0.6);
+      }
+
+      .toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.8rem;
+      }
+
+      .toggle input {
+        width: 42px;
+        height: 22px;
+        border-radius: 999px;
+        background: rgba(120, 200, 255, 0.2);
+        border: 1px solid rgba(120, 200, 255, 0.35);
+        appearance: none;
+        position: relative;
+        outline: none;
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
+
+      .toggle input::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--accent);
+        transition: transform 0.2s ease;
+      }
+
+      .toggle input:checked {
+        background: rgba(140, 255, 220, 0.35);
+      }
+
+      .toggle input:checked::after {
+        transform: translateX(20px);
+      }
+
+      canvas {
+        width: 100%;
+        height: 100vh;
+        display: block;
+      }
+
+      .hud {
+        position: absolute;
+        right: 2.4rem;
+        top: 2rem;
+        padding: 0.9rem 1.3rem;
+        border-radius: 999px;
+        background: rgba(10, 15, 28, 0.62);
+        border: 1px solid rgba(120, 200, 255, 0.24);
+        display: flex;
+        gap: 1.2rem;
+        font-size: 0.8rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        pointer-events: none;
+      }
+
+      .hud span strong {
+        color: var(--accent);
+      }
+
+      @media (max-width: 980px) {
+        body {
+          grid-template-columns: 1fr;
+        }
+
+        .panel {
+          position: absolute;
+          inset: auto 1rem 1rem;
+          width: calc(100% - 2rem);
+          max-height: 45vh;
+          overflow-y: auto;
+          border-radius: 1.5rem;
+        }
+
+        canvas {
+          grid-column: 1 / -1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="panel">
+      <header>
+        <h1>ÆON TERRAFORMER</h1>
+        <p class="description">
+          Explore an alien basin carved by ancient tides. Tune the orbital lighting, vegetation bloom
+          and megastructure skylines while cruisers patrol the air. All geometry is generated on the fly—no
+          external assets required.
+        </p>
+      </header>
+
+      <section class="stats">
+        <div class="stat-card">
+          <span class="label">Terrain Polys</span>
+          <span class="value" id="terrain-poly-count">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="label">Atmospheric Cycle</span>
+          <span class="value" id="time-readout">Dawn</span>
+        </div>
+        <div class="stat-card">
+          <span class="label">Habitation Nodes</span>
+          <span class="value" id="building-count">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="label">Bioforms</span>
+          <span class="value" id="flora-count">0</span>
+        </div>
+      </section>
+
+      <section class="controls">
+        <div class="control-group">
+          <h2>Scenario Presets</h2>
+          <div class="control-row">
+            <label for="preset-select">Load Profile</label>
+            <select id="preset-select">
+              <option value="dawn-citadel">Dawn Citadel</option>
+              <option value="nocturne-bloom">Nocturne Bloom</option>
+              <option value="stormfront">Ion Stormfront</option>
+              <option value="custom">Custom Blend</option>
+            </select>
+          </div>
+          <div class="preset-actions">
+            <button type="button" id="apply-preset" class="accent">Deploy</button>
+            <button type="button" id="randomize-preset" class="ghost">Randomize</button>
+          </div>
+          <p class="preset-description" id="preset-description">
+            Rise above the crystalline valley as morning light ignites the citadel line.
+          </p>
+        </div>
+        <div class="control-group">
+          <h2>Orbital Parameters</h2>
+          <div class="control-row">
+            <label for="time-slider">Star Position</label>
+            <input type="range" id="time-slider" min="0" max="1" step="0.001" value="0.32" />
+            <output id="time-output">0.32</output>
+          </div>
+          <div class="control-row">
+            <label for="aura-slider">Aurora Intensity</label>
+            <input type="range" id="aura-slider" min="0" max="1" step="0.01" value="0.62" />
+            <output id="aura-output">0.62</output>
+          </div>
+        </div>
+        <div class="control-group">
+          <h2>Surface Fabrication</h2>
+          <div class="control-row">
+            <label for="building-slider">Habitat Density</label>
+            <input type="range" id="building-slider" min="0" max="1" step="0.01" value="0.82" />
+            <output id="building-output">0.82</output>
+          </div>
+          <div class="control-row">
+            <label for="flora-slider">Bioform Bloom</label>
+            <input type="range" id="flora-slider" min="0" max="1" step="0.01" value="0.54" />
+            <output id="flora-output">0.54</output>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="crater-toggle" checked />
+            <span>Crystalline Craters</span>
+          </label>
+        </div>
+        <div class="control-group">
+          <h2>Flight Patterns</h2>
+          <div class="control-row">
+            <label for="patrol-slider">Cruiser Velocity</label>
+            <input type="range" id="patrol-slider" min="0.1" max="3" step="0.01" value="1.18" />
+            <output id="patrol-output">1.18</output>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="path-toggle" checked />
+            <span>Display Flight Vectors</span>
+          </label>
+        </div>
+        <div class="control-group">
+          <h2>Atmospheric Phenomena</h2>
+          <div class="control-row">
+            <label for="nebula-slider">Nebula Drift</label>
+            <input type="range" id="nebula-slider" min="0" max="1" step="0.01" value="0.52" />
+            <output id="nebula-output">0.52</output>
+          </div>
+          <div class="control-row">
+            <label for="storm-slider">Ion Storm</label>
+            <input type="range" id="storm-slider" min="0" max="1" step="0.01" value="0.22" />
+            <output id="storm-output">0.22</output>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="ring-toggle" checked />
+            <span>Planetary Ring</span>
+          </label>
+        </div>
+      </section>
+    </aside>
+
+    <canvas id="scene"></canvas>
+    <div class="hud">
+      <span>Atmosphere: <strong id="hud-atmo">Dawn Mist</strong></span>
+      <span>Framerate: <strong id="hud-fps">--</strong></span>
+      <span>Ion Storm: <strong id="hud-storm">Calm</strong></span>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.161/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.161/examples/js/controls/OrbitControls.js"></script>
+    <script>
+      const canvas = document.getElementById("scene");
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+      const scene = new THREE.Scene();
+      const fogColor = new THREE.Color(0x0c1321);
+      scene.fog = new THREE.FogExp2(fogColor, 0.0026);
+      renderer.setClearColor(fogColor);
+
+      const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.5, 2000);
+      camera.position.set(-120, 80, 140);
+
+      const controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.maxPolarAngle = Math.PI / 2.15;
+      controls.minDistance = 40;
+      controls.maxDistance = 420;
+
+      const hemiLight = new THREE.HemisphereLight(0x77b5ff, 0x30405c, 0.75);
+      scene.add(hemiLight);
+
+      const sunLight = new THREE.DirectionalLight(0xfff5d0, 1.4);
+      sunLight.position.set(-120, 150, 60);
+      sunLight.castShadow = true;
+      sunLight.shadow.mapSize.set(2048, 2048);
+      sunLight.shadow.camera.left = -180;
+      sunLight.shadow.camera.right = 180;
+      sunLight.shadow.camera.top = 160;
+      sunLight.shadow.camera.bottom = -160;
+      sunLight.shadow.camera.near = 30;
+      sunLight.shadow.camera.far = 420;
+      scene.add(sunLight);
+
+      const nightLight = new THREE.PointLight(0x8ad7ff, 0.3, 800, 1.4);
+      nightLight.position.set(0, 90, 0);
+      scene.add(nightLight);
+
+      function makeGradientTexture(colorTop, colorBottom) {
+        const size = 64;
+        const data = new Uint8Array(3 * size);
+        const color = new THREE.Color();
+        for (let i = 0; i < size; i++) {
+          const t = i / (size - 1);
+          color.copy(colorTop).lerp(colorBottom, t);
+          data[i * 3] = Math.floor(color.r * 255);
+          data[i * 3 + 1] = Math.floor(color.g * 255);
+          data[i * 3 + 2] = Math.floor(color.b * 255);
+        }
+        const texture = new THREE.DataTexture(data, 1, size, THREE.RGBFormat);
+        texture.needsUpdate = true;
+        texture.magFilter = THREE.LinearFilter;
+        texture.minFilter = THREE.LinearFilter;
+        texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
+        return texture;
+      }
+
+      function makeSpriteTexture(innerColor, outerColor = innerColor.clone().multiplyScalar(0.2)) {
+        const size = 128;
+        const canvasSprite = document.createElement("canvas");
+        canvasSprite.width = canvasSprite.height = size;
+        const ctx = canvasSprite.getContext("2d");
+        const gradient = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+        gradient.addColorStop(0, `rgba(${innerColor.r * 255}, ${innerColor.g * 255}, ${innerColor.b * 255}, 1)`);
+        gradient.addColorStop(1, `rgba(${outerColor.r * 255}, ${outerColor.g * 255}, ${outerColor.b * 255}, 0)`);
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, size, size);
+        const texture = new THREE.CanvasTexture(canvasSprite);
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping;
+        return texture;
+      }
+
+      const skyMat = new THREE.MeshBasicMaterial({
+        map: makeGradientTexture(new THREE.Color(0x081632), new THREE.Color(0x122233)),
+        side: THREE.BackSide,
+        depthWrite: false,
+      });
+
+      const skyGeo = new THREE.SphereGeometry(1000, 32, 16);
+      const skyDome = new THREE.Mesh(skyGeo, skyMat);
+      scene.add(skyDome);
+
+      // Noise generator (simplex-style permutation-based 3D noise)
+      function createNoise(seed = 42) {
+        const perm = new Uint8Array(512);
+        const grad3 = [
+          [1, 1, 0],
+          [-1, 1, 0],
+          [1, -1, 0],
+          [-1, -1, 0],
+          [1, 0, 1],
+          [-1, 0, 1],
+          [1, 0, -1],
+          [-1, 0, -1],
+          [0, 1, 1],
+          [0, -1, 1],
+          [0, 1, -1],
+          [0, -1, -1],
+        ];
+        const random = (function () {
+          let s = seed;
+          return function () {
+            s = (s * 16807) % 2147483647;
+            return (s - 1) / 2147483646;
+          };
+        })();
+        for (let i = 0; i < 256; i++) {
+          perm[i] = Math.floor(random() * 256);
+          perm[i + 256] = perm[i];
+        }
+        function dot(g, x, y, z) {
+          return g[0] * x + g[1] * y + g[2] * z;
+        }
+        function fade(t) {
+          return t * t * t * (t * (t * 6 - 15) + 10);
+        }
+        return function (x, y, z) {
+          const X = Math.floor(x) & 255;
+          const Y = Math.floor(y) & 255;
+          const Z = Math.floor(z) & 255;
+          x -= Math.floor(x);
+          y -= Math.floor(y);
+          z -= Math.floor(z);
+          const u = fade(x);
+          const v = fade(y);
+          const w = fade(z);
+          const A = perm[X] + Y;
+          const AA = perm[A] + Z;
+          const AB = perm[A + 1] + Z;
+          const B = perm[X + 1] + Y;
+          const BA = perm[B] + Z;
+          const BB = perm[B + 1] + Z;
+          const gAA = grad3[perm[AA] % 12];
+          const gBA = grad3[perm[BA] % 12];
+          const gAB = grad3[perm[AB] % 12];
+          const gBB = grad3[perm[BB] % 12];
+          const gAA1 = grad3[perm[AA + 1] % 12];
+          const gBA1 = grad3[perm[BA + 1] % 12];
+          const gAB1 = grad3[perm[AB + 1] % 12];
+          const gBB1 = grad3[perm[BB + 1] % 12];
+          const lerp = (a, b, t) => a + t * (b - a);
+          const x1 = lerp(dot(gAA, x, y, z), dot(gBA, x - 1, y, z), u);
+          const x2 = lerp(dot(gAB, x, y - 1, z), dot(gBB, x - 1, y - 1, z), u);
+          const y1 = lerp(x1, x2, v);
+          const x3 = lerp(dot(gAA1, x, y, z - 1), dot(gBA1, x - 1, y, z - 1), u);
+          const x4 = lerp(dot(gAB1, x, y - 1, z - 1), dot(gBB1, x - 1, y - 1, z - 1), u);
+          const y2 = lerp(x3, x4, v);
+          return lerp(y1, y2, w);
+        };
+      }
+
+      const noise = createNoise(121);
+
+      const terrainSize = 420;
+      const terrainSegments = 180;
+      const terrainGeometry = new THREE.PlaneGeometry(terrainSize, terrainSize, terrainSegments, terrainSegments);
+      terrainGeometry.rotateX(-Math.PI / 2);
+
+      const position = terrainGeometry.attributes.position;
+      const colors = new Float32Array(position.count * 3);
+
+      let minHeight = Infinity;
+      let maxHeight = -Infinity;
+      for (let i = 0; i < position.count; i++) {
+        const x = position.getX(i);
+        const z = position.getZ(i);
+        let h = 0;
+        let scale = 0.0028;
+        let amplitude = 46;
+        for (let octave = 0; octave < 4; octave++) {
+          h += noise(x * scale + 120, z * scale + 600, octave * 20) * amplitude;
+          scale *= 2;
+          amplitude *= 0.46;
+        }
+        h += Math.sin((x * x + z * z) / 2600) * 4;
+        position.setY(i, h);
+        minHeight = Math.min(minHeight, h);
+        maxHeight = Math.max(maxHeight, h);
+      }
+
+      const colorLow = new THREE.Color(0x18283d);
+      const colorMid = new THREE.Color(0x3f7c88);
+      const colorHigh = new THREE.Color(0xc5ffd5);
+      for (let i = 0; i < position.count; i++) {
+        const h = position.getY(i);
+        const t = (h - minHeight) / (maxHeight - minHeight);
+        const color = new THREE.Color();
+        if (t < 0.45) {
+          color.copy(colorLow).lerp(colorMid, t / 0.45);
+        } else {
+          color.copy(colorMid).lerp(colorHigh, (t - 0.45) / 0.55);
+        }
+        colors[i * 3] = color.r;
+        colors[i * 3 + 1] = color.g;
+        colors[i * 3 + 2] = color.b;
+      }
+
+      terrainGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+      terrainGeometry.computeVertexNormals();
+
+      const terrainMaterial = new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        roughness: 0.92,
+        metalness: 0.05,
+        flatShading: false,
+      });
+
+      const terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
+      terrain.receiveShadow = true;
+      terrain.castShadow = false;
+      scene.add(terrain);
+
+      document.getElementById("terrain-poly-count").textContent = terrainGeometry.index.count;
+
+      function getHeightAt(x, z) {
+        const half = terrainSize / 2;
+        const fx = ((x + half) / terrainSize) * terrainSegments;
+        const fz = ((z + half) / terrainSize) * terrainSegments;
+        const ix = Math.floor(THREE.MathUtils.clamp(fx, 0, terrainSegments));
+        const iz = Math.floor(THREE.MathUtils.clamp(fz, 0, terrainSegments));
+        const idx = iz * (terrainSegments + 1) + ix;
+        return position.getY(idx);
+      }
+
+      // Crystalline craters
+      const craterGroup = new THREE.Group();
+      function generateCraters() {
+        craterGroup.clear();
+        const craterMat = new THREE.MeshPhysicalMaterial({
+          color: 0x83fff4,
+          transparent: true,
+          opacity: 0.4,
+          roughness: 0.1,
+          transmission: 0.6,
+        });
+        for (let i = 0; i < 6; i++) {
+          const radius = THREE.MathUtils.randFloat(16, 28);
+          const geo = new THREE.CylinderGeometry(radius, radius * 0.6, THREE.MathUtils.randFloat(10, 22), 7, 1, true);
+          geo.translate(0, 0, 0);
+          const mesh = new THREE.Mesh(geo, craterMat);
+          const angle = (i / 6) * Math.PI * 2 + Math.random() * 0.3;
+          const dist = THREE.MathUtils.randFloat(40, 110);
+          const x = Math.cos(angle) * dist;
+          const z = Math.sin(angle) * dist;
+          const h = getHeightAt(x, z);
+          mesh.position.set(x, h + 2, z);
+          mesh.rotation.x = Math.PI / 2;
+          mesh.castShadow = true;
+          craterGroup.add(mesh);
+        }
+      }
+      generateCraters();
+      scene.add(craterGroup);
+
+      // Buildings
+      const buildingGroup = new THREE.Group();
+      scene.add(buildingGroup);
+      const buildingCount = 120;
+
+      const buildingMaterial = new THREE.MeshStandardMaterial({
+        color: 0x94d7ff,
+        emissive: 0x0f3a55,
+        emissiveIntensity: 0.6,
+        metalness: 0.75,
+        roughness: 0.24,
+      });
+
+      function regenerateBuildings(density = 0.7) {
+        buildingGroup.clear();
+        const maxCount = Math.floor(buildingCount * density);
+        for (let i = 0; i < maxCount; i++) {
+          const baseSize = THREE.MathUtils.randFloat(6, 12);
+          const height = THREE.MathUtils.randFloat(18, 60) * (0.7 + density * 0.6);
+          const geo = new THREE.BoxGeometry(baseSize, height, baseSize * THREE.MathUtils.randFloat(0.7, 1.3));
+          const mesh = new THREE.Mesh(geo, buildingMaterial);
+          const angle = THREE.MathUtils.randFloat(-Math.PI / 4, Math.PI / 4);
+          const radius = THREE.MathUtils.randFloat(10, 85);
+          const theta = THREE.MathUtils.randFloat(-Math.PI / 6, Math.PI / 6);
+          const x = Math.sin(theta) * radius;
+          const z = Math.cos(theta) * radius;
+          const y = getHeightAt(x, z);
+          mesh.position.set(x, y + height / 2 + 1.2, z);
+          mesh.rotation.y = angle;
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+
+          const holoMat = new THREE.MeshBasicMaterial({
+            color: new THREE.Color().setHSL(0.55 + Math.random() * 0.1, 0.75, 0.65),
+            transparent: true,
+            opacity: 0.28,
+            blending: THREE.AdditiveBlending,
+          });
+          const holoGeo = new THREE.ConeGeometry(baseSize * 0.75, height * 0.8, 5, 1, true);
+          const holo = new THREE.Mesh(holoGeo, holoMat);
+          holo.position.y = height * 0.35;
+          holo.rotation.y = Math.random() * Math.PI;
+          mesh.add(holo);
+
+          buildingGroup.add(mesh);
+        }
+        document.getElementById("building-count").textContent = buildingGroup.children.length;
+      }
+
+      regenerateBuildings(0.7);
+
+      // Flora
+      const floraGroup = new THREE.Group();
+      scene.add(floraGroup);
+      const floraMaterial = new THREE.MeshStandardMaterial({
+        color: 0x6affb1,
+        emissive: 0x072720,
+        emissiveIntensity: 0.5,
+        roughness: 0.35,
+      });
+      const trunkMaterial = new THREE.MeshStandardMaterial({
+        color: 0x1d3631,
+        roughness: 0.8,
+        metalness: 0.1,
+      });
+
+      function makePlant() {
+        const plant = new THREE.Group();
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 1.4, 6, 6), trunkMaterial);
+        trunk.castShadow = true;
+        trunk.position.y = 3;
+        plant.add(trunk);
+        for (let i = 0; i < 3; i++) {
+          const scale = 1.2 - i * 0.22;
+          const leaf = new THREE.Mesh(new THREE.ConeGeometry(4 * scale, 6 * scale, 7), floraMaterial);
+          leaf.position.y = 6 + i * 3.5;
+          leaf.castShadow = true;
+          plant.add(leaf);
+        }
+        return plant;
+      }
+
+      const floraPositions = [];
+      for (let i = 0; i < 200; i++) {
+        const radius = THREE.MathUtils.randFloat(20, 160);
+        const angle = THREE.MathUtils.randFloat(0, Math.PI * 2);
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
+        const y = getHeightAt(x, z);
+        if (y < maxHeight - 5) {
+          floraPositions.push({ x, y, z, rotation: Math.random() * Math.PI * 2 });
+        }
+      }
+
+      function regenerateFlora(density = 0.6) {
+        floraGroup.clear();
+        const count = Math.floor(floraPositions.length * density);
+        for (let i = 0; i < count; i++) {
+          const plant = makePlant();
+          const pos = floraPositions[i];
+          plant.position.set(pos.x, pos.y, pos.z);
+          plant.rotation.y = pos.rotation;
+          floraGroup.add(plant);
+        }
+        document.getElementById("flora-count").textContent = floraGroup.children.length;
+      }
+
+      regenerateFlora(0.6);
+
+      // Spaceships
+      const shipGroup = new THREE.Group();
+      scene.add(shipGroup);
+
+      function createShip(color) {
+        const body = new THREE.Group();
+        const hull = new THREE.Mesh(new THREE.CapsuleGeometry(2.4, 6, 6, 12), new THREE.MeshStandardMaterial({
+          color,
+          metalness: 0.9,
+          roughness: 0.24,
+          emissive: new THREE.Color(color).multiplyScalar(0.35),
+        }));
+        hull.castShadow = true;
+        body.add(hull);
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(3.2, 0.35, 10, 24), new THREE.MeshStandardMaterial({
+          color: new THREE.Color(color).offsetHSL(0.15, 0.2, 0.1),
+          emissive: 0x0c1c2f,
+          metalness: 1,
+          roughness: 0.12,
+        }));
+        ring.rotation.x = Math.PI / 2;
+        body.add(ring);
+        const glowMat = new THREE.MeshBasicMaterial({ color: 0x9dfcff, transparent: true, opacity: 0.45 });
+        const glow = new THREE.Mesh(new THREE.ConeGeometry(1.2, 4.5, 12, 1, true), glowMat);
+        glow.position.set(0, 0, -3.6);
+        glow.rotation.x = -Math.PI / 2;
+        body.add(glow);
+        return body;
+      }
+
+      const flightPaths = [
+        { radius: 90, speed: 0.08, height: 45, offset: 0 },
+        { radius: 140, speed: 0.05, height: 70, offset: 1.4 },
+        { radius: 110, speed: 0.065, height: 58, offset: 2.4 },
+      ];
+
+      const shipColors = [0xff9d7d, 0x9fafff, 0x7dffcf];
+      const ships = flightPaths.map((path, i) => {
+        const ship = createShip(shipColors[i % shipColors.length]);
+        ship.userData.path = path;
+        shipGroup.add(ship);
+        return ship;
+      });
+
+      const pathMaterial = new THREE.LineDashedMaterial({ color: 0x7ce0ff, dashSize: 6, gapSize: 3, transparent: true, opacity: 0.35 });
+      const pathGroup = new THREE.Group();
+      scene.add(pathGroup);
+
+      function generatePaths() {
+        pathGroup.clear();
+        flightPaths.forEach((path) => {
+          const curvePoints = [];
+          for (let i = 0; i <= 64; i++) {
+            const t = (i / 64) * Math.PI * 2;
+            const x = Math.cos(t) * path.radius;
+            const z = Math.sin(t) * path.radius;
+            const y = getHeightAt(x, z) + path.height;
+            curvePoints.push(new THREE.Vector3(x, y, z));
+          }
+          const curveGeo = new THREE.BufferGeometry().setFromPoints(curvePoints);
+          const line = new THREE.Line(curveGeo, pathMaterial);
+          line.computeLineDistances();
+          pathGroup.add(line);
+        });
+      }
+
+      generatePaths();
+
+      // Particle aurora
+      const auroraGeometry = new THREE.BufferGeometry();
+      const auroraCount = 800;
+      const auroraPositions = new Float32Array(auroraCount * 3);
+      const auroraSpeeds = new Float32Array(auroraCount);
+      for (let i = 0; i < auroraCount; i++) {
+        auroraPositions[i * 3] = THREE.MathUtils.randFloatSpread(380);
+        auroraPositions[i * 3 + 1] = THREE.MathUtils.randFloat(50, 140);
+        auroraPositions[i * 3 + 2] = THREE.MathUtils.randFloatSpread(380);
+        auroraSpeeds[i] = THREE.MathUtils.randFloat(0.1, 0.5);
+      }
+      auroraGeometry.setAttribute("position", new THREE.BufferAttribute(auroraPositions, 3));
+      const auroraMaterial = new THREE.PointsMaterial({
+        size: 2.5,
+        color: 0x9dfcff,
+        transparent: true,
+        opacity: 0.3,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      });
+      const aurora = new THREE.Points(auroraGeometry, auroraMaterial);
+      scene.add(aurora);
+
+      // Starfield
+      const starGeometry = new THREE.BufferGeometry();
+      const starCount = 1500;
+      const starPositions = new Float32Array(starCount * 3);
+      for (let i = 0; i < starCount; i++) {
+        const r = THREE.MathUtils.randFloat(300, 900);
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.random() * Math.PI;
+        starPositions[i * 3] = Math.sin(phi) * Math.cos(theta) * r;
+        starPositions[i * 3 + 1] = Math.cos(phi) * r;
+        starPositions[i * 3 + 2] = Math.sin(phi) * Math.sin(theta) * r;
+      }
+      starGeometry.setAttribute("position", new THREE.BufferAttribute(starPositions, 3));
+      const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 1.1, sizeAttenuation: true });
+      const starfield = new THREE.Points(starGeometry, starMaterial);
+      scene.add(starfield);
+
+      // Nebula veil
+      const nebulaGeometry = new THREE.BufferGeometry();
+      const nebulaCount = 560;
+      const nebulaPositions = new Float32Array(nebulaCount * 3);
+      const nebulaColors = new Float32Array(nebulaCount * 3);
+      const nebulaBase = new THREE.Color(0x71e5ff);
+      for (let i = 0; i < nebulaCount; i++) {
+        const radius = THREE.MathUtils.randFloat(220, 420);
+        const theta = Math.random() * Math.PI * 2;
+        const y = THREE.MathUtils.randFloat(80, 220);
+        nebulaPositions[i * 3] = Math.cos(theta) * radius;
+        nebulaPositions[i * 3 + 1] = y + Math.sin(theta * 2.1) * 12;
+        nebulaPositions[i * 3 + 2] = Math.sin(theta) * radius * THREE.MathUtils.randFloat(0.6, 1);
+        const color = nebulaBase.clone().offsetHSL(Math.random() * 0.08, 0.18, THREE.MathUtils.randFloat(-0.1, 0.1));
+        nebulaColors[i * 3] = color.r;
+        nebulaColors[i * 3 + 1] = color.g;
+        nebulaColors[i * 3 + 2] = color.b;
+      }
+      nebulaGeometry.setAttribute("position", new THREE.BufferAttribute(nebulaPositions, 3));
+      nebulaGeometry.setAttribute("color", new THREE.BufferAttribute(nebulaColors, 3));
+      const nebulaMaterial = new THREE.PointsMaterial({
+        size: 28,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        map: makeSpriteTexture(new THREE.Color(0x9bf5ff), new THREE.Color(0x03223a)),
+        vertexColors: true,
+        opacity: 0.28,
+      });
+      const nebulaPoints = new THREE.Points(nebulaGeometry, nebulaMaterial);
+      nebulaPoints.renderOrder = -1;
+      scene.add(nebulaPoints);
+
+      // Planetary ring
+      const ringGeometry = new THREE.RingGeometry(110, 190, 96, 1);
+      ringGeometry.rotateX(Math.PI / 2.1);
+      ringGeometry.rotateZ(Math.PI / 8);
+      const ringMaterial = new THREE.MeshBasicMaterial({
+        color: 0x92e1ff,
+        transparent: true,
+        opacity: 0.38,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+      });
+      const planetaryRing = new THREE.Mesh(ringGeometry, ringMaterial);
+      planetaryRing.position.set(-210, 240, -140);
+      scene.add(planetaryRing);
+
+      // Ion storm particles
+      const stormGeometry = new THREE.BufferGeometry();
+      const stormCount = 320;
+      const stormPositions = new Float32Array(stormCount * 3);
+      const stormVelocities = new Float32Array(stormCount * 3);
+
+      function resetStormParticle(i) {
+        stormPositions[i * 3] = THREE.MathUtils.randFloatSpread(260);
+        stormPositions[i * 3 + 1] = THREE.MathUtils.randFloat(80, 220);
+        stormPositions[i * 3 + 2] = THREE.MathUtils.randFloatSpread(260);
+        stormVelocities[i * 3] = THREE.MathUtils.randFloat(-0.6, 0.6);
+        stormVelocities[i * 3 + 1] = THREE.MathUtils.randFloat(0.6, 1.6);
+        stormVelocities[i * 3 + 2] = THREE.MathUtils.randFloat(-0.6, 0.6);
+      }
+
+      for (let i = 0; i < stormCount; i++) {
+        resetStormParticle(i);
+      }
+
+      stormGeometry.setAttribute("position", new THREE.BufferAttribute(stormPositions, 3));
+      const stormMaterial = new THREE.PointsMaterial({
+        size: 8,
+        color: 0xffd5a4,
+        transparent: true,
+        opacity: 0.22,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        map: makeSpriteTexture(new THREE.Color(0xfff1c2), new THREE.Color(0x2b0a06)),
+      });
+      const stormParticles = new THREE.Points(stormGeometry, stormMaterial);
+      stormParticles.visible = true;
+      scene.add(stormParticles);
+
+      const stormLight = new THREE.PointLight(0xffb68a, 0.0, 320, 1.4);
+      stormLight.position.set(0, 120, 0);
+      scene.add(stormLight);
+
+      // Energy pylons
+      const pylonGroup = new THREE.Group();
+      scene.add(pylonGroup);
+      const pylonCoreMaterial = new THREE.MeshStandardMaterial({
+        color: 0x1a2f42,
+        roughness: 0.65,
+        metalness: 0.4,
+      });
+      const pylonGlowMaterial = new THREE.MeshBasicMaterial({
+        color: 0x78fff2,
+        transparent: true,
+        opacity: 0.35,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      for (let i = 0; i < 8; i++) {
+        const carrier = new THREE.Group();
+        const radius = 95;
+        const angle = (i / 8) * Math.PI * 2;
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
+        const y = getHeightAt(x, z) + 2.5;
+        const base = new THREE.Mesh(new THREE.CylinderGeometry(4, 6, 6, 8), pylonCoreMaterial);
+        base.castShadow = true;
+        base.receiveShadow = true;
+        carrier.add(base);
+        const spine = new THREE.Mesh(new THREE.ConeGeometry(2.6, 16, 6), new THREE.MeshStandardMaterial({
+          color: 0x3ac3ff,
+          emissive: 0x0e4c63,
+          emissiveIntensity: 0.9,
+          metalness: 0.8,
+          roughness: 0.25,
+        }));
+        spine.position.y = 11;
+        spine.castShadow = true;
+        carrier.add(spine);
+        const emitter = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.2, 7, 16, 1, true), pylonGlowMaterial.clone());
+        emitter.position.y = 16;
+        carrier.add(emitter);
+        const halo = new THREE.Mesh(new THREE.TorusGeometry(5.2, 0.3, 12, 48), pylonGlowMaterial.clone());
+        halo.rotation.x = Math.PI / 2;
+        halo.position.y = 9.5;
+        carrier.add(halo);
+        carrier.position.set(x, y + 8, z);
+        carrier.lookAt(0, y + 8, 0);
+        carrier.userData.emitter = emitter;
+        carrier.userData.halo = halo;
+        pylonGroup.add(carrier);
+      }
+
+      // UI hooks
+      let nebulaDrift = 0.0025;
+      let nebulaOpacity = 0.28;
+      let stormStrength = 0.35;
+      let stormBaseOpacity = 0.22;
+      const timeSlider = document.getElementById("time-slider");
+      const auraSlider = document.getElementById("aura-slider");
+      const buildingSlider = document.getElementById("building-slider");
+      const floraSlider = document.getElementById("flora-slider");
+      const patrolSlider = document.getElementById("patrol-slider");
+      const pathToggle = document.getElementById("path-toggle");
+      const craterToggle = document.getElementById("crater-toggle");
+      const nebulaSlider = document.getElementById("nebula-slider");
+      const stormSlider = document.getElementById("storm-slider");
+      const ringToggle = document.getElementById("ring-toggle");
+      const presetSelect = document.getElementById("preset-select");
+      const applyPresetBtn = document.getElementById("apply-preset");
+      const randomizePresetBtn = document.getElementById("randomize-preset");
+      const presetDescription = document.getElementById("preset-description");
+
+      const timeOutput = document.getElementById("time-output");
+      const auraOutput = document.getElementById("aura-output");
+      const buildingOutput = document.getElementById("building-output");
+      const floraOutput = document.getElementById("flora-output");
+      const patrolOutput = document.getElementById("patrol-output");
+      const nebulaOutput = document.getElementById("nebula-output");
+      const stormOutput = document.getElementById("storm-output");
+
+      const timeReadout = document.getElementById("time-readout");
+      const hudAtmo = document.getElementById("hud-atmo");
+      const hudFps = document.getElementById("hud-fps");
+      const hudStorm = document.getElementById("hud-storm");
+
+      const timeLabels = ["Deep Night", "Dawn", "Radiant Noon", "Dusklight"];
+      const stormLabels = ["Calm", "Glint", "Charged", "Tempest"];
+      const presets = {
+        "dawn-citadel": {
+          label: "Dawn Citadel",
+          description: "Rise above the crystalline valley as morning light ignites the citadel line.",
+          time: 0.32,
+          aura: 0.62,
+          building: 0.82,
+          flora: 0.54,
+          patrol: 1.18,
+          nebula: 0.52,
+          storm: 0.22,
+          craters: true,
+          paths: true,
+          ring: true,
+        },
+        "nocturne-bloom": {
+          label: "Nocturne Bloom",
+          description: "Bathed in auroral tides, the basin erupts with bioluminescent flora and lazy patrols.",
+          time: 0.08,
+          aura: 0.88,
+          building: 0.4,
+          flora: 0.86,
+          patrol: 0.9,
+          nebula: 0.78,
+          storm: 0.14,
+          craters: true,
+          paths: false,
+          ring: true,
+        },
+        stormfront: {
+          label: "Ion Stormfront",
+          description: "When the ion squalls roll in, traffic reroutes and pylons surge with teal lightning.",
+          time: 0.58,
+          aura: 0.48,
+          building: 0.65,
+          flora: 0.32,
+          patrol: 2.15,
+          nebula: 0.35,
+          storm: 0.82,
+          craters: false,
+          paths: true,
+          ring: false,
+        },
+      };
+
+      function setPresetDescription(id) {
+        if (presets[id]) {
+          presetDescription.textContent = presets[id].description;
+        } else {
+          presetDescription.textContent = "Curate your own fusion of skylanes, flora and weather.";
+        }
+      }
+
+      function applyPresetValues(config) {
+        if (!config) return;
+        timeSlider.value = config.time;
+        updateTime(config.time);
+        auraSlider.value = config.aura;
+        updateAurora(config.aura);
+        buildingSlider.value = config.building;
+        updateBuildings(config.building);
+        floraSlider.value = config.flora;
+        updateFlora(config.flora);
+        patrolSlider.value = config.patrol;
+        updatePatrol(config.patrol);
+        nebulaSlider.value = config.nebula;
+        updateNebula(config.nebula);
+        stormSlider.value = config.storm;
+        updateStorm(config.storm);
+        craterToggle.checked = config.craters;
+        updateCraters(config.craters);
+        pathToggle.checked = config.paths;
+        updatePaths(config.paths);
+        ringToggle.checked = config.ring;
+        updateRing(config.ring);
+      }
+
+      function applyPreset(id) {
+        if (!presets[id]) return;
+        applyPresetValues(presets[id]);
+        presetSelect.value = id;
+        setPresetDescription(id);
+      }
+
+      function randomizePreset() {
+        const config = {
+          time: Math.random(),
+          aura: Math.random(),
+          building: Math.random(),
+          flora: Math.random(),
+          patrol: THREE.MathUtils.randFloat(0.6, 2.6),
+          nebula: Math.random(),
+          storm: Math.random(),
+          craters: Math.random() > 0.25,
+          paths: Math.random() > 0.35,
+          ring: Math.random() > 0.2,
+        };
+        applyPresetValues(config);
+        presetSelect.value = "custom";
+        presetDescription.textContent = "Experimental blend locked in. Fine-tune further if you dare.";
+      }
+
+      presetSelect.addEventListener("change", (event) => {
+        const id = event.target.value;
+        if (presets[id]) {
+          setPresetDescription(id);
+          applyPresetValues(presets[id]);
+        } else {
+          setPresetDescription(id);
+        }
+      });
+
+      applyPresetBtn.addEventListener("click", () => applyPreset(presetSelect.value));
+      randomizePresetBtn.addEventListener("click", () => randomizePreset());
+
+      function markCustomPreset() {
+        if (presetSelect.value !== "custom") {
+          presetSelect.value = "custom";
+          presetDescription.textContent = "Manual overrides detected. You're scripting a unique skyline.";
+        }
+      }
+
+      function updateAtmosphereLabel(t) {
+        const idx = Math.floor(t * (timeLabels.length - 1));
+        timeReadout.textContent = timeLabels[idx];
+        hudAtmo.textContent = timeLabels[idx] + (t > 0.55 ? " Glow" : " Mist");
+      }
+
+      function updateTime(val) {
+        const t = parseFloat(val);
+        timeOutput.value = t.toFixed(2);
+        const angle = THREE.MathUtils.lerp(0.45, Math.PI * 1.4, t);
+        const radius = THREE.MathUtils.lerp(220, 320, t);
+        sunLight.position.set(Math.cos(angle) * radius, THREE.MathUtils.lerp(180, 40, t), Math.sin(angle) * radius);
+        sunLight.intensity = THREE.MathUtils.lerp(0.2, 1.6, Math.sin(t * Math.PI));
+        hemiLight.intensity = THREE.MathUtils.lerp(0.2, 0.9, Math.sin(t * Math.PI));
+        nightLight.intensity = THREE.MathUtils.lerp(0.6, 0.15, Math.sin(t * Math.PI));
+        scene.fog.density = THREE.MathUtils.lerp(0.004, 0.0018, Math.sin(t * Math.PI));
+        renderer.setClearColor(new THREE.Color().setHSL(0.58 - t * 0.2, 0.68, 0.12 + t * 0.18));
+        skyMat.map = makeGradientTexture(
+          new THREE.Color().setHSL(0.62 - t * 0.25, 0.6, 0.12 + t * 0.35),
+          new THREE.Color().setHSL(0.55 - t * 0.15, 0.7, 0.08 + t * 0.3)
+        );
+        skyMat.map.needsUpdate = true;
+        updateAtmosphereLabel(t);
+      }
+
+      function updateAurora(val) {
+        const t = parseFloat(val);
+        auraOutput.value = t.toFixed(2);
+        auroraMaterial.opacity = THREE.MathUtils.lerp(0.1, 0.55, t);
+        auroraMaterial.size = THREE.MathUtils.lerp(1.4, 3.5, t);
+      }
+
+      function updateBuildings(val) {
+        const t = parseFloat(val);
+        buildingOutput.value = t.toFixed(2);
+        regenerateBuildings(t);
+      }
+
+      function updateFlora(val) {
+        const t = parseFloat(val);
+        floraOutput.value = t.toFixed(2);
+        regenerateFlora(t);
+      }
+
+      function updatePatrol(val) {
+        const t = parseFloat(val);
+        patrolOutput.value = t.toFixed(2);
+        flightPaths.forEach((path) => (path.speedFactor = t));
+      }
+
+      function updateCraters(enabled) {
+        craterGroup.visible = enabled;
+      }
+
+      function updatePaths(enabled) {
+        pathGroup.visible = enabled;
+      }
+
+      function updateNebula(val) {
+        const t = parseFloat(val);
+        nebulaOutput.value = t.toFixed(2);
+        nebulaDrift = THREE.MathUtils.lerp(0.0006, 0.0048, t);
+        nebulaOpacity = THREE.MathUtils.lerp(0.14, 0.48, t);
+        nebulaMaterial.size = THREE.MathUtils.lerp(20, 42, t);
+        nebulaMaterial.opacity = nebulaOpacity;
+      }
+
+      function updateStorm(val) {
+        const t = parseFloat(val);
+        stormOutput.value = t.toFixed(2);
+        stormStrength = t;
+        stormMaterial.size = THREE.MathUtils.lerp(6, 11, t);
+        stormParticles.visible = t > 0.02;
+        stormBaseOpacity = THREE.MathUtils.lerp(0.02, 0.5, t);
+        stormMaterial.opacity = stormBaseOpacity;
+        stormLight.intensity = THREE.MathUtils.lerp(0.1, 2.6, t);
+        const stormIndex = Math.min(stormLabels.length - 1, Math.round(t * (stormLabels.length - 1)));
+        hudStorm.textContent = stormLabels[stormIndex];
+      }
+
+      function updateRing(enabled) {
+        planetaryRing.visible = enabled;
+      }
+
+      timeSlider.addEventListener("input", (e) => {
+        markCustomPreset();
+        updateTime(e.target.value);
+      });
+      auraSlider.addEventListener("input", (e) => {
+        markCustomPreset();
+        updateAurora(e.target.value);
+      });
+      buildingSlider.addEventListener("input", (e) => {
+        markCustomPreset();
+        updateBuildings(e.target.value);
+      });
+      floraSlider.addEventListener("input", (e) => {
+        markCustomPreset();
+        updateFlora(e.target.value);
+      });
+      patrolSlider.addEventListener("input", (e) => {
+        markCustomPreset();
+        updatePatrol(e.target.value);
+      });
+      craterToggle.addEventListener("change", (e) => {
+        markCustomPreset();
+        updateCraters(e.target.checked);
+      });
+      pathToggle.addEventListener("change", (e) => {
+        markCustomPreset();
+        updatePaths(e.target.checked);
+      });
+      nebulaSlider.addEventListener("input", (e) => {
+        markCustomPreset();
+        updateNebula(e.target.value);
+      });
+      stormSlider.addEventListener("input", (e) => {
+        markCustomPreset();
+        updateStorm(e.target.value);
+      });
+      ringToggle.addEventListener("change", (e) => {
+        markCustomPreset();
+        updateRing(e.target.checked);
+      });
+
+      updateTime(timeSlider.value);
+      updateAurora(auraSlider.value);
+      updateBuildings(buildingSlider.value);
+      updateFlora(floraSlider.value);
+      updatePatrol(patrolSlider.value);
+      updateCraters(craterToggle.checked);
+      updatePaths(pathToggle.checked);
+      updateNebula(nebulaSlider.value);
+      updateStorm(stormSlider.value);
+      updateRing(ringToggle.checked);
+      setPresetDescription(presetSelect.value);
+
+      // Animation loop
+      const clock = new THREE.Clock();
+      let lastFpsUpdate = 0;
+      function animate() {
+        requestAnimationFrame(animate);
+        const delta = clock.getDelta();
+        const elapsed = clock.elapsedTime;
+
+        ships.forEach((ship) => {
+          const path = ship.userData.path;
+          const speed = (path.speedFactor || patrolSlider.value) * path.speed;
+          const angle = elapsed * speed + path.offset;
+          const x = Math.cos(angle) * path.radius;
+          const z = Math.sin(angle) * path.radius;
+          const baseY = getHeightAt(x, z) + path.height;
+          const bob = Math.sin(elapsed * 1.5 + path.offset) * 4;
+          ship.position.set(x, baseY + bob, z);
+          ship.lookAt(new THREE.Vector3(Math.cos(angle + 0.01) * path.radius, baseY, Math.sin(angle + 0.01) * path.radius));
+        });
+
+        const positions = auroraGeometry.attributes.position.array;
+        for (let i = 0; i < auroraCount; i++) {
+          positions[i * 3 + 1] += Math.sin(elapsed * 0.12 + i) * 0.03 * auroraSpeeds[i];
+          positions[i * 3] += Math.cos(elapsed * 0.08 + i) * 0.02 * auroraSpeeds[i];
+        }
+        auroraGeometry.attributes.position.needsUpdate = true;
+
+        nebulaPoints.rotation.y += nebulaDrift * delta * 60;
+        nebulaMaterial.opacity = THREE.MathUtils.lerp(
+          nebulaMaterial.opacity,
+          nebulaOpacity * (0.6 + Math.sin(elapsed * 0.45) * 0.35 + stormStrength * 0.15),
+          delta * 4.5
+        );
+
+        if (stormParticles.visible && stormStrength > 0.01) {
+          const stormPos = stormGeometry.attributes.position.array;
+          const accel = 0.4 + stormStrength * 1.8;
+          for (let i = 0; i < stormCount; i++) {
+            stormPos[i * 3] += stormVelocities[i * 3] * delta * 60 * accel;
+            stormPos[i * 3 + 1] -= stormVelocities[i * 3 + 1] * delta * 60 * accel;
+            stormPos[i * 3 + 2] += stormVelocities[i * 3 + 2] * delta * 60 * accel;
+            if (stormPos[i * 3 + 1] < 6) {
+              resetStormParticle(i);
+            }
+          }
+          stormGeometry.attributes.position.needsUpdate = true;
+          stormMaterial.opacity = THREE.MathUtils.lerp(
+            stormMaterial.opacity,
+            stormBaseOpacity * (0.7 + Math.abs(Math.sin(elapsed * 5.2)) * 0.6),
+            delta * 6
+          );
+        }
+
+        stormLight.position.y = 120 + Math.sin(elapsed * 1.4) * 35;
+        stormLight.position.x = Math.cos(elapsed * 0.6) * 40;
+        stormLight.position.z = Math.sin(elapsed * 0.6) * 40;
+        stormLight.intensity = THREE.MathUtils.lerp(
+          stormLight.intensity,
+          THREE.MathUtils.lerp(0.1, 3.4, stormStrength) * (0.7 + Math.sin(elapsed * 3.1) * 0.3),
+          delta * 2.4
+        );
+
+        planetaryRing.rotation.y += delta * 0.09;
+        planetaryRing.rotation.x += Math.sin(elapsed * 0.12) * 0.0006;
+
+        pylonGroup.children.forEach((carrier, idx) => {
+          carrier.rotation.y += delta * 0.35;
+          const emitter = carrier.userData.emitter;
+          const halo = carrier.userData.halo;
+          const pulse = 0.32 + Math.sin(elapsed * 2 + idx) * 0.18 + stormStrength * 0.25;
+          if (emitter) {
+            emitter.material.opacity = THREE.MathUtils.clamp(pulse, 0.18, 0.85);
+          }
+          if (halo) {
+            halo.rotation.z += delta * (0.6 + stormStrength * 1.2);
+            halo.material.opacity = THREE.MathUtils.clamp(pulse * 0.7, 0.12, 0.6);
+          }
+        });
+
+        controls.update();
+        renderer.render(scene, camera);
+
+        if (clock.elapsedTime - lastFpsUpdate > 0.4) {
+          const fps = Math.round(1 / delta);
+          hudFps.textContent = `${fps}`;
+          lastFpsUpdate = clock.elapsedTime;
+        }
+      }
+
+      animate();
+
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    </script>
+  </body>
+</html>
