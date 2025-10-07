@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Polygonal Face Speaker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      --primary: #89c2ff;
+      --accent: #ffba08;
+      --bg: radial-gradient(circle at top, #1d3557, #101725 60%, #05070d 100%);
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      background: var(--bg);
+      color: #f1f5ff;
+      overflow: hidden;
+    }
+    h1 {
+      margin: 1.75rem 0 1rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 600;
+      text-shadow: 0 8px 24px rgba(13, 36, 81, 0.65);
+    }
+    .controls {
+      display: flex;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: rgba(12, 19, 36, 0.7);
+      border-radius: 999px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 12px 35px rgba(3, 10, 21, 0.6);
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .controls input {
+      min-width: 240px;
+      padding: 0.75rem 1.1rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.05);
+      color: inherit;
+      font-size: 1rem;
+      outline: none;
+      transition: border 0.2s ease;
+    }
+    .controls input:focus {
+      border: 1px solid var(--primary);
+      box-shadow: 0 0 0 3px rgba(137, 194, 255, 0.35);
+    }
+    button {
+      padding: 0.75rem 1.6rem;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(135deg, var(--primary), #4361ee);
+      color: #0b132b;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 14px 30px rgba(67, 97, 238, 0.35);
+    }
+    button:active {
+      transform: translateY(2px) scale(0.98);
+      box-shadow: 0 10px 18px rgba(67, 97, 238, 0.25);
+    }
+    #scene-container {
+      width: min(100vw, 960px);
+      height: min(70vh, 640px);
+      margin: 2rem auto;
+      border-radius: 32px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 40px 120px rgba(5, 9, 19, 0.75);
+    }
+    canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+    footer {
+      padding: 1.5rem;
+      font-size: 0.85rem;
+      opacity: 0.75;
+    }
+    @media (max-width: 560px) {
+      h1 { font-size: 1.4rem; }
+      .controls input { min-width: 200px; }
+      #scene-container { height: 55vh; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Polygonal Face Speaker</h1>
+  <div class="controls">
+    <input id="speechText" type="text" value="Hello there! Let's talk polygons." aria-label="Speech text" />
+    <button id="speakBtn" type="button">Speak</button>
+  </div>
+  <div id="scene-container" role="img" aria-label="Animated polygonal face"></div>
+  <footer>Uses the Web Speech API for text-to-speech and a Three.js scene composed of simple polygons.</footer>
+  <script src="https://unpkg.com/three@0.159.0/build/three.min.js"></script>
+  <script>
+    const container = document.getElementById('scene-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x05070d);
+
+    const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera.position.set(0, 1.2, 7);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+
+    const faceGroup = new THREE.Group();
+    scene.add(faceGroup);
+
+    const materialSkin = new THREE.MeshStandardMaterial({ color: 0xffc89c, roughness: 0.55, metalness: 0.1 });
+    const materialFeature = new THREE.MeshStandardMaterial({ color: 0x2d3142, roughness: 0.3, metalness: 0.2 });
+    const materialLip = new THREE.MeshStandardMaterial({ color: 0xd72638, roughness: 0.4, metalness: 0.05 });
+    const materialEye = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.1, metalness: 0.8 });
+    const materialIris = new THREE.MeshStandardMaterial({ color: 0x0067b8, roughness: 0.2, metalness: 0.6 });
+
+    const headGeom = new THREE.BoxGeometry(4.2, 4.7, 3);
+    const head = new THREE.Mesh(headGeom, materialSkin);
+    head.castShadow = head.receiveShadow = true;
+    head.position.y = 0.4;
+    faceGroup.add(head);
+
+    const cheekGeom = new THREE.BoxGeometry(4.6, 2.6, 2.4);
+    const cheeks = new THREE.Mesh(cheekGeom, materialSkin.clone());
+    cheeks.position.set(0, -0.4, 0.6);
+    faceGroup.add(cheeks);
+
+    const chinGeom = new THREE.BoxGeometry(2.6, 1.2, 2.2);
+    const chin = new THREE.Mesh(chinGeom, materialSkin.clone());
+    chin.position.set(0, -2.6, 0.5);
+    faceGroup.add(chin);
+
+    const noseGeom = new THREE.ConeGeometry(0.5, 2, 6);
+    const nose = new THREE.Mesh(noseGeom, materialSkin.clone());
+    nose.rotation.x = Math.PI / 2;
+    nose.position.set(0, -0.2, 1.8);
+    faceGroup.add(nose);
+
+    const browGeom = new THREE.BoxGeometry(1.6, 0.25, 0.3);
+    const leftBrow = new THREE.Mesh(browGeom, materialFeature);
+    const rightBrow = leftBrow.clone();
+    leftBrow.position.set(-1.1, 1.3, 1.51);
+    rightBrow.position.set(1.1, 1.3, 1.51);
+    faceGroup.add(leftBrow, rightBrow);
+
+    const eyeGeom = new THREE.BoxGeometry(1.2, 0.8, 0.2);
+    const leftEye = new THREE.Mesh(eyeGeom, materialEye);
+    const rightEye = leftEye.clone();
+    leftEye.position.set(-1.2, 0.8, 1.6);
+    rightEye.position.set(1.2, 0.8, 1.6);
+    faceGroup.add(leftEye, rightEye);
+
+    const irisGeom = new THREE.CylinderGeometry(0.26, 0.22, 0.1, 12);
+    const leftIris = new THREE.Mesh(irisGeom, materialIris);
+    const rightIris = leftIris.clone();
+    leftIris.rotation.x = Math.PI / 2;
+    rightIris.rotation.x = Math.PI / 2;
+    leftIris.position.set(-1.2, 0.8, 1.75);
+    rightIris.position.set(1.2, 0.8, 1.75);
+    faceGroup.add(leftIris, rightIris);
+
+    const mouthGeom = new THREE.BoxGeometry(2.0, 0.45, 0.2);
+    const mouth = new THREE.Mesh(mouthGeom, materialLip);
+    mouth.position.set(0, -1.3, 1.55);
+    faceGroup.add(mouth);
+
+    const lowerLipGeom = new THREE.BoxGeometry(2.1, 0.4, 0.1);
+    const lowerLip = new THREE.Mesh(lowerLipGeom, materialSkin.clone());
+    lowerLip.position.set(0, -1.6, 1.5);
+    faceGroup.add(lowerLip);
+
+    const earGeom = new THREE.CylinderGeometry(0.65, 0.65, 1.6, 10);
+    const leftEar = new THREE.Mesh(earGeom, materialSkin.clone());
+    const rightEar = leftEar.clone();
+    leftEar.rotation.z = Math.PI / 2;
+    rightEar.rotation.z = Math.PI / 2;
+    leftEar.position.set(-2.5, 0.2, 0.2);
+    rightEar.position.set(2.5, 0.2, 0.2);
+    faceGroup.add(leftEar, rightEar);
+
+    const hairGeom = new THREE.BoxGeometry(4.4, 1.4, 3.1);
+    const hair = new THREE.Mesh(hairGeom, materialFeature.clone());
+    hair.position.set(0, 2.6, 0);
+    hair.position.z = -0.1;
+    faceGroup.add(hair);
+
+    const light = new THREE.DirectionalLight(0xffffff, 1.1);
+    light.position.set(5, 10, 8);
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0x556677, 0.6));
+
+    faceGroup.position.y = 0.4;
+
+    let isTalking = false;
+    let startTime = performance.now();
+    let noiseSeed = Math.random() * 1000;
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    const animate = (time) => {
+      const elapsed = (time - startTime) / 1000;
+
+      faceGroup.rotation.y = Math.sin(elapsed * 0.45) * 0.25;
+      faceGroup.rotation.x = Math.sin(elapsed * 0.32) * 0.06 - 0.05;
+
+      const blink = (Math.sin(elapsed * 3.4) + 1) / 2;
+      const eyeScale = 0.8 - Math.pow(blink, 8) * 0.7;
+      leftEye.scale.y = rightEye.scale.y = 0.6 + eyeScale * 0.4;
+
+      if (isTalking) {
+        const talkSpeed = 7.5;
+        const talkAmplitude = 0.55 + 0.35 * Math.abs(Math.sin(elapsed * talkSpeed + noiseSeed));
+        mouth.scale.y = talkAmplitude * 1.3;
+        lowerLip.position.y = -1.6 - (talkAmplitude - 0.6) * 0.4;
+        const browLift = 0.18 * Math.abs(Math.sin(elapsed * 2.4));
+        leftBrow.position.y = 1.3 + browLift;
+        rightBrow.position.y = 1.3 + browLift;
+      } else {
+        mouth.scale.y = THREE.MathUtils.lerp(mouth.scale.y, 1, 0.08);
+        lowerLip.position.y = THREE.MathUtils.lerp(lowerLip.position.y, -1.6, 0.08);
+        leftBrow.position.y = THREE.MathUtils.lerp(leftBrow.position.y, 1.3, 0.1);
+        rightBrow.position.y = THREE.MathUtils.lerp(rightBrow.position.y, 1.3, 0.1);
+      }
+
+      leftIris.position.x = -1.2 + mouse.x * 0.35;
+      rightIris.position.x = 1.2 + mouse.x * 0.35;
+      leftIris.position.y = 0.8 + mouse.y * 0.25;
+      rightIris.position.y = 0.8 + mouse.y * 0.25;
+
+      renderer.render(scene, camera);
+    };
+
+    renderer.setAnimationLoop(animate);
+
+    window.addEventListener('resize', () => {
+      const { clientWidth, clientHeight } = container;
+      camera.aspect = clientWidth / clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(clientWidth, clientHeight);
+    });
+
+    container.addEventListener('pointermove', (event) => {
+      const rect = container.getBoundingClientRect();
+      mouse.x = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
+      mouse.y = ((event.clientY - rect.top) / rect.height - 0.5) * -2;
+    });
+
+    const speakBtn = document.getElementById('speakBtn');
+    const input = document.getElementById('speechText');
+
+    function speak(text) {
+      if (!('speechSynthesis' in window)) {
+        alert('Sorry, your browser does not support Text-to-Speech.');
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      const voices = speechSynthesis.getVoices();
+      const preferred = voices.find(v => /en-US|en_GB/i.test(v.lang) && v.name.toLowerCase().includes('female'));
+      if (preferred) utterance.voice = preferred;
+      utterance.pitch = 1.05;
+      utterance.rate = 1.02;
+
+      utterance.onstart = () => {
+        isTalking = true;
+        noiseSeed = Math.random() * 1000;
+      };
+      utterance.onend = () => {
+        isTalking = false;
+      };
+      utterance.onerror = () => {
+        isTalking = false;
+      };
+
+      speechSynthesis.speak(utterance);
+    }
+
+    speakBtn.addEventListener('click', () => {
+      const text = input.value.trim();
+      if (text) {
+        speak(text);
+      }
+    });
+
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        speakBtn.click();
+      }
+    });
+
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+      speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+    }
+  </script>
+</body>
+</html>
