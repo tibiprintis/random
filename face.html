@@ -43,13 +43,13 @@
       justify-content: center;
     }
     .controls input {
-      min-width: 240px;
-      padding: 0.75rem 1.1rem;
+      min-width: 320px;
+      padding: 0.85rem 1.25rem;
       border-radius: 999px;
       border: 1px solid rgba(255, 255, 255, 0.15);
       background: rgba(255, 255, 255, 0.05);
       color: inherit;
-      font-size: 1rem;
+      font-size: 1.12rem;
       outline: none;
       transition: border 0.2s ease;
     }
@@ -95,7 +95,7 @@
     }
     @media (max-width: 560px) {
       h1 { font-size: 1.4rem; }
-      .controls input { min-width: 200px; }
+      .controls input { min-width: 240px; }
       #scene-container { height: 55vh; }
     }
   </style>
@@ -114,8 +114,8 @@
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x05070d);
 
-    const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 100);
-    camera.position.set(0, 1.2, 7);
+    const camera = new THREE.PerspectiveCamera(38, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera.position.set(0, 1.05, 8.8);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -176,15 +176,55 @@
     rightIris.position.set(1.2, 0.8, 1.75);
     faceGroup.add(leftIris, rightIris);
 
-    const mouthGeom = new THREE.BoxGeometry(2.0, 0.45, 0.2);
-    const mouth = new THREE.Mesh(mouthGeom, materialLip);
-    mouth.position.set(0, -1.3, 1.55);
-    faceGroup.add(mouth);
+    const mouthGroup = new THREE.Group();
+    mouthGroup.position.set(0, -1.35, 1.55);
+    faceGroup.add(mouthGroup);
 
-    const lowerLipGeom = new THREE.BoxGeometry(2.1, 0.4, 0.1);
-    const lowerLip = new THREE.Mesh(lowerLipGeom, materialSkin.clone());
-    lowerLip.position.set(0, -1.6, 1.5);
-    faceGroup.add(lowerLip);
+    const mouthCavityGeom = new THREE.CylinderGeometry(1.05, 1.05, 0.32, 32, 1, false, 0, Math.PI);
+    const mouthCavity = new THREE.Mesh(
+      mouthCavityGeom,
+      new THREE.MeshStandardMaterial({ color: 0x1b0d16, roughness: 0.85, metalness: 0.05 })
+    );
+    mouthCavity.rotation.x = Math.PI;
+    mouthCavity.position.z = 0.2;
+    mouthGroup.add(mouthCavity);
+
+    const innerMouthGeom = new THREE.PlaneGeometry(2.4, 1.4);
+    const innerMouth = new THREE.Mesh(
+      innerMouthGeom,
+      new THREE.MeshStandardMaterial({ color: 0x290d1c, roughness: 0.9, metalness: 0.08, side: THREE.DoubleSide })
+    );
+    innerMouth.position.set(0, 0, 0.24);
+    innerMouth.scale.y = 0.4;
+    mouthGroup.add(innerMouth);
+
+    const upperLipGeom = new THREE.BoxGeometry(2.5, 0.42, 0.32);
+    const upperLip = new THREE.Mesh(upperLipGeom, materialLip.clone());
+    upperLip.position.set(0, 0.32, 0.16);
+    mouthGroup.add(upperLip);
+
+    const lowerLipGeom = new THREE.BoxGeometry(2.5, 0.42, 0.32);
+    const lowerLip = new THREE.Mesh(lowerLipGeom, materialLip.clone());
+    lowerLip.position.set(0, -0.32, 0.16);
+    mouthGroup.add(lowerLip);
+
+    const teethGeom = new THREE.PlaneGeometry(2.1, 0.55);
+    const upperTeeth = new THREE.Mesh(
+      teethGeom,
+      new THREE.MeshStandardMaterial({ color: 0xf5f5fa, roughness: 0.28, metalness: 0.1, transparent: true, opacity: 0.0, depthWrite: false })
+    );
+    upperTeeth.position.set(0, 0.18, 0.26);
+    upperTeeth.renderOrder = 2;
+    mouthGroup.add(upperTeeth);
+
+    const tongueGeom = new THREE.PlaneGeometry(1.6, 0.75);
+    const tongue = new THREE.Mesh(
+      tongueGeom,
+      new THREE.MeshStandardMaterial({ color: 0xc1526b, roughness: 0.75, metalness: 0.06, side: THREE.DoubleSide })
+    );
+    tongue.position.set(0, -0.45, 0.25);
+    tongue.scale.y = 0.4;
+    mouthGroup.add(tongue);
 
     const earGeom = new THREE.CylinderGeometry(0.65, 0.65, 1.6, 10);
     const leftEar = new THREE.Mesh(earGeom, materialSkin.clone());
@@ -211,6 +251,9 @@
     let isTalking = false;
     let startTime = performance.now();
     let noiseSeed = Math.random() * 1000;
+    let mouthOpen = 0.08;
+    let boundaryEnergy = 0.08;
+    let lastBoundaryAt = 0;
 
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
@@ -226,19 +269,42 @@
       leftEye.scale.y = rightEye.scale.y = 0.6 + eyeScale * 0.4;
 
       if (isTalking) {
-        const talkSpeed = 7.5;
-        const talkAmplitude = 0.55 + 0.35 * Math.abs(Math.sin(elapsed * talkSpeed + noiseSeed));
-        mouth.scale.y = talkAmplitude * 1.3;
-        lowerLip.position.y = -1.6 - (talkAmplitude - 0.6) * 0.4;
+        boundaryEnergy *= 0.92;
+        const timeSinceBoundary = (performance.now() - lastBoundaryAt) / 1000;
+        const decay = Math.max(0, 1 - timeSinceBoundary * 2.1);
+        const phonemeEnergy = boundaryEnergy * decay;
+        const talkSpeed = 9.5;
+        const jitter = 0.18 * (Math.sin(elapsed * talkSpeed + noiseSeed) + 1) * 0.5;
+        const targetOpen = THREE.MathUtils.clamp(0.15 + phonemeEnergy + jitter, 0.08, 1.15);
+        mouthOpen = THREE.MathUtils.lerp(mouthOpen, targetOpen, 0.22);
         const browLift = 0.18 * Math.abs(Math.sin(elapsed * 2.4));
         leftBrow.position.y = 1.3 + browLift;
         rightBrow.position.y = 1.3 + browLift;
       } else {
-        mouth.scale.y = THREE.MathUtils.lerp(mouth.scale.y, 1, 0.08);
-        lowerLip.position.y = THREE.MathUtils.lerp(lowerLip.position.y, -1.6, 0.08);
+        mouthOpen = THREE.MathUtils.lerp(mouthOpen, 0.08, 0.12);
         leftBrow.position.y = THREE.MathUtils.lerp(leftBrow.position.y, 1.3, 0.1);
         rightBrow.position.y = THREE.MathUtils.lerp(rightBrow.position.y, 1.3, 0.1);
       }
+
+      const mouthGap = mouthOpen;
+      const baseGap = 0.08;
+      const openFactor = Math.max(0, mouthGap - baseGap);
+      innerMouth.scale.y = THREE.MathUtils.lerp(innerMouth.scale.y, 0.35 + baseGap * 0.4 + openFactor * 1.6, 0.18);
+      mouthCavity.scale.set(0.9 + baseGap * 0.18 + openFactor * 0.3, 0.65 + baseGap * 0.6 + openFactor * 1.1, 1);
+      const widthFactor = Math.max(0, mouthGap - 0.12);
+      mouthGroup.scale.x = THREE.MathUtils.lerp(mouthGroup.scale.x, 1 + widthFactor * 0.45, 0.2);
+      upperLip.position.y = THREE.MathUtils.lerp(upperLip.position.y, 0.32 + openFactor * 0.6, 0.28);
+      lowerLip.position.y = THREE.MathUtils.lerp(lowerLip.position.y, -0.32 - openFactor * 0.74, 0.28);
+      upperLip.rotation.x = THREE.MathUtils.lerp(upperLip.rotation.x, 0.22 * openFactor, 0.18);
+      lowerLip.rotation.x = THREE.MathUtils.lerp(lowerLip.rotation.x, -0.78 * openFactor, 0.18);
+      lowerLip.scale.y = THREE.MathUtils.lerp(lowerLip.scale.y, 1 + openFactor * 0.65, 0.2);
+      upperLip.scale.y = THREE.MathUtils.lerp(upperLip.scale.y, 1 + openFactor * 0.45, 0.2);
+      tongue.position.y = THREE.MathUtils.lerp(tongue.position.y, -0.45 - openFactor * 0.95, 0.18);
+      tongue.scale.y = THREE.MathUtils.lerp(tongue.scale.y, 0.4 + openFactor * 1.2, 0.18);
+      const showTeeth = openFactor > 0.12;
+      upperTeeth.material.opacity = THREE.MathUtils.lerp(upperTeeth.material.opacity, showTeeth ? 0.95 : 0.0, 0.2);
+      upperTeeth.position.y = THREE.MathUtils.lerp(upperTeeth.position.y, showTeeth ? 0.26 - openFactor * 0.4 : 0.18, 0.2);
+
 
       leftIris.position.x = -1.2 + mouse.x * 0.35;
       rightIris.position.x = 1.2 + mouse.x * 0.35;
@@ -266,6 +332,16 @@
     const speakBtn = document.getElementById('speakBtn');
     const input = document.getElementById('speechText');
 
+    function estimateWordEnergy(word) {
+      if (!word) return 0.08;
+      const vowels = (word.match(/[aeiouy]/gi) || []).length;
+      const consonants = (word.match(/[bcdfghjklmnpqrstvwxyz]/gi) || []).length;
+      const plosives = (word.match(/[pbtdkg]/gi) || []).length;
+      const lengthFactor = Math.min(word.length / 6, 1);
+      const energy = vowels * 0.22 + consonants * 0.12 + plosives * 0.2 + lengthFactor * 0.35;
+      return Math.min(1, energy);
+    }
+
     function speak(text) {
       if (!('speechSynthesis' in window)) {
         alert('Sorry, your browser does not support Text-to-Speech.');
@@ -282,12 +358,31 @@
       utterance.onstart = () => {
         isTalking = true;
         noiseSeed = Math.random() * 1000;
+        boundaryEnergy = 0.25;
       };
       utterance.onend = () => {
         isTalking = false;
+        boundaryEnergy = 0.08;
       };
       utterance.onerror = () => {
         isTalking = false;
+        boundaryEnergy = 0.08;
+      };
+
+      utterance.onboundary = (event) => {
+        if (!text) return;
+        if (event.name === 'word' || event.name === 'sentence' || typeof event.charLength === 'number') {
+          const charLen = event.charLength || 1;
+          let segment = text.slice(event.charIndex, event.charIndex + charLen).trim();
+          if (!segment) {
+            segment = text.slice(event.charIndex).split(/\s+/)[0] || '';
+          }
+          segment = segment.replace(/[^a-z']/gi, '');
+          if (segment) {
+            boundaryEnergy = Math.min(1.1, Math.max(boundaryEnergy, 0.18 + estimateWordEnergy(segment)));
+            lastBoundaryAt = performance.now();
+          }
+        }
       };
 
       speechSynthesis.speak(utterance);
