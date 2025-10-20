@@ -42,7 +42,8 @@
       flex-wrap: wrap;
       justify-content: center;
     }
-    .controls input {
+    .controls input,
+    .controls textarea {
       min-width: 320px;
       padding: 0.85rem 1.25rem;
       border-radius: 999px;
@@ -52,8 +53,10 @@
       font-size: 1.12rem;
       outline: none;
       transition: border 0.2s ease;
+      resize: vertical;
     }
-    .controls input:focus {
+    .controls input:focus,
+    .controls textarea:focus {
       border: 1px solid var(--primary);
       box-shadow: 0 0 0 3px rgba(137, 194, 255, 0.35);
     }
@@ -95,7 +98,8 @@
     }
     @media (max-width: 560px) {
       h1 { font-size: 1.4rem; }
-      .controls input { min-width: 240px; }
+      .controls input,
+      .controls textarea { min-width: 240px; }
       #scene-container { height: 55vh; }
     }
   </style>
@@ -103,7 +107,7 @@
 <body>
   <h1>Polygonal Face Speaker</h1>
   <div class="controls">
-    <input id="speechText" type="text" value="Hello there! Let's talk polygons." aria-label="Speech text" />
+    <textarea id="speechText" rows="4" aria-label="Speech text">Descoperă colecția noastră de produse din lemn debitate cu laser, realizate cu precizie pentru a evidenția fiecare linie și detaliu fin. Fie că este vorba despre decorațiuni personalizate, trofee elegante sau piese utilitare pentru casă și birou, finisajele netede și designul atent gândit oferă o estetică modernă, păstrând în același timp căldura naturală a lemnului.</textarea>
     <button id="speakBtn" type="button">Speak</button>
   </div>
   <div id="scene-container" role="img" aria-label="Animated polygonal face"></div>
@@ -187,8 +191,6 @@
     );
     mouthCavity.rotation.x = Math.PI;
     mouthCavity.position.z = 0.2;
-    mouthGroup.add(mouthCavity);
-
     const innerMouthGeom = new THREE.PlaneGeometry(2.4, 1.4);
     const innerMouth = new THREE.Mesh(
       innerMouthGeom,
@@ -350,7 +352,8 @@
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       const voices = speechSynthesis.getVoices();
-      const preferred = voices.find(v => /en-US|en_GB/i.test(v.lang) && v.name.toLowerCase().includes('female'));
+      utterance.lang = 'ro-RO';
+      const preferred = voices.find(v => /ro/i.test(v.lang));
       if (preferred) utterance.voice = preferred;
       utterance.pitch = 1.05;
       utterance.rate = 1.02;
