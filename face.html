@@ -22,6 +22,8 @@
       background: var(--bg);
       color: #f1f5ff;
       overflow: hidden;
+      padding: 1.5rem;
+      box-sizing: border-box;
     }
     h1 {
       margin: 1.75rem 0 1rem;
@@ -30,23 +32,39 @@
       font-weight: 600;
       text-shadow: 0 8px 24px rgba(13, 36, 81, 0.65);
     }
+    .layout {
+      width: min(1200px, 100%);
+      flex: 1;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      gap: 2rem;
+      padding: 1.5rem;
+      box-sizing: border-box;
+    }
+    .controls-panel {
+      flex: 1;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
     .controls {
       display: flex;
-      gap: 0.75rem;
-      padding: 1rem;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 1.5rem;
       background: rgba(12, 19, 36, 0.7);
-      border-radius: 999px;
+      border-radius: 28px;
       backdrop-filter: blur(12px);
       box-shadow: 0 12px 35px rgba(3, 10, 21, 0.6);
-      align-items: center;
-      flex-wrap: wrap;
-      justify-content: center;
+      align-items: stretch;
     }
     .controls input,
     .controls textarea {
-      min-width: 320px;
+      width: 100%;
       padding: 0.85rem 1.25rem;
-      border-radius: 999px;
+      border-radius: 22px;
       border: 1px solid rgba(255, 255, 255, 0.15);
       background: rgba(255, 255, 255, 0.05);
       color: inherit;
@@ -77,10 +95,16 @@
       transform: translateY(2px) scale(0.98);
       box-shadow: 0 10px 18px rgba(67, 97, 238, 0.25);
     }
+    .scene-panel {
+      flex: 1.35;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
     #scene-container {
-      width: min(100vw, 960px);
+      width: 100%;
       height: min(70vh, 640px);
-      margin: 2rem auto;
       border-radius: 32px;
       overflow: hidden;
       position: relative;
@@ -91,6 +115,12 @@
       width: 100% !important;
       height: 100% !important;
     }
+    .hint {
+      margin: 0;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: rgba(241, 245, 255, 0.8);
+    }
     footer {
       padding: 1.5rem;
       font-size: 0.85rem;
@@ -98,19 +128,31 @@
     }
     @media (max-width: 560px) {
       h1 { font-size: 1.4rem; }
-      .controls input,
-      .controls textarea { min-width: 240px; }
+      body { padding: 1rem; }
+      .layout {
+        flex-direction: column;
+        padding: 1rem;
+        gap: 1.5rem;
+      }
+      .scene-panel { order: -1; }
       #scene-container { height: 55vh; }
     }
   </style>
 </head>
 <body>
   <h1>Polygonal Face Speaker</h1>
-  <div class="controls">
-    <textarea id="speechText" rows="4" aria-label="Speech text">Descoperă colecția noastră de produse din lemn debitate cu laser, realizate cu precizie pentru a evidenția fiecare linie și detaliu fin. Fie că este vorba despre decorațiuni personalizate, trofee elegante sau piese utilitare pentru casă și birou, finisajele netede și designul atent gândit oferă o estetică modernă, păstrând în același timp căldura naturală a lemnului.</textarea>
-    <button id="speakBtn" type="button">Speak</button>
+  <div class="layout">
+    <div class="controls-panel">
+      <div class="controls">
+        <textarea id="speechText" rows="6" aria-label="Speech text">Descoperă colecția noastră de produse din lemn debitate cu laser, realizate cu precizie pentru a evidenția fiecare linie și detaliu fin. Fie că este vorba despre decorațiuni personalizate, trofee elegante sau piese utilitare pentru casă și birou, finisajele netede și designul atent gândit oferă o estetică modernă, păstrând în același timp căldura naturală a lemnului.</textarea>
+        <button id="speakBtn" type="button">Vorbește</button>
+      </div>
+      <p class="hint">Introdu textul în stânga, apoi apasă <strong>Vorbește</strong> pentru a vedea avatarul animat în dreapta.</p>
+    </div>
+    <div class="scene-panel">
+      <div id="scene-container" role="img" aria-label="Animated polygonal presenter"></div>
+    </div>
   </div>
-  <div id="scene-container" role="img" aria-label="Animated polygonal face"></div>
   <footer>Uses the Web Speech API for text-to-speech and a Three.js scene composed of simple polygons.</footer>
   <script src="https://unpkg.com/three@0.159.0/build/three.min.js"></script>
   <script>
@@ -119,15 +161,23 @@
     scene.background = new THREE.Color(0x05070d);
 
     const camera = new THREE.PerspectiveCamera(38, container.clientWidth / container.clientHeight, 0.1, 100);
-    camera.position.set(0, 1.05, 8.8);
+    camera.position.set(0, 2.8, 10);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(container.clientWidth, container.clientHeight);
     container.appendChild(renderer.domElement);
 
+    const avatarGroup = new THREE.Group();
+    scene.add(avatarGroup);
+
     const faceGroup = new THREE.Group();
-    scene.add(faceGroup);
+    faceGroup.position.y = 2.2;
+    avatarGroup.add(faceGroup);
+
+    const bodyGroup = new THREE.Group();
+    bodyGroup.position.y = -0.6;
+    avatarGroup.add(bodyGroup);
 
     const materialSkin = new THREE.MeshStandardMaterial({ color: 0xffc89c, roughness: 0.55, metalness: 0.1 });
     const materialFeature = new THREE.MeshStandardMaterial({ color: 0x2d3142, roughness: 0.3, metalness: 0.2 });
@@ -243,12 +293,81 @@
     hair.position.z = -0.1;
     faceGroup.add(hair);
 
+    const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x274690, roughness: 0.55, metalness: 0.08 });
+    const accentMaterial = new THREE.MeshStandardMaterial({ color: 0xffa630, roughness: 0.4, metalness: 0.3 });
+
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.1, 1.1, 12), materialSkin.clone());
+    neck.position.set(0, -0.4, 0.3);
+    faceGroup.add(neck);
+
+    const torso = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.6, 4.6, 16), bodyMaterial);
+    torso.position.set(0, -2.6, 0.2);
+    bodyGroup.add(torso);
+
+    const shoulder = new THREE.Mesh(new THREE.BoxGeometry(5.2, 1, 2.8), bodyMaterial.clone());
+    shoulder.position.set(0, -0.9, 0.45);
+    bodyGroup.add(shoulder);
+
+    const chestPanel = new THREE.Mesh(new THREE.BoxGeometry(2.1, 3.2, 0.2), accentMaterial);
+    chestPanel.position.set(0, -2.4, 1.4);
+    bodyGroup.add(chestPanel);
+
+    const hip = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2, 1.6, 16), bodyMaterial.clone());
+    hip.position.set(0, -4.8, 0.25);
+    bodyGroup.add(hip);
+
+    const leftArmGroup = new THREE.Group();
+    leftArmGroup.position.set(-2.6, -1.2, 0.8);
+    bodyGroup.add(leftArmGroup);
+
+    const rightArmGroup = new THREE.Group();
+    rightArmGroup.position.set(2.6, -1.2, 0.8);
+    bodyGroup.add(rightArmGroup);
+
+    function createArm(isLeft = true) {
+      const side = isLeft ? 1 : -1;
+      const upperArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.55, 1.6, 6, 12), bodyMaterial.clone());
+      upperArm.rotation.z = side * Math.PI / 2;
+      upperArm.position.set(0, -1.1, 0);
+
+      const elbowPivot = new THREE.Group();
+      elbowPivot.position.set(0, -2, 0);
+
+      const forearm = new THREE.Mesh(new THREE.CapsuleGeometry(0.5, 1.8, 6, 12), bodyMaterial.clone());
+      forearm.rotation.z = side * Math.PI / 2;
+      forearm.position.set(0, -1, 0);
+      elbowPivot.add(forearm);
+
+      const hand = new THREE.Mesh(new THREE.SphereGeometry(0.65, 16, 12), materialSkin.clone());
+      hand.position.set(0, -2.1, 0);
+      elbowPivot.add(hand);
+
+      const armRoot = new THREE.Group();
+      armRoot.add(upperArm);
+      armRoot.add(elbowPivot);
+      armRoot.rotation.y = isLeft ? 0 : Math.PI;
+      armRoot.userData = { elbowPivot };
+      return armRoot;
+    }
+
+    const leftArm = createArm(true);
+    const rightArm = createArm(false);
+    leftArmGroup.add(leftArm);
+    rightArmGroup.add(rightArm);
+
+    const leftElbow = leftArm.userData.elbowPivot;
+    const rightElbow = rightArm.userData.elbowPivot;
+    leftArmGroup.rotation.set(-0.9, 0.1, 0.35);
+    rightArmGroup.rotation.set(-0.9, -0.1, -0.35);
+    leftElbow.rotation.x = -0.3;
+    rightElbow.rotation.x = -0.3;
+
     const light = new THREE.DirectionalLight(0xffffff, 1.1);
     light.position.set(5, 10, 8);
     scene.add(light);
     scene.add(new THREE.AmbientLight(0x556677, 0.6));
 
-    faceGroup.position.y = 0.4;
+    avatarGroup.position.y = 0.4;
 
     let isTalking = false;
     let startTime = performance.now();
@@ -257,14 +376,34 @@
     let boundaryEnergy = 0.08;
     let lastBoundaryAt = 0;
 
-    const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
     const animate = (time) => {
       const elapsed = (time - startTime) / 1000;
 
+      avatarGroup.rotation.y = Math.sin(elapsed * 0.25) * 0.12;
+      avatarGroup.position.x = THREE.MathUtils.lerp(avatarGroup.position.x, mouse.x * 0.6, 0.08);
       faceGroup.rotation.y = Math.sin(elapsed * 0.45) * 0.25;
       faceGroup.rotation.x = Math.sin(elapsed * 0.32) * 0.06 - 0.05;
+      bodyGroup.rotation.z = THREE.MathUtils.lerp(bodyGroup.rotation.z, Math.sin(elapsed * 0.7) * 0.05, 0.1);
+      bodyGroup.rotation.x = THREE.MathUtils.lerp(bodyGroup.rotation.x, isTalking ? -0.05 + Math.cos(elapsed * 1.4) * 0.05 : 0, 0.1);
+      shoulder.position.y = -0.9 + (isTalking ? Math.sin(elapsed * 2.3) * 0.18 : 0);
+      chestPanel.position.z = 1.4 + (isTalking ? Math.sin(elapsed * 3.1) * 0.08 : 0);
+
+      const leftArmTargetX = isTalking ? -0.35 + Math.sin(elapsed * 3.3) * 0.85 : -0.9;
+      const rightArmTargetX = isTalking ? -0.35 + Math.cos(elapsed * 3.2) * 0.85 : -0.9;
+      leftArmGroup.rotation.x = THREE.MathUtils.lerp(leftArmGroup.rotation.x, leftArmTargetX, 0.12);
+      rightArmGroup.rotation.x = THREE.MathUtils.lerp(rightArmGroup.rotation.x, rightArmTargetX, 0.12);
+
+      const leftArmTargetZ = isTalking ? 0.55 + Math.cos(elapsed * 2.1) * 0.35 : 0.35;
+      const rightArmTargetZ = isTalking ? -0.55 + Math.sin(elapsed * 2.2) * 0.35 : -0.35;
+      leftArmGroup.rotation.z = THREE.MathUtils.lerp(leftArmGroup.rotation.z, leftArmTargetZ, 0.12);
+      rightArmGroup.rotation.z = THREE.MathUtils.lerp(rightArmGroup.rotation.z, rightArmTargetZ, 0.12);
+
+      const leftElbowTarget = isTalking ? -0.45 + Math.sin(elapsed * 4.6 + 0.4) * 0.7 : -0.3;
+      const rightElbowTarget = isTalking ? -0.45 + Math.sin(elapsed * 4.4 - 0.4) * 0.7 : -0.3;
+      leftElbow.rotation.x = THREE.MathUtils.lerp(leftElbow.rotation.x, leftElbowTarget, 0.18);
+      rightElbow.rotation.x = THREE.MathUtils.lerp(rightElbow.rotation.x, rightElbowTarget, 0.18);
 
       const blink = (Math.sin(elapsed * 3.4) + 1) / 2;
       const eyeScale = 0.8 - Math.pow(blink, 8) * 0.7;
